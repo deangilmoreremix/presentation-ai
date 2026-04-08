@@ -1,13 +1,8 @@
-/**
- * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
- * for Docker builds.
- */
-await import("./src/env.js");
-
-/** @type {import("next").NextConfig} */
-const config = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Enable standalone output for Docker
   output: "standalone",
+
   // Production optimizations
   poweredByHeader: false,
   compress: true,
@@ -76,6 +71,8 @@ const config = {
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["@radix-ui/react-icons", "lucide-react"],
+    // Enable server components optimization
+    serverComponentsExternalPackages: [],
   },
 
   // Build optimization
@@ -83,9 +80,46 @@ const config = {
     // Optimize bundle size in production
     if (!dev && !isServer) {
       config.optimization.splitChunks.chunks = "all";
+
+      // Add compression
+      config.optimization.minimize = true;
     }
+
+    // Resolve aliases for better imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@/components": "./src/components",
+      "@/lib": "./src/lib",
+      "@/server": "./src/server",
+      "@/states": "./src/states",
+      "@/app": "./src/app",
+    };
+
     return config;
   },
+
+  // Production-specific settings
+  ...(process.env.NODE_ENV === "production" && {
+    // Disable source maps in production for security
+    productionBrowserSourceMaps: false,
+
+    // Enable bundle analyzer in production builds
+    ...(process.env.ANALYZE === "true" && {
+      webpack: (config, { dev, isServer }) => {
+        if (!dev && !isServer) {
+          const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+          config.plugins.push(
+            new BundleAnalyzerPlugin({
+              analyzerMode: "static",
+              openAnalyzer: false,
+              reportFilename: "./bundle-analyzer-report.html",
+            })
+          );
+        }
+        return config;
+      },
+    }),
+  }),
 };
 
-export default config;
+export default nextConfig;

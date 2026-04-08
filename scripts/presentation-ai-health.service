@@ -1,0 +1,16 @@
+[Unit]
+Description=Presentation AI Health Check Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=node
+WorkingDirectory=/path/to/your/app
+ExecStart=/usr/bin/node /path/to/your/app/scripts/health-check.js
+Restart=always
+RestartSec=60
+Environment=NODE_ENV=production
+Environment=HEALTH_CHECK_URL=https://your-domain.com/api/health
+
+[Install]
+WantedBy=multi-user.target

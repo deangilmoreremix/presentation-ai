@@ -183,6 +183,82 @@ Create personalized themes to match your brand or style:
 3. Customize colors, fonts, and layout
 4. Save your theme for future use
 
+## 🚀 Production Deployment
+
+### Prerequisites
+
+- Docker and Docker Compose
+- PostgreSQL database (or use the provided Docker setup)
+- Domain name with SSL certificate
+- All required API keys and environment variables
+
+### Quick Deploy with Docker
+
+1. **Clone and setup**
+   ```bash
+   git clone <repository-url>
+   cd presentation-ai
+   cp .env.production.example .env
+   # Fill in your production environment variables
+   ```
+
+2. **Build and run with Docker Compose**
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+3. **Run database migrations**
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec app pnpm prod:migrate
+   ```
+
+4. **Seed the database (optional)**
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec app pnpm prod:seed
+   ```
+
+### Manual Deployment
+
+1. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+2. **Build the application**
+   ```bash
+   pnpm prod:build
+   ```
+
+3. **Run database migrations**
+   ```bash
+   pnpm prod:migrate
+   ```
+
+4. **Start the production server**
+   ```bash
+   pnpm prod:start
+   ```
+
+### Environment Variables
+
+See `.env.production.example` for all required environment variables. Key production considerations:
+
+- Use strong, unique `NEXTAUTH_SECRET` (32+ characters)
+- Set `NEXTAUTH_URL` to your production domain
+- Configure database connection pooling for production loads
+- Enable all required API keys for full functionality
+
+### Production Checklist
+
+- [ ] Environment variables configured
+- [ ] Database migrations run
+- [ ] SSL certificate installed
+- [ ] Domain configured
+- [ ] File upload service configured
+- [ ] Monitoring and logging set up
+- [ ] Backups configured
+- [ ] Health checks passing
+
 ## 🧠 Local Models Guide
 You can use either Ollama or LM Studio for using local models in ALLWEONE presentation ai. 
 
