@@ -26,6 +26,8 @@
     "analyze": "ANALYZE=true pnpm build",
     "performance:log": "node scripts/log-performance.js",
     "health:check": "node scripts/health-check.js",
+    "verify:production": "node scripts/verify-production.js",
+    "deploy:production": "./scripts/deploy-production.sh",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
