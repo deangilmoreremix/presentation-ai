@@ -43,9 +43,17 @@ if [ ! -f ".env" ]; then
     print_warning "No .env file found. Copying from example..."
     if [ -f ".env.production.example" ]; then
         cp .env.production.example .env
-        print_error "Please edit .env file with your production values before continuing!"
-        print_warning "Required: DATABASE_URL, NEXTAUTH_SECRET, API keys, etc."
-        exit 1
+        print_warning ".env file created from example. Please review and update values:"
+        print_warning "- NEXTAUTH_SECRET: Generate a secure 32+ character secret"
+        print_warning "- API keys: Add your actual API keys"
+        print_warning "- NEXTAUTH_URL: Update when you have a domain"
+
+        read -p "Do you want to continue with default values for now? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            print_warning "Please edit .env file and run this script again."
+            exit 0
+        fi
     else
         print_error ".env.production.example not found!"
         exit 1

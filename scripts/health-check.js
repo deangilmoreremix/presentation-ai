@@ -8,6 +8,9 @@ import { readFileSync } from "fs";
 const HEALTH_CHECK_URL = process.env.HEALTH_CHECK_URL || "http://localhost:3000/api/health";
 const MONITORING_URL = process.env.MONITORING_URL || "http://localhost:3000/api/monitoring";
 
+// Set default timeout for fetch requests
+const DEFAULT_TIMEOUT = 10000; // 10 seconds
+
 interface HealthStatus {
   status: "healthy" | "unhealthy";
   checks: {
@@ -19,9 +22,17 @@ interface HealthStatus {
 
 async function checkHealth(): Promise<HealthStatus | null> {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+
     const response = await fetch(HEALTH_CHECK_URL, {
-      timeout: 5000, // 5 second timeout
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Health-Check-Script/1.0'
+      }
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       return null;

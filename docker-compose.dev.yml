@@ -1,0 +1,24 @@
+# Development overrides for docker-compose
+# Use with: docker-compose -f docker-compose.prod.yml -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - NODE_ENV=development
+      - NEXTAUTH_URL=http://localhost:3000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: pnpm dev
+    ports:
+      - "3000:3000"
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
