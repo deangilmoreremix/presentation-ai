@@ -1,9 +1,9 @@
+import { getSession } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { auth } from "@/server/auth";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  const session = await auth();
+  const session = await getSession();
   const isAuthPage = request.nextUrl.pathname.startsWith("/auth");
 
   // Always redirect from root to /presentation

@@ -5,19 +5,14 @@ import { env } from "@/env";
 import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import Together from "together-ai";
+import OpenAI from "openai";
 import { UTFile } from "uploadthing/server";
 
-export type ImageModelList =
-  | "black-forest-labs/FLUX1.1-pro"
-  | "black-forest-labs/FLUX.1-schnell"
-  | "black-forest-labs/FLUX.1-schnell-Free"
-  | "black-forest-labs/FLUX.1-pro"
-  | "black-forest-labs/FLUX.1-dev";
+export type ImageModelList = "dall-e-3" | "dall-e-2";
 
 export async function generateImageAction(
   prompt: string,
-  model: ImageModelList = "black-forest-labs/FLUX.1-schnell-Free",
+  model: ImageModelList = "dall-e-3",
 ) {
   // Get the current session
   const session = await auth();
@@ -28,95 +23,79 @@ export async function generateImageAction(
   }
 
   try {
-    const togetherConfig = requireOptionalIntegration({
-      integration: "Together AI",
-      envVar: "TOGETHER_AI_API_KEY",
-      value: env.TOGETHER_AI_API_KEY,
+    const openaiConfig = requireOptionalIntegration({
+      integration: "OpenAI",
+      envVar: "OPENAI_API_KEY",
+      value: env.OPENAI_API_KEY,
       feature: "AI image generation",
     });
 
-    if (!togetherConfig.ok) {
+    if (!openaiConfig.ok) {
       return {
         success: false,
-        error: togetherConfig.error,
+        error: openaiConfig.error,
       };
     }
 
-    const together = new Together({ apiKey: togetherConfig.value });
+    const openai = new OpenAI({ apiKey: openaiConfig.value });
 
-    console.log(`Generating image with model: ${model}`);
+    console.log(`Generating image with OpenAI DALL-E model: ${model}`);
 
-    // Generate the image using Together AI
-    const response = (await together.images.create({
+    // Generate image using OpenAI DALL-E
+    const response = await openai.images.generate({
       model: model,
       prompt: prompt,
-      width: 1024,
-      height: 768,
-      steps: model.includes("schnell") ? 4 : 28, // Fewer steps for schnell models
       n: 1,
-    })) as unknown as {
-      id: string;
-      model: string;
-      object: string;
-      data: {
-        url: string;
-      }[];
-    };
+      size: "1024x1024",
+      response_format: "url",
+    });
 
     const imageUrl = response.data[0]?.url;
-
     if (!imageUrl) {
-      throw new Error("Failed to generate image");
+      throw new Error("Failed to generate image: no URL returned");
     }
 
     console.log(`Generated image URL: ${imageUrl}`);
 
-    // Download the image from Together AI URL
+    // Download the image from OpenAI's temporary URL
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
-      throw new Error("Failed to download image from Together AI");
+      throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
     const imageBlob = await imageResponse.blob();
     const imageBuffer = await imageBlob.arrayBuffer();
-
-    // Generate a filename based on the prompt
     const filename = `${prompt.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}.png`;
-
-    // Create a UTFile from the downloaded image
     const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
 
-    // Upload to UploadThing
+    // Upload to UploadThing for permanent storage
     const uploadResult = await utapi.uploadFiles([utFile]);
-
     if (!uploadResult[0]?.data?.ufsUrl) {
       console.error("Upload error:", uploadResult[0]?.error);
-      throw new Error("Failed to upload image to UploadThing");
+      throw new Error("Failed to upload image to storage");
     }
 
-    console.log(uploadResult);
     const permanentUrl = uploadResult[0].data.ufsUrl;
-    console.log(`Uploaded to UploadThing URL: ${permanentUrl}`);
+    console.log(`Uploaded to storage: ${permanentUrl}`);
 
-    // Store in database with the permanent URL
-    const generatedImage = await db.generatedImage.create({
+    // Save to database
+    const image = await db.generatedImage.create({
       data: {
-        url: permanentUrl, // Store the UploadThing URL instead of the Together AI URL
-        prompt: prompt,
+        url: permanentUrl,
+        prompt,
         userId: session.user.id,
       },
     });
 
     return {
       success: true,
-      image: generatedImage,
+      image,
     };
   } catch (error) {
-    console.error("Error generating image:", error);
+    console.error("Image generation error:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate image",
+      error: error instanceof Error ? error.message : "Failed to generate image",
     };
   }
 }

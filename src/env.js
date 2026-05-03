@@ -9,21 +9,15 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
 
-    OPENAI_API_KEY: z.string().optional(),
-    TOGETHER_AI_API_KEY: z.string().optional(),
-    FAL_API_KEY: z.string().optional(),
-    PINECONE_API_KEY: z.string().optional(),
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
+    // OpenAI for text and image generation (required for AI features)
+    OPENAI_API_KEY: z.string(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
-    NEXTAUTH_URL: z.preprocess(
-      (str) => process.env.VERCEL_URL ?? str,
-      process.env.VERCEL ? z.string() : z.string().url(),
-    ),
-    NEXTAUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string()
-        : z.string().optional(),
+    
+    // NextAuth removed - using Supabase auth
+    NEXTAUTH_SECRET: z.string().optional(),
+    NEXTAUTH_URL: z.string().url().optional(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
   },
 
   runtimeEnv: {
@@ -34,9 +28,6 @@ export const env = createEnv({
     TAVILY_API_KEY: process.env.TAVILY_API_KEY,
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    TOGETHER_AI_API_KEY: process.env.TOGETHER_AI_API_KEY,
-    FAL_API_KEY: process.env.FAL_API_KEY,
-    PINECONE_API_KEY: process.env.PINECONE_API_KEY,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   },

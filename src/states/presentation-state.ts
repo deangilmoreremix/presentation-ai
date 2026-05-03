@@ -362,7 +362,7 @@ export const usePresentationState = create<PresentationState>((set, get) => ({
   webSearchEnabled: false,
   theme: "mystique",
   customThemeData: null,
-  imageModel: "fal-ai/flux-2/flash",
+   imageModel: "dall-e-3",
   imageSource: "automatic",
   stockImageProvider: "unsplash",
   presentationStyle: "professional",

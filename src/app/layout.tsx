@@ -1,7 +1,5 @@
-import NextAuthProvider from "@/provider/NextAuthProvider";
-import TanStackQueryProvider from "@/provider/TanstackProvider";
-import { ThemeProvider } from "@/provider/theme-provider";
 import "@/styles/globals.css";
+import { ThemeProvider } from "@/provider/theme-provider";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 
@@ -18,16 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <TanStackQueryProvider>
-      <NextAuthProvider>
-        <html lang="en">
-          <body className={`${inter.className} antialiased`}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              {children}
-            </ThemeProvider>
-          </body>
-        </html>
-      </NextAuthProvider>
-    </TanStackQueryProvider>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }
