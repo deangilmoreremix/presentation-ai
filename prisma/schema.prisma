@@ -82,6 +82,11 @@ model BaseDocument {
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   presentation Presentation?
   favorites    FavoriteDocument[]
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([isPublic])
+  @@index([type])
 }
 
 model Presentation {
@@ -97,6 +102,10 @@ model Presentation {
   searchResults     Json?
   templateId        String?
   base              BaseDocument          @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@index([theme])
+  @@index([imageSource])
+  @@index([language])
 }
 
 model PresentationTheme {

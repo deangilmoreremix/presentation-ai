@@ -14,6 +14,11 @@ export {
 } from "./cssVariableResolver";
 export { scanAllSlides, scanRootImage, scanSlide } from "./domSlideScanner";
 export {
+  convertToPdf,
+  downloadPdfBlob,
+  exportPresentationToPdf,
+} from "./domToPdfConverter";
+export {
   convertToPptx,
   downloadBlob,
   exportPresentationToPptx,

@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/presentation_ai
+      - NEXTAUTH_SECRET=development-secret-key
+      - NEXTAUTH_URL=http://localhost:3000
+      - GOOGLE_CLIENT_ID=placeholder
+      - GOOGLE_CLIENT_SECRET=placeholder
+      - OPENAI_API_KEY=sk-placeholder
+      - TOGETHER_AI_API_KEY=placeholder
+      - UPLOADTHING_TOKEN=placeholder
+      - UNSPLASH_ACCESS_KEY=placeholder
+      - TAVILY_API_KEY=placeholder
+      - SKIP_ENV_VALIDATION=true
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: pnpm dev
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=presentation_ai
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

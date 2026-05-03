@@ -14,3 +14,14 @@ const globalForPrisma = globalThis as unknown as {
 export const db = globalForPrisma.prisma ?? createPrismaClient();
 
 if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+
+// Handle database connection errors gracefully in development
+if (env.NODE_ENV === "development") {
+  db.$on("error", (e) => {
+    console.warn("Database connection error (non-fatal in dev):", e.message);
+  });
+
+  db.$on("warn", (e) => {
+    console.warn("Database warning:", e.message);
+  });
+}

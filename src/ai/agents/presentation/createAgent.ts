@@ -21,7 +21,7 @@ function getAiMessageText(message: AIMessage) {
 
   return message.content
     .filter((part) => part.type === "text")
-    .map((part) => ("text" in part ? part.text ?? "" : ""))
+    .map((part) => ("text" in part ? (part.text ?? "") : ""))
     .join("");
 }
 
@@ -61,8 +61,7 @@ function parseJsonToolCall(rawText: string) {
         continue;
       }
 
-      const args =
-        parsed.parameters ?? parsed.arguments ?? parsed.args ?? {};
+      const args = parsed.parameters ?? parsed.arguments ?? parsed.args ?? {};
 
       if (args !== null && typeof args !== "object") {
         continue;
@@ -73,7 +72,6 @@ function parseJsonToolCall(rawText: string) {
         args: (args as Record<string, unknown>) ?? {},
       };
     } catch {
-      continue;
     }
   }
 
@@ -196,10 +194,10 @@ ${
     },
   });
 
-  return createAgent({
+  const agentConfig: any = {
     model: modelPicker(
       modelProvider,
-      modelProvider === "openai" ? (modelId || "gpt-4o-mini") : modelId,
+      modelProvider === "openai" ? modelId || "gpt-4o-mini" : modelId,
     ).withConfig({
       parallel_tool_calls: false,
     }),
@@ -266,6 +264,12 @@ You work with presentations in XML format that contain:
 - If a change might break the design, warn the user briefly.
 
 Remember: think like a design partner, not just a command executor.`,
-    checkpointer,
-  });
+  };
+
+  // Only add checkpointer if database is available
+  if (checkpointer) {
+    agentConfig.checkpointer = checkpointer;
+  }
+
+  return createAgent(agentConfig);
 }

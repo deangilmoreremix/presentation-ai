@@ -5,7 +5,6 @@ import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 
-// If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
   description: "AI-powered presentation creation and editing.",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

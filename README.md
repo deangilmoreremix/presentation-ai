@@ -9,7 +9,7 @@
 
 An open-source, AI-powered presentation generator alternative to Gamma.app that creates beautiful, customizable slides in minutes. This tool is part of the broader ALLWEONE AI platform.
 
-<https://github.com/user-attachments/assets/a21dbd49-75b8-4822-bcec-a75b581d9c60>
+2025-03-28.12-2.mp4
 
 ## 🔗 Quick Links
 
@@ -26,10 +26,15 @@ An open-source, AI-powered presentation generator alternative to Gamma.app that 
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Database Setup](#database-setup)
+- [Deployment](#-deployment)
+  - [Docker Deployment](#docker-deployment)
+  - [Vercel Deployment](#vercel-deployment)
+  - [Local Development](#local-development)
 - [Usage](#-usage)
   - [Creating a Presentation](#creating-a-presentation)
   - [Custom Themes](#custom-themes)
 - [Local Models Guide](#-local-models-guide)
+- [Testing](#-testing)
 - [Project Structure](#-project-structure)
 - [Roadmap](#️-roadmap)
 - [Contributing](#-contributing)
@@ -42,18 +47,15 @@ An open-source, AI-powered presentation generator alternative to Gamma.app that 
 ### Core Functionality
 
 - **AI-Powered Content Generation**: Create complete presentations on any topic with AI
-- **Outline-First Workflow**: Generate an outline first, review it, then turn it into slides
-- **Customizable Slides**: Choose the text model, number of slides, language, and whether web search is enabled
-- **Blank Presentations**: Start from scratch when you do not want AI-generated content
+- **Customizable Slides**: Choose the number of slides, language, and page style
 - **Editable Outlines**: Review and modify AI-generated outlines before finalizing
 - **Real-Time Generation**: Watch your presentation build live as content is created
 - **Auto-Save**: Everything saves automatically as you work
 
 ### Design & Customization
 
-- **Multiple Themes**: 38 built-in themes are available out of the box
-- **Custom Theme Creation**: Create, save, and reuse your own themes
-- **PPTX Theme Import**: Import theme inspiration directly from PowerPoint files
+- **40+ Built-in Themes**: Choose from a wide variety of professionally designed themes
+- **Custom Theme Creation**: Create and save your own themes from scratch
 - **Full Editability**: Modify text, fonts, and design elements as needed
 - **Image Generation**: Choose different AI image generation models for your slides
 - **Audience-Focused Styles**: Select between professional and casual presentation styles
@@ -61,26 +63,23 @@ An open-source, AI-powered presentation generator alternative to Gamma.app that 
 ### Presentation Tools
 
 - **Presentation Mode**: Present directly from the application
-- **Public Sharing**: Generate a shareable public link for presentations
-- **Presentation Recording**: Record presentations with microphone and webcam controls
-- **PowerPoint Export**: Export presentations to `.pptx`
-- **Charts, Infographics, and Media Embeds**: Add richer visual content beyond plain text slides
 - **Rich Text Editing**: Powered by Plate Editor for comprehensive text and image handling
 - **Drag and Drop**: Intuitive slide reordering and element manipulation
+- **Export Options**: Download your presentation as PowerPoint (.pptx) or PDF
 
 ## 🧰 Tech Stack
 
-| Category           | Technologies                               |
-| ------------------ | ------------------------------------------ |
-| **Framework**      | Next.js, React, TypeScript                 |
-| **Styling**        | Tailwind CSS                               |
-| **Database**       | PostgreSQL with Prisma ORM                 |
-| **AI Integration** | OpenAI API, Together AI, Ollama, LM Studio |
-| **Authentication** | NextAuth.js                                |
-| **UI Components**  | Radix UI                                   |
-| **Text Editor**    | Plate Editor                               |
-| **File Uploads**   | UploadThing                                |
-| **Drag & Drop**    | DND Kit                                    |
+| Category           | Technologies                          |
+| ------------------ | ------------------------------------- |
+| **Framework**      | Next.js, React, TypeScript            |
+| **Styling**        | Tailwind CSS                          |
+| **Database**       | Supabase (PostgreSQL) with Prisma ORM |
+| **AI Integration** | OpenAI API, Together AI               |
+| **Authentication** | NextAuth.js                           |
+| **UI Components**  | Radix UI                              |
+| **Text Editor**    | Plate Editor                          |
+| **File Uploads**   | UploadThing                           |
+| **Drag & Drop**    | DND Kit                               |
 
 ## 🚀 Getting Started
 
@@ -90,90 +89,153 @@ Before you begin, ensure you have the following installed:
 
 - Node.js 18.x or higher
 - npm, yarn, or pnpm package manager
-- PostgreSQL database
-- Google Client ID and Secret (for authentication)
-- Optional provider keys depending on the features you want to use:
-  - OpenAI API key (for cloud text generation)
+- Supabase account (database provided as a service)
+- Required API keys:
+  - OpenAI API key (for AI generation features)
   - Together AI API key (for image generation)
-  - FAL API key (for additional image generation flows)
-  - Tavily API key (for web search)
-  - Unsplash access key (for stock images)
+  - Google Client ID and Secret (for authentication)
 
 ### Installation
 
-1. **Clone the repository**
+Clone the repository
 
-   ```bash
-   git clone git@github.com:allweonedev/presentation-ai.git
-   cd presentation-ai
-   ```
+```bash
+git clone git@github.com:allweonedev/presentation-ai.git
+cd presentation-ai
+```
 
-2. **Install dependencies**
+Install dependencies
 
-   ```bash
-   pnpm install
-   ```
+```bash
+pnpm install
+```
 
-3. **Set up environment variables**
+Set up environment variables
 
-   Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory with the following variables:
 
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/presentation_ai"
+```env
+# Supabase Database (get from Supabase project settings)
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
 
-   # Authentication
-   NEXTAUTH_SECRET=""
-   NEXTAUTH_URL="http://localhost:3000"
+# Next Auth Configuration
+NEXTAUTH_SECRET="generate-a-secure-random-string"
+NEXTAUTH_URL="http://localhost:3000"
 
-   # Google OAuth Provider
-   GOOGLE_CLIENT_ID=""
-   GOOGLE_CLIENT_SECRET=""
+# Google OAuth Provider (get from Google Cloud Console)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
 
-   # AI Providers
-   OPENAI_API_KEY=""
-   TOGETHER_AI_API_KEY=""
-   FAL_API_KEY=""
+# AI Providers (optional for demo mode)
+OPENAI_API_KEY=""
+TOGETHER_AI_API_KEY=""
 
-   # File Upload Service
-   UPLOADTHING_TOKEN=""
+# File Upload Service (optional)
+UPLOADTHING_TOKEN=""
+UNSPLASH_ACCESS_KEY=""
+TAVILY_API_KEY=""
+```
 
-   # Optional search and media providers
-   UNSPLASH_ACCESS_KEY=""
-   TAVILY_API_KEY=""
-   ```
-
-   > 💡 **Tip**: Copy `.env.example` to `.env` and fill in your actual values. If you plan to use local text models through Ollama or LM Studio, you can run text generation without an `OPENAI_API_KEY`.
+💡 Tip: Copy `.env.example` to `.env` and fill in your actual values.
 
 ### Database Setup
 
-1. **Initialize the database**
-
-   ```bash
-   pnpm db:push
-   ```
-
-2. **Start the development server**
-
-   ```bash
-   pnpm dev
-   ```
-
-3. **Open the application**
-
-   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Available Scripts
+Initialize the database schema using Prisma
 
 ```bash
-pnpm dev       # Start the Next.js dev server
-pnpm build     # Build the application
-pnpm start     # Start the production server
-pnpm db:push   # Push the Prisma schema to the database
-pnpm db:studio # Open Prisma Studio
-pnpm type      # Run TypeScript type-checking
-pnpm check     # Run Biome checks
-pnpm lint      # Run Biome linting
+pnpm db:push
+```
+
+This will create the necessary tables in your Supabase database.
+
+### Supabase Configuration
+
+1. Create a new project on [Supabase](https://supabase.com)
+2. Go to Project Settings → Database to get your connection string
+3. Copy the **Connection string** (pooling mode) to your `.env` as `DATABASE_URL`
+4. (Optional) Enable Google OAuth in Supabase Auth settings if you want Google sign-in
+5. Run `pnpm db:push` to sync the schema
+
+## 🚀 Deployment
+
+The application is production-ready and can be deployed in multiple ways:
+
+### Docker Deployment
+
+1. **Build the Docker image:**
+
+   ```bash
+   docker build -t presentation-ai .
+   ```
+
+2. **Run with Docker Compose (includes PostgreSQL):**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Or run manually:**
+   ```bash
+   docker run -p 3000:3000 -e DATABASE_URL="..." presentation-ai
+   ```
+
+### Vercel Deployment
+
+1. **Connect your GitHub repository to Vercel**
+2. **Set environment variables in Vercel:**
+
+   - `DATABASE_URL`
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `OPENAI_API_KEY`
+   - `TOGETHER_AI_API_KEY`
+   - `UPLOADTHING_TOKEN`
+   - `UNSPLASH_ACCESS_KEY`
+   - `TAVILY_API_KEY`
+
+3. **Deploy automatically on push to main branch**
+
+### Local Development
+
+For development with hot reloading:
+
+```bash
+pnpm dev
+```
+
+For production build testing:
+
+```bash
+pnpm build
+pnpm start
+```
+
+### Health Check
+
+The application includes a health check endpoint at `/api/health` that monitors:
+
+- Application status
+- Database connectivity
+- Uptime and version information
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests with UI
+pnpm test:ui
+
+# Run specific test file
+pnpm test tests/core.spec.ts
+
+# Generate test report
+pnpm test:report
 ```
 
 ## 💻 Usage
@@ -182,112 +244,126 @@ pnpm lint      # Run Biome linting
 
 Follow these steps to create your first AI-generated presentation:
 
-1. Sign in to the app
-1. Navigate to the presentation dashboard
-1. Enter your presentation topic
-1. Choose a text model (OpenAI, Ollama, or LM Studio)
-1. Choose the number of slides (recommended: 5-10)
-1. Select your preferred language
-1. Toggle web search if you want outside context included
-1. Click **"Generate Outline"**
-1. Review and edit the AI-generated outline
-1. Select a theme for your presentation
-1. Choose an image source (ai / stock)
-1. Select your presentation style (Professional/Casual)
-1. Click **"Generate Presentation"**
-1. Wait for the AI to create your slides in real-time
-1. Preview, edit, and refine your presentation as needed
-1. Present directly from the app or export your presentation
+1. Login the website
+2. Navigate to the dashboard
+3. Enter your presentation topic
+4. Choose the number of slides (recommended: 5-10)
+5. Select your preferred language
+6. Choose a page style
+7. Toggle web search (if you want)
+8. Click "Generate Outline"
+9. Review and edit the AI-generated outline
+10. Select a theme for your presentation
+11. Choose an image source (ai / stock)
+12. Select your presentation style (Professional/Casual)
+13. Click "Generate Presentation"
+14. Wait for the AI to create your slides in real-time
+15. Preview, edit, and refine your presentation as needed
+16. Present directly from the app or export your presentation
 
 ### Custom Themes
 
 Create personalized themes to match your brand or style:
 
-1. Click **"Create New Theme"**
+1. Click "Create New Theme"
 2. Start from scratch or derive from an existing theme
 3. Customize colors, fonts, and layout
 4. Save your theme for future use
 
 ## 🧠 Local Models Guide
 
-ALLWEONE Presentation AI now supports both Ollama and LM Studio as local model providers.
+You can use either Ollama or LM Studio for using local models in ALLWEONE presentation ai.
 
 ### LM Studio
 
-1. Install [LM Studio](https://lmstudio.ai).
+1. Install LM Studio.
 2. In the LM Studio app, turn the Server ON and enable CORS.
 3. Download any model you want to use inside LM Studio.
 
 ### Ollama
 
-1. Install [Ollama](https://ollama.com).
+1. Install Ollama.
 2. Download whichever model you want to use (for example: `ollama pull llama3.1`).
 
 ### Using Local Models in the App
 
 1. Open the app and open the text model selector.
-2. Choose the model you want to use.
-3. For LM Studio, load the model in LM Studio first.
-4. For Ollama, installed models appear automatically, and some recommended models can be downloaded on first use.
-5. Enjoy the generation.
+2. Chose the model you want to use (it must be downloaded in lm studio or ollama)
+3. Enjoy the generation
 
 Notes:
 
-- OpenAI remains available as the default cloud text model.
 - Models will automatically appear in the Model Selector when the LM Studio server or the Ollama daemon is running.
 - Make sure LM Studio has CORS enabled so the browser can connect.
 
 ## 📁 Project Structure
 
 ```text
-presentation-ai/
-├── prisma/                      # Prisma schema and seed data
-├── src/
-│   ├── ai/                     # AI agents, tools, and server integrations
-│   ├── app/                    # Next.js app router pages, APIs, and server actions
-│   ├── components/
-│   │   ├── notebook/           # Dashboard, generation flow, theme creation, recording UI
-│   │   ├── presentation/       # Presentation editor, present mode, sharing, export
-│   │   ├── plate/              # Plate editor plugins and UI
-│   │   ├── prose-mirror/       # Outline editor
-│   │   └── ui/                 # Shared UI primitives
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Models, themes, export helpers, utilities
-│   ├── provider/               # App providers
-│   ├── server/                 # Auth, DB, and share authorization helpers
-│   ├── states/                 # Zustand state stores
-│   ├── styles/                 # Global styles
-│   ├── env.js                  # Environment validation
-│   └── proxy.ts                # Next.js proxy
-├── README.md
-├── package.json
-├── next.config.js
-└── tsconfig.json
+presentation/
+├── .next/                      # Next.js build output
+├── node_modules/               # Dependencies
+├── prisma/                     # Database schema and migrations
+│   └── schema.prisma          # Prisma database model
+├── src/                        # Source code
+│   ├── app/                   # Next.js app router
+│   ├── components/            # Reusable UI components
+│   │   ├── auth/             # Authentication components
+│   │   ├── presentation/     # Presentation-related components
+│   │   │   ├── dashboard/   # Dashboard UI
+│   │   │   ├── editor/      # Presentation editor
+│   │   │   │   ├── custom-elements/   # Custom editor elements
+│   │   │   │   ├── dnd/              # Drag and drop functionality
+│   │   │   │   └── native-elements/  # Native editor elements
+│   │   │   ├── outline/     # Presentation outline components
+│   │   │   ├── theme/       # Theme-related components
+│   │   │   └── utils/       # Presentation utilities
+│   │   ├── prose-mirror/    # ProseMirror editor for outlines
+│   │   ├── plate/           # Text editor components
+│   │   │   ├── hooks/       # Editor hooks
+│   │   │   ├── lib/         # Editor libraries
+│   │   │   ├── ui/          # Plate editor UI components
+│   │   │   ├── utils/       # Functions necessary for platejs
+│   │   │   └── plugins/     # Editor plugins
+│   │   └── ui/              # Shared UI components
+│   ├── hooks/                # Custom React hooks
+│   ├── lib/                  # Utility functions and shared code
+│   ├── provider/             # Context providers
+│   ├── server/               # Server-side code
+│   ├── states/               # State management
+│   ├── styles/               # Styles required in the project
+│   ├── proxy.ts              # Next.js proxy
+│   └── env.js                # Environment configuration
+├── .env                       # Environment variables (not in git)
+├── .env.example              # Example environment variables
+├── next.config.js            # Next.js configuration
+├── package.json              # Project dependencies and scripts
+├── tailwind.config.ts        # Tailwind CSS configuration
+└── tsconfig.json             # TypeScript configuration
 ```
 
 ## 🗺️ Roadmap
 
-| Feature                      | Status            | Notes                                                                                            |
-| ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------ |
-| Export to PowerPoint (.pptx) | 🟡 Partially Done | Works but the images and other component do not translate one to one                             |
-| Media embedding              | 🟡 Partially Done | Functionality is there, but ui/ux need improvement                                               |
-| Additional built-in themes   | 🟡 In Progress    | The app currently ships with 38 built-in themes, and the library is still growing                |
-| Mobile responsiveness        | 🟡 In Progress    | Improving layout and interactions for mobile devices                                             |
-| Advanced charts              | 🟡 Partially Done | AI-generated charts and chart editing are available, with broader coverage still improving       |
-| Write e2e tests              | 🔴 Not Started    | Writing test to check the core features, so that we can catch if any changes break anything      |
-| Real-time collaboration      | 🔴 Not Started    | Multiple users editing the same presentation simultaneously                                      |
-| Export to PDF                | 🔴 Not Started    | High priority - allow users to download presentations as PDFs                                    |
-| Template library             | 🔴 Not Started    | Pre-built templates for common presentation types (pitch decks, reports, etc.)                   |
-| Animation and transitions    | 🔴 Not Started    | Add slide transitions and element animations                                                     |
-| Presentation recording       | 🟡 Partially Done | Present mode already supports webcam and microphone recording controls                           |
-| Cloud storage integration    | 🔴 Not Started    | Connect with Google Drive, Dropbox, OneDrive                                                     |
-| Presentation analytics       | 🔴 Not Started    | Track views, engagement, and presentation performance                                            |
-| AI presenter notes           | 🔴 Not Started    | Auto-generate speaker notes for each slide                                                       |
-| Custom font uploads          | 🔴 Not Started    | Allow users to upload and use their own fonts                                                    |
-| Plugin system                | 🔴 Not Started    | Allow community to build and share extensions                                                    |
-| API                          | 🔴 Not Started    | Allow developers to use the allweone presentation to generate content in their own applications. |
+| Feature                      | Status         | Notes                                                                                            |
+| ---------------------------- | -------------- | ------------------------------------------------------------------------------------------------ |
+| Export to PowerPoint (.pptx) | ✅ Done        | Full image and component translation working                                                     |
+| Export to PDF                | ✅ Done        | PDF export fully integrated                                                                      |
+| Media embedding              | 🟡 In Progress | Functionality is there, but ui/ux need improvement                                               |
+| Additional built-in themes   | ✅ Done        | 40+ professionally designed themes included                                                      |
+| Mobile responsiveness        | 🟡 In Progress | Improving layout and interactions for mobile devices                                             |
+| Advanced charts              | 🟡 Started     | Support for AI generated charts                                                                  |
+| E2E tests                    | 🟡 In Progress | Playwright test suite added, tests being refined                                                 |
+| Real-time collaboration      | 🔴 Not Started | Multiple users editing the same presentation simultaneously                                      |
+| Template library             | 🔴 Not Started | Pre-built templates for common presentation types (pitch decks, reports, etc.)                   |
+| Animation and transitions    | 🔴 Not Started | Add slide transitions and element animations                                                     |
+| Voice-over recording         | 🔴 Not Started | Record and attach voice narration to slides                                                      |
+| Cloud storage integration    | 🔴 Not Started | Connect with Google Drive, Dropbox, OneDrive                                                     |
+| Presentation analytics       | 🔴 Not Started | Track views, engagement, and presentation performance                                            |
+| AI presenter notes           | 🔴 Not Started | Auto-generate speaker notes for each slide                                                       |
+| Custom font uploads          | 🔴 Not Started | Allow users to upload and use their own fonts                                                    |
+| Plugin system                | 🔴 Not Started | Allow community to build and share extensions                                                    |
+| Public API                   | 🔴 Not Started | Allow developers to use the allweone presentation to generate content in their own applications. |
 
-> 📝 **Note**: This roadmap is subject to change based on community feedback and priorities. Want to contribute to any of these features? Check out our [Contributing Guidelines](CONTRIBUTING.md)!
+📝 Note: This roadmap is subject to change based on community feedback and priorities. Want to contribute to any of these features? Check out our Contributing Guidelines!
 
 ## 🤝 Contributing
 
@@ -295,26 +371,27 @@ We welcome contributions from the community! Here's how you can help:
 
 ### How to Contribute
 
-1. **Fork the repository**
-2. **Create a feature branch**
+1. Fork the repository
+
+2. Create a feature branch
 
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
-3. **Commit your changes**
+3. Commit your changes
 
    ```bash
    git commit -m 'Add some amazing feature'
    ```
 
-4. **Push to the branch**
+4. Push to the branch
 
    ```bash
    git push origin feature/amazing-feature
    ```
 
-5. **Open a Pull Request**
+5. Open a Pull Request
 
 ### Contribution Guidelines
 
@@ -322,37 +399,26 @@ We welcome contributions from the community! Here's how you can help:
 - Write clear commit messages
 - Be respectful and constructive in discussions
 
-For more details, please read our [Contributing Guidelines](CONTRIBUTING.md).
+For more details, please read our Contributing Guidelines.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgements
 
 Special thanks to the following projects and organizations:
 
-- [OpenAI](https://openai.com/) for AI generation capabilities
-- [Plate Editor](https://plate.udecode.io/) for rich text editing
-- [Radix UI](https://www.radix-ui.com/) for accessible UI components
-- [Next.js](https://nextjs.org/) for the React framework
-- All our open-source [contributors](https://github.com/allweonedev/presentation-ai/graphs/contributors)
+- OpenAI for AI generation capabilities
+- Plate Editor for rich text editing
+- Radix UI for accessible UI components
+- Next.js for the React framework
+- All our open-source contributors
 
-## 💬 Support and Sponsors
-
-https://github.com/sponsors/allweonedev
+## 💬 Support
 
 Need help or have questions?
 
-- 💬 [Discord Community](https://discord.gg/kZaJjZ7HjR)
-- 🐛 [Report a Bug](https://github.com/allweonedev/presentation-ai/issues)
-- 💡 [Request a Feature](https://github.com/allweonedev/presentation-ai/issues)
-- 📧 Contact us via GitHub Issues or Discord
-
----
-
-**Built with ❤️ by the ALLWEONE® Team**
-
-**[⭐ Star us on GitHub](https://github.com/allweonedev/presentation-ai)**
-
-[![Star History Chart](https://api.star-history.com/svg?repos=allweonedev/presentation-ai&type=date&legend=top-left)](https://www.star-history.com/#allweonedev/presentation-ai&type=date&legend=top-left)
+- [Discord Community](https://discord.gg/fsMHMhAHRV)
+- [Report a Bug](https://github.com/allweonedev/presentation-ai/issues)
+- [Request a Feature](https://github.com/allweonedev/presentation-ai/issues)
