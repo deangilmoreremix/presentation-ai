@@ -74,7 +74,7 @@ An open-source, AI-powered presentation generator alternative to Gamma.app that 
 | **Framework**      | Next.js, React, TypeScript            |
 | **Styling**        | Tailwind CSS                          |
 | **Database**       | Supabase (PostgreSQL) with Prisma ORM |
-| **AI Integration** | OpenAI API, Together AI               |
+| **AI Integration** | OpenAI API (GPT-4, DALL-E) |
 | **Authentication** | NextAuth.js                           |
 | **UI Components**  | Radix UI                              |
 | **Text Editor**    | Plate Editor                          |
@@ -92,7 +92,6 @@ Before you begin, ensure you have the following installed:
 - Supabase account (database provided as a service)
 - Required API keys:
   - OpenAI API key (for AI generation features)
-  - Together AI API key (for image generation)
   - Google Client ID and Secret (for authentication)
 
 ### Installation
@@ -126,9 +125,8 @@ NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
 
-# AI Providers (optional for demo mode)
+# AI (optional for demo mode)
 OPENAI_API_KEY=""
-TOGETHER_AI_API_KEY=""
 
 # File Upload Service (optional)
 UPLOADTHING_TOKEN=""
@@ -184,16 +182,15 @@ The application is production-ready and can be deployed in multiple ways:
 1. **Connect your GitHub repository to Vercel**
 2. **Set environment variables in Vercel:**
 
-   - `DATABASE_URL`
-   - `NEXTAUTH_SECRET`
-   - `NEXTAUTH_URL`
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `OPENAI_API_KEY`
-   - `TOGETHER_AI_API_KEY`
-   - `UPLOADTHING_TOKEN`
-   - `UNSPLASH_ACCESS_KEY`
-   - `TAVILY_API_KEY`
+    - `DATABASE_URL`
+    - `NEXTAUTH_SECRET`
+    - `NEXTAUTH_URL`
+    - `GOOGLE_CLIENT_ID`
+    - `GOOGLE_CLIENT_SECRET`
+    - `OPENAI_API_KEY`
+    - `UPLOADTHING_TOKEN`
+    - `UNSPLASH_ACCESS_KEY`
+    - `TAVILY_API_KEY`
 
 3. **Deploy automatically on push to main branch**
 

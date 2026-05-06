@@ -79,7 +79,7 @@
 ## 🎯 Features Ready for Production
 
 1. **Authentication** – NextAuth with Google OAuth, session management
-2. **AI Generation** – OpenAI/TogetherAI integration for content and images
+2. **AI Generation** – OpenAI DALL-E integration for content and images
 3. **Rich Text Editor** – Plate.js-based editor with full formatting
 4. **Multiple Themes** – 40+ built-in themes, custom theme creation
 5. **Slide Management** – Add, edit, delete, reorder slides
@@ -121,8 +121,7 @@
    GOOGLE_CLIENT_ID="..."
    GOOGLE_CLIENT_SECRET="..."
 
-   OPENAI_API_KEY="..."  # optional
-   TOGETHER_AI_API_KEY="..."  # optional
+    OPENAI_API_KEY="..."  # optional
    ```
 
 3. **Enable Google OAuth in Supabase**

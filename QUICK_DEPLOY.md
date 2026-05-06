@@ -38,7 +38,6 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 | Variable | Value |
 |----------|-------|
 | `OPENAI_API_KEY` | Your OpenAI API key (if you have one) |
-| `TOGETHER_AI_API_KEY` | Your TogetherAI API key (if you have one) |
 
 **Note:** `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are NOT needed if you use Supabase Auth. Configure Google OAuth in Supabase dashboard instead.
 

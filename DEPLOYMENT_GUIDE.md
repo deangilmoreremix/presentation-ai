@@ -83,7 +83,6 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 # ── AI Providers (optional but recommended) ─────────────────────────
 OPENAI_API_KEY="sk-your-openai-key"
-TOGETHER_AI_API_KEY="your-togetherai-key"
 
 # ── Optional Services ───────────────────────────────────────────────
 UNSPLASH_ACCESS_KEY="your-unsplash-key"     # For stock images

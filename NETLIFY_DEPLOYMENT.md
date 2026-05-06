@@ -70,7 +70,6 @@ NEXTAUTH_URL="https://your-site.netlify.app"
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 OPENAI_API_KEY="..." # optional
-TOGETHER_AI_API_KEY="..." # optional
 SKIP_ENV_VALIDATION=true
 ```
 
