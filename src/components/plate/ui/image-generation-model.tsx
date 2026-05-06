@@ -29,16 +29,12 @@ import { toast } from "sonner";
 
 const MODEL_OPTIONS = [
   {
-    label: "Flux 2 Flash",
-    value: "fal-ai/flux-2/flash",
+    label: "DALL-E 3 (Best Quality)",
+    value: "dall-e-3",
   },
   {
-    label: "Flux Dev",
-    value: "fal-ai/flux/dev",
-  },
-  {
-    label: "Flux 2 Pro",
-    value: "fal-ai/flux-2-pro",
+    label: "DALL-E 2 (Faster/Cheaper)",
+    value: "dall-e-2",
   },
 ];
 
@@ -54,7 +50,7 @@ export function GenerateImageDialogContent({
   const editor = useEditorRef();
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<ImageModelList>(
-    "fal-ai/flux-2/flash",
+    "dall-e-3",
   );
 
   const generateImage = async () => {

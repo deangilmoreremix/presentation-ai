@@ -32,9 +32,6 @@ export async function createPresentation({
   language?: string;
 }) {
   const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   try {
     const presentation = await db.baseDocument.create({
@@ -42,7 +39,7 @@ export async function createPresentation({
         type: "PRESENTATION",
         documentType: "presentation",
         title: title || "Untitled Presentation",
-        userId: session.user.id,
+        userId: session!.user.id,
         thumbnailUrl: getPresentationThumbnailUrl(content.slides) ?? undefined,
         presentation: {
           create: {
@@ -147,9 +144,6 @@ export async function updatePresentation({
   thumbnailUrl?: string | null;
 }) {
   const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   const canEdit = await canEditDocument(id, {
     userId: session.user.id,
@@ -206,9 +200,6 @@ export async function updatePresentation({
 
 export async function updatePresentationTitle(id: string, title: string) {
   const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   const canEdit = await canEditDocument(id, {
     userId: session.user.id,
@@ -250,15 +241,12 @@ export async function deletePresentation(id: string) {
 
 export async function deletePresentations(ids: string[]) {
   const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   try {
     const result = await db.baseDocument.deleteMany({
       where: {
         id: { in: ids },
-        userId: session.user.id,
+        userId: session!.user.id,
       },
     });
 
@@ -281,12 +269,12 @@ export async function deletePresentations(ids: string[]) {
 export async function getPresentation(id: string) {
   const session = await auth();
   const canRead = await canReadDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: normalizeShareEmail(session?.user.email),
+    userId: session!.user.id,
+    userEmail: null,
   });
   const canEdit = await canEditDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: normalizeShareEmail(session?.user.email),
+    userId: session!.user.id,
+    userEmail: null,
   });
 
   try {
@@ -294,12 +282,10 @@ export async function getPresentation(id: string) {
       where: { id },
       include: {
         presentation: true,
-        favorites: session?.user.id
-          ? {
-              where: { userId: session.user.id },
-              select: { id: true },
-            }
-          : false,
+        favorites: {
+          where: { userId: session!.user.id },
+          select: { id: true },
+        },
       },
     });
 
@@ -381,9 +367,6 @@ export async function updatePresentationTheme(id: string, theme: string) {
 
 export async function duplicatePresentation(id: string, newTitle?: string) {
   const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
 
   const canRead = await canReadDocument(id, {
     userId: session.user.id,

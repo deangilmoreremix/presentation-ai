@@ -14,9 +14,8 @@ import {
 import { Image, Wand2 } from "lucide-react";
 
 export const IMAGE_MODELS: { value: ImageModelList; label: string }[] = [
-  { value: "fal-ai/flux-2/flash", label: "Flux 2 Flash" },
-  { value: "fal-ai/flux/dev", label: "Flux Dev" },
-  { value: "fal-ai/flux-2-pro", label: "Flux 2 Pro" },
+  { value: "dall-e-3", label: "DALL-E 3 (Best Quality)" },
+  { value: "dall-e-2", label: "DALL-E 2 (Faster/Cheaper)" },
 ];
 
 interface ImageSourceSelectorProps {
@@ -48,7 +47,7 @@ export function ImageSourceSelector({
       <Select
         value={
           imageSource === "ai"
-            ? imageModel || "fal-ai/flux-2/flash"
+            ? imageModel || "dall-e-3"
             : imageSource === "stock"
               ? `stock-${stockImageProvider}`
               : "automatic"

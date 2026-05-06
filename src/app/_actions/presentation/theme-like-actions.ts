@@ -7,14 +7,6 @@ import { db } from "@/server/db";
 export async function toggleLikeTheme(themeId: string) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to like themes",
-        isLiked: false,
-        likeCount: 0,
-      };
-    }
 
     // Check if theme exists
     const theme = await db.presentationTheme.findUnique({
@@ -137,13 +129,6 @@ export async function getThemeLikes(themeIds: string[]) {
 export async function getUserLikedThemeIds(themeIds: string[]) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in",
-        themeIds: [],
-      };
-    }
 
     if (themeIds.length === 0) {
       return {

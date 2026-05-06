@@ -2,6 +2,7 @@ import {
   assertModelIsConfigured,
   ensureModelIsReady,
   modelPicker,
+  userModelPicker,
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { auth } from "@/server/auth";
@@ -452,12 +453,6 @@ export async function POST(req: Request) {
   try {
     routeLogger.info("Presentation generation request received", { requestId });
     const session = await auth();
-    if (!session) {
-      routeLogger.warn("Presentation generation request rejected: unauthorized", {
-        requestId,
-      });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const {
       title,
@@ -559,7 +554,7 @@ export async function POST(req: Request) {
         { status: 503 },
       );
     }
-    const model = modelPicker(modelProvider, modelId);
+    const model = await userModelPicker(session!.user.id, modelProvider, modelId);
     const chain = RunnableSequence.from([prompt, model]);
 
     routeLogger.info("Presentation generation started", {

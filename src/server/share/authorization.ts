@@ -9,8 +9,8 @@ interface SessionIdentity {
 export async function getSessionIdentity(): Promise<SessionIdentity> {
   const session = await auth();
   return {
-    userId: session?.user.id ?? null,
-    userEmail: session?.user.email ?? null,
+    userId: session!.user.id,
+    userEmail: session!.user.email,
   };
 }
 

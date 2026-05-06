@@ -2,10 +2,9 @@
 
 import { utapi } from "@/app/api/uploadthing/core";
 import { env } from "@/env";
-import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import OpenAI from "openai";
+import { getOpenAIClient } from "@/lib/openai/client";
 import { UTFile } from "uploadthing/server";
 
 export type ImageModelList = "dall-e-3" | "dall-e-2";
@@ -13,31 +12,13 @@ export type ImageModelList = "dall-e-3" | "dall-e-2";
 export async function generateImageAction(
   prompt: string,
   model: ImageModelList = "dall-e-3",
+  apiKey?: string,
 ) {
-  // Get the current session
+  // Get the current session (now always returns anonymous user)
   const session = await auth();
 
-  // Check if user is authenticated
-  if (!session?.user?.id) {
-    throw new Error("You must be logged in to generate images");
-  }
-
   try {
-    const openaiConfig = requireOptionalIntegration({
-      integration: "OpenAI",
-      envVar: "OPENAI_API_KEY",
-      value: env.OPENAI_API_KEY,
-      feature: "AI image generation",
-    });
-
-    if (!openaiConfig.ok) {
-      return {
-        success: false,
-        error: openaiConfig.error,
-      };
-    }
-
-    const openai = new OpenAI({ apiKey: openaiConfig.value });
+    const openai = await getOpenAIClient(session!.user.id, apiKey);
 
     console.log(`Generating image with OpenAI DALL-E model: ${model}`);
 
@@ -50,7 +31,16 @@ export async function generateImageAction(
       response_format: "url",
     });
 
-    const imageUrl = response.data[0]?.url;
+    if (!response.data || response.data.length === 0) {
+      throw new Error("Failed to generate image: no data returned");
+    }
+
+    const firstImage = response.data[0];
+    if (!firstImage) {
+      throw new Error("Failed to generate image: no image data");
+    }
+
+    const imageUrl = firstImage.url;
     if (!imageUrl) {
       throw new Error("Failed to generate image: no URL returned");
     }

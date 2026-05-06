@@ -38,11 +38,6 @@ export async function getImageFromUnsplash(
   // Get the current session
   const session = await auth();
 
-  // Check if user is authenticated
-  if (!session?.user?.id) {
-    return { success: false, error: "You must be logged in to get images" };
-  }
-
   const unsplashConfig = requireOptionalIntegration({
     integration: "Unsplash",
     envVar: "UNSPLASH_ACCESS_KEY",

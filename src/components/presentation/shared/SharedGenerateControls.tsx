@@ -5,6 +5,7 @@ import {
   generateImageAction,
   type ImageModelList,
 } from "@/app/_actions/apps/image-studio/generate";
+import { ApiKeyModal } from "@/components/settings/ApiKeyModal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { shouldShowModal, getApiKey } from "@/lib/key-storage";
 import { usePresentationState } from "@/states/presentation-state";
 import { AlertTriangle, Check, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -98,6 +100,9 @@ export function SharedGenerateControls({
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [imageCount, setImageCount] = useState(1);
 
+  // API key modal state
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+
   // Get cached images for current prompt
   const lastGeneratedImages = generatedImageCache[newPrompt] ?? [];
 
@@ -111,6 +116,11 @@ export function SharedGenerateControls({
   const handleGenerateClick = async () => {
     if (!newPrompt.trim()) return;
 
+    // Show API key modal if no key is set (but don't block generation)
+    if (shouldShowModal()) {
+      setShowApiKeyModal(true);
+    }
+
     setLocalError(null);
     setIsGenerating(true);
 
@@ -121,11 +131,14 @@ export function SharedGenerateControls({
         ? `${newPrompt}, ${styleSuffix}`
         : newPrompt;
 
+      // Get API key from localStorage if available
+      const apiKey = getApiKey();
+
       // Generate multiple images sequentially (or parallel if backend supports, here sequential for safety)
       const promises = Array(imageCount)
         .fill(null)
         .map(() =>
-          generateImageAction(fullPrompt, imageModel as ImageModelList),
+          generateImageAction(fullPrompt, imageModel as ImageModelList, apiKey || undefined),
         );
 
       const results = await Promise.all(promises);
@@ -342,19 +355,27 @@ export function SharedGenerateControls({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="fal-ai/flux-2/flash">
-                  Flux 2 Flash
+                <SelectItem value="dall-e-3">
+                  DALL-E 3 (Best Quality)
                 </SelectItem>
-                <SelectItem value="fal-ai/flux-2/turbo">
-                  Flux 2 Turbo
+                <SelectItem value="dall-e-2">
+                  DALL-E 2 (Faster/Cheaper)
                 </SelectItem>
-                <SelectItem value="fal-ai/flux/dev">Flux Dev</SelectItem>
-                <SelectItem value="fal-ai/flux-2-pro">Flux 2 Pro</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
+
+      {/* API Key Modal */}
+      <ApiKeyModal
+        open={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+        onSave={async (key, storage) => {
+          // After saving, the modal will close and localStorage will be updated
+          // Next time generate is clicked, shouldShowModal() will return false
+        }}
+      />
     </div>
   );
 }

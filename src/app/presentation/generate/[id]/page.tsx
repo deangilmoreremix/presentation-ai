@@ -25,7 +25,7 @@ import {
 import { usePresentationState } from "@/states/presentation-state";
 import { useQuery } from "@tanstack/react-query";
 import { Wand2 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useParams, useRouter } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const { resolvedTheme } = usePresentationTheme();
   const {
     setCurrentPresentation,

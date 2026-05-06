@@ -1,0 +1,9 @@
+{
+  "$schema": "https://kilo.ai/kilo.json",
+  "skills": {
+    "paths": ["./superpowers/skills", "./impeccable/.opencode/skills"]
+  },
+  "default_agent": "code",
+  "plugin": ["./superpowers"],
+  "instructions": ["AGENTS.md"]
+}

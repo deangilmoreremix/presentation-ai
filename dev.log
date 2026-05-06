@@ -1,0 +1,12 @@
+
+> presentation@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.0.11.62:3000
+- Environments: .env
+✓ Ready in 670ms
+Creating turbopack project { dir: '/workspaces/presentation-ai', testMode: true }
+
+[?25h

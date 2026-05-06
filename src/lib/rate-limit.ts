@@ -1,4 +1,4 @@
-import { getToken } from "next-auth/jwt";
+import { getUser } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 
 interface RateLimitConfig {
@@ -101,13 +101,10 @@ export async function authenticatedRateLimit(
   request: NextRequest,
   config: RateLimitConfig = DEFAULT_CONFIG,
 ): Promise<{ success: boolean; identifier: string }> {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const user = await getUser();
 
   const identifier =
-    token?.email ||
+    user?.email ||
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "anonymous";
 

@@ -20,12 +20,6 @@ export type ThemeFormData = z.infer<typeof themeSchema>;
 export async function createCustomTheme(formData: ThemeFormData) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to create a theme",
-      };
-    }
 
     const validatedData = themeSchema.parse(formData);
 
@@ -75,12 +69,6 @@ export async function updateCustomTheme(
 ) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to update a theme",
-      };
-    }
 
     const validatedData = themeSchema.parse(formData);
 
@@ -140,12 +128,6 @@ export async function updateCustomTheme(
 export async function deleteCustomTheme(themeId: string) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to delete a theme",
-      };
-    }
 
     // Verify ownership
     const existingTheme = await db.presentationTheme.findUnique({
@@ -195,13 +177,6 @@ export async function deleteCustomTheme(themeId: string) {
 export async function getUserCustomThemes() {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to view your themes",
-        themes: [],
-      };
-    }
 
     const themes = await db.presentationTheme.findMany({
       where: {

@@ -35,10 +35,6 @@ export async function updatePresentationThumbnailUrl({
   try {
     const session = await auth();
 
-    if (!session?.user) {
-      throw new Error("Unauthorized");
-    }
-
     const canEdit = await canEditDocument(id, {
       userId: session.user.id,
       userEmail: session.user.email

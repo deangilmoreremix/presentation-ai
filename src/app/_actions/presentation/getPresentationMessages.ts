@@ -23,10 +23,6 @@ export async function getPresentationMessages(
 ): Promise<UIMessage[]> {
   const session = await auth();
 
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
   await ensureCheckpointerSetup();
 
   const graph = createPresentationGraph();

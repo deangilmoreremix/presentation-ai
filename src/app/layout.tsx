@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/provider/theme-provider";
+import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 
@@ -10,17 +11,19 @@ export const metadata: Metadata = {
   description: "AI-powered presentation creation and editing.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+        <TanStackQueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+          </ThemeProvider>
+        </TanStackQueryProvider>
       </body>
     </html>
   );

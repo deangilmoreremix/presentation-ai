@@ -46,14 +46,6 @@ export async function POST(req: Request) {
     });
     const session = await auth();
 
-    if (!session?.user) {
-      routeLogger.warn("Presentation agent request rejected: unauthorized", {
-        requestId,
-        presentationId: id,
-      });
-      return new Response("Unauthorized", { status: 401 });
-    }
-
     await ensureCheckpointerSetup();
     try {
       assertModelIsConfigured(modelProvider ?? "openai", modelId);

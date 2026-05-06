@@ -13,9 +13,6 @@ export async function getUserImages({
   limit?: number;
 } = {}) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return [];
-  }
 
   return db.generatedImage.findMany({
     where: { userId: session.user.id },

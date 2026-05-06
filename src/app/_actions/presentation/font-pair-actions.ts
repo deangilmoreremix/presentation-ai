@@ -21,12 +21,6 @@ export type FontPairFormData = z.infer<typeof fontPairSchema>;
 export async function createFontPair(formData: FontPairFormData) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to save a font pair",
-      };
-    }
 
     const validatedData = fontPairSchema.parse(formData);
 
@@ -74,13 +68,6 @@ export async function createFontPair(formData: FontPairFormData) {
 export async function getUserFontPairs() {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to view your font pairs",
-        fontPairs: [],
-      };
-    }
 
     const fontPairs = await db.fontPair.findMany({
       where: {
@@ -110,12 +97,6 @@ export async function getUserFontPairs() {
 export async function deleteFontPair(fontPairId: string) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to delete a font pair",
-      };
-    }
 
     // Verify ownership
     const existingFontPair = await db.fontPair.findUnique({

@@ -7,13 +7,6 @@ import { db } from "@/server/db";
 export async function toggleFavoriteTheme(themeId: string) {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to favorite themes",
-        isFavorite: false,
-      };
-    }
 
     // Check if theme exists
     const theme = await db.presentationTheme.findUnique({
@@ -77,13 +70,6 @@ export async function toggleFavoriteTheme(themeId: string) {
 export async function getUserFavoriteThemes() {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to view favorite themes",
-        themes: [],
-      };
-    }
 
     const favorites = await db.favoritePresentationTheme.findMany({
       where: {
@@ -143,13 +129,6 @@ export async function getUserFavoriteThemes() {
 export async function getUserFavoriteThemeIds() {
   try {
     const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to view favorite themes",
-        themeIds: [],
-      };
-    }
 
     const favorites = await db.favoritePresentationTheme.findMany({
       where: {

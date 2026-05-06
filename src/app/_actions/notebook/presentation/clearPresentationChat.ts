@@ -7,10 +7,6 @@ import { db } from "@/server/db";
 export async function clearPresentationChat(presentationId: string) {
   const session = await auth();
 
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
   const presentation = await db.baseDocument.findFirst({
     where: {
       id: presentationId,

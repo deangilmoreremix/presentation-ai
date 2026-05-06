@@ -47,6 +47,8 @@ model User {
   website                    String?
   role                       UserRole                    @default(USER)
   hasAccess                  Boolean                     @default(false)
+  openaiApiKeyEncrypted      String?
+  openaiApiKeyIv             String?
   accounts                   Account[]
   documents                  BaseDocument[]
   favorites                  FavoriteDocument[]

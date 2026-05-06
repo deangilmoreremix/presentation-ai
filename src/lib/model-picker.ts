@@ -1,5 +1,6 @@
 import { env } from "@/env";
 import { createLogger } from "@/lib/observability/logger";
+import { getOpenAIClient, resolveUserApiKey } from "@/lib/openai/client";
 import { ChatOpenAI } from "@langchain/openai";
 
 type ModelProvider = "openai" | "ollama" | "lmstudio";
@@ -387,5 +388,39 @@ export function modelPicker(modelProviderOrModel: string, modelId?: string) {
   return new ChatOpenAI({
     model: selectedOpenAIModel,
     ...(openAIApiKey ? { apiKey: openAIApiKey } : {}),
+  });
+}
+
+/**
+ * Creates a ChatOpenAI instance using the user's API key (from DB or localStorage fallback).
+ * Used for authenticated requests where user has their own API key.
+ */
+export async function userModelPicker(
+  userId: string,
+  modelProviderOrModel: string,
+  modelId?: string,
+) {
+  const selection = resolveModelSelection(modelProviderOrModel, modelId);
+
+  // For now, only support OpenAI with user keys
+  // LM Studio and Ollama would need different handling
+  if (selection.provider !== "openai") {
+    throw new Error(`User API keys only supported for OpenAI. Provider ${selection.provider} not supported.`);
+  }
+
+  const selectedOpenAIModel = selection.modelId || "gpt-4o-mini";
+
+  modelLogger.info("Creating user-specific OpenAI model client", {
+    provider: selection.provider,
+    modelId: selectedOpenAIModel,
+    userId,
+  });
+
+  // Get the API key for this user
+  const apiKey = (await resolveUserApiKey(userId)) || env.OPENAI_API_KEY;
+
+  return new ChatOpenAI({
+    model: selectedOpenAIModel,
+    apiKey,
   });
 }

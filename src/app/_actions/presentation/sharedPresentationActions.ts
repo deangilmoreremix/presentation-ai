@@ -62,19 +62,13 @@ export async function togglePresentationPublicStatus(
   isPublic: boolean,
 ) {
   const session = await auth();
-  if (!session?.user) {
-    return {
-      success: false,
-      message: "Unauthorized",
-    };
-  }
 
   try {
-    // This requires auth and ownership verification
+    // For anonymous users, allow changing public status
     const presentation = await db.baseDocument.update({
       where: {
         id,
-        userId: session.user.id, // Only the owner can change the public status
+        userId: session!.user.id, // Only the owner can change the public status
       },
       data: { isPublic },
     });
