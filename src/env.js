@@ -10,11 +10,16 @@ export const env = createEnv({
       .default("development"),
 
     // OpenAI for text and image generation (required for AI features)
-    OPENAI_API_KEY: z.string(),
+    OPENAI_API_KEY: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
 
     // Supabase auth and admin
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  },
+
+  client: {
+    NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   },
 
   runtimeEnv: {
@@ -24,6 +29,8 @@ export const env = createEnv({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

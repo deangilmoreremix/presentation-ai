@@ -3,7 +3,25 @@ import { cookies } from "next/headers";
 import { db } from "@/server/db";
 import type { Session } from "@supabase/supabase-js";
 
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    if (process.env.NODE_ENV === "development" || process.env.SKIP_ENV_VALIDATION) {
+      return null;
+    }
+    throw new Error("Supabase URL and Key are required. Set SKIP_ENV_VALIDATION=true for development.");
+  }
+  
+  return supabaseUrl && supabaseKey ? { supabaseUrl, supabaseKey } : null;
+}
+
 export async function getUser() {
+  const supabaseConfig = createSupabaseClient();
+  if (!supabaseConfig) {
+    return null;
+  }
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -33,6 +51,10 @@ export async function getUser() {
 }
 
 export async function getSession() {
+  const supabaseConfig = createSupabaseClient();
+  if (!supabaseConfig) {
+    return null;
+  }
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -63,17 +85,20 @@ export async function getSession() {
   }
 
   // Fetch user profile from database to include custom fields (role, hasAccess, etc.)
-  const dbUser = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      role: true,
-      hasAccess: true,
-    },
-  });
+  // Wrap in try-catch for environments without database
+  let dbUser: { role: string; hasAccess: boolean } | null = null;
+  try {
+    const result = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        role: true,
+        hasAccess: true,
+      },
+    });
+    dbUser = result;
+  } catch (error) {
+    console.warn("Database not available, returning session without custom fields");
+  }
 
   const isAdmin = dbUser?.role === "ADMIN" || dbUser?.hasAccess === true;
 

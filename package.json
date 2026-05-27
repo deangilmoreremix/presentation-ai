@@ -133,6 +133,7 @@
     "jszip": "3.10.1",
     "langchain": "^1.2.30",
     "lodash.debounce": "^4.0.8",
+    "lowlight": "^3.3.0",
     "lucide-react": "^0.525.0",
     "motion": "12.26.2",
     "nanoid": "^5.1.5",
