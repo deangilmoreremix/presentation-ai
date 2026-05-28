@@ -1,6 +1,6 @@
 import { env } from "@/env";
-import { getOpenAIClient, resolveUserApiKey } from "./client";
-import type { ResponseStreamEvent } from "openai";
+import { resolveUserApiKey } from "./client";
+import OpenAI from "openai";
 
 export interface ResponseChain {
   id: string;
@@ -74,7 +74,7 @@ export interface ResponsesApiResponse {
   };
 }
 
-export async function createResponsesClient(userId?: string) {
+export async function createResponsesClient(userId?: string): Promise<OpenAI> {
   const apiKey = userId
     ? (await resolveUserApiKey(userId)) || env.OPENAI_API_KEY!
     : env.OPENAI_API_KEY!;
@@ -83,12 +83,10 @@ export async function createResponsesClient(userId?: string) {
     throw new Error("OpenAI API key is required for Responses API");
   }
 
-  const client = new (await import("openai")).default({
+  return new OpenAI({
     apiKey,
     ...(env.OPENAI_RESPONSES_BASE_URL && { baseURL: env.OPENAI_RESPONSES_BASE_URL }),
   });
-
-  return client;
 }
 
 export async function createResponse(
@@ -112,27 +110,4 @@ export async function createResponse(
   });
 
   return response as unknown as ResponsesApiResponse;
-}
-
-export async function* streamResponse(
-  params: ResponsesApiRequest,
-  userId?: string
-): AsyncGenerator<ResponseStreamEvent> {
-  const client = await createResponsesClient(userId);
-
-  const stream = await client.responses.create({
-    model: params.model || "gpt-4o-mini",
-    input: params.input,
-    tools: params.tools as Parameters<typeof client.responses.create>[0]["tools"],
-    tool_choice: params.tool_choice,
-    temperature: params.temperature,
-    max_output_tokens: params.max_output_tokens || 4096,
-    instructions: params.instructions,
-    store: params.store ?? false,
-    previous_response_id: params.previous_response_id,
-    stream: true,
-    ...(params.text && { text: params.text }),
-  });
-
-  yield* stream;
 }

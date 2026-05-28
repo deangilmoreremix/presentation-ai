@@ -32,7 +32,7 @@ export function ModelPicker({
   const { data: modelsData, isLoading, isInitialLoad } = useLocalModels();
   const hasRestoredFromStorage = useRef(false);
 
-  useEffect(() => {
+useEffect(() => {
     if (!hasRestoredFromStorage.current) {
       const savedModel = getSelectedModel();
       if (savedModel) {
@@ -41,7 +41,7 @@ export function ModelPicker({
           modelId: savedModel.modelId || "gpt-4o-mini",
         });
         setModelProvider(
-          savedModel.modelProvider as "openai" | "ollama" | "lmstudio",
+          savedModel.modelProvider as "openai" | "ollama" | "lmstudio" | "openai-responses",
         );
         setModelId(savedModel.modelId);
       }

@@ -32,7 +32,7 @@ interface PresentationOutlineMessageMetadata {
   numberOfCards: number;
   language: string;
   modelId: string;
-  modelProvider: "openai" | "ollama" | "lmstudio";
+  modelProvider: "openai" | "ollama" | "lmstudio" | "openai-responses";
   webSearch: boolean;
   presentationId: string | null;
   textContent: "minimal" | "concise" | "detailed" | "extensive";

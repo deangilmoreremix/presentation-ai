@@ -2,6 +2,7 @@ import { env } from "@/env";
 import { createLogger } from "@/lib/observability/logger";
 import { getOpenAIClient, resolveUserApiKey } from "@/lib/openai/client";
 import { ChatOpenAI } from "@langchain/openai";
+import OpenAI from "openai";
 
 type ModelProvider = "openai" | "ollama" | "lmstudio" | "openai-responses";
 const modelLogger = createLogger("model-picker");
@@ -425,11 +426,7 @@ export async function userModelPicker(
   });
 }
 
-/**
- * Get Responses API client for OpenAI models.
- * Returns an OpenAI client configured for the Responses API.
- */
-export async function getResponsesClient(userId?: string): Promise<import("openai").default> {
+export async function getResponsesClient(userId?: string): Promise<OpenAI> {
   const apiKey = userId
     ? (await resolveUserApiKey(userId)) || env.OPENAI_API_KEY!
     : env.OPENAI_API_KEY!;
