@@ -10,7 +10,9 @@ export const env = createEnv({
       .default("development"),
 
     // OpenAI for text and image generation (required for AI features)
+    // Responses API uses the same key as Chat Completions
     OPENAI_API_KEY: z.string().optional(),
+    OPENAI_RESPONSES_BASE_URL: z.string().url().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
 
     // Supabase auth and admin
@@ -27,6 +29,7 @@ export const env = createEnv({
     TAVILY_API_KEY: process.env.TAVILY_API_KEY,
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_RESPONSES_BASE_URL: process.env.OPENAI_RESPONSES_BASE_URL,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

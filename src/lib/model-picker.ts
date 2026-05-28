@@ -3,7 +3,7 @@ import { createLogger } from "@/lib/observability/logger";
 import { getOpenAIClient, resolveUserApiKey } from "@/lib/openai/client";
 import { ChatOpenAI } from "@langchain/openai";
 
-type ModelProvider = "openai" | "ollama" | "lmstudio";
+type ModelProvider = "openai" | "ollama" | "lmstudio" | "openai-responses";
 const modelLogger = createLogger("model-picker");
 const OLLAMA_BASE_URL = "http://localhost:11434";
 const OLLAMA_TAGS_URL = `${OLLAMA_BASE_URL}/api/tags`;
@@ -56,7 +56,7 @@ function extractLMStudioModelIds(payload: unknown): string[] {
 }
 
 function isModelProvider(value: string): value is ModelProvider {
-  return value === "openai" || value === "ollama" || value === "lmstudio";
+  return value === "openai" || value === "ollama" || value === "lmstudio" || value === "openai-responses";
 }
 
 function resolveModelSelection(
@@ -404,7 +404,7 @@ export async function userModelPicker(
 
   // For now, only support OpenAI with user keys
   // LM Studio and Ollama would need different handling
-  if (selection.provider !== "openai") {
+  if (selection.provider !== "openai" && selection.provider !== "openai-responses") {
     throw new Error(`User API keys only supported for OpenAI. Provider ${selection.provider} not supported.`);
   }
 
@@ -422,5 +422,25 @@ export async function userModelPicker(
   return new ChatOpenAI({
     model: selectedOpenAIModel,
     apiKey,
+  });
+}
+
+/**
+ * Get Responses API client for OpenAI models.
+ * Returns an OpenAI client configured for the Responses API.
+ */
+export async function getResponsesClient(userId?: string): Promise<import("openai").default> {
+  const apiKey = userId
+    ? (await resolveUserApiKey(userId)) || env.OPENAI_API_KEY!
+    : env.OPENAI_API_KEY!;
+
+  if (!apiKey) {
+    throw new Error("OpenAI API key is required for Responses API");
+  }
+
+  const OpenAI = (await import("openai")).default;
+  return new OpenAI({
+    apiKey,
+    ...(env.OPENAI_RESPONSES_BASE_URL && { baseURL: env.OPENAI_RESPONSES_BASE_URL }),
   });
 }

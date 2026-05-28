@@ -30,13 +30,28 @@ export type RightPanelType =
   | null;
 
 type PendingPresentationCreateRequest = {
-  language: string;
-  modelId: string;
-  modelProvider: "openai" | "ollama" | "lmstudio";
-  numSlides: number;
-  prompt: string;
-  webSearchEnabled: boolean;
+   language: string;
+   modelId: string;
+   modelProvider: "openai" | "ollama" | "lmstudio" | "openai-responses";
+   numSlides: number;
+   prompt: string;
+   webSearchEnabled: boolean;
 };
+
+interface ResponseChain {
+  id: string;
+  previousId?: string | null;
+  model: string;
+  toolCalls: Array<{
+    id: string;
+    type: string;
+    name?: string;
+    arguments?: string;
+    output?: string;
+  }>;
+  content: any;
+  createdAt: Date;
+}
 
 interface PresentationState {
   currentPresentationId: string | null;
@@ -55,9 +70,11 @@ interface PresentationState {
   imageSource: "automatic" | "ai" | "stock";
   stockImageProvider: "unsplash" | "pixabay";
   presentationStyle: string;
-  modelProvider: "openai" | "ollama" | "lmstudio";
+  modelProvider: "openai" | "ollama" | "lmstudio" | "openai-responses";
   modelId: string;
-  // New customization options
+  responseId: string | null;
+  previousResponseId: string | null;
+  responseChain: ResponseChain[];
   textContent: "minimal" | "concise" | "detailed" | "extensive";
   tone:
     | "auto"
@@ -198,6 +215,11 @@ interface PresentationState {
   setCurrentSlideId: (id: string | null) => void;
   nextSlide: () => void;
   previousSlide: () => void;
+
+  setResponseId: (id: string | null) => void;
+  setPreviousResponseId: (id: string | null) => void;
+  addResponseToChain: (response: ResponseChain) => void;
+  clearResponseChain: () => void;
 
   setIsThemeCreatorOpen: (update: boolean) => void;
   // Typography overrides
@@ -366,9 +388,12 @@ export const usePresentationState = create<PresentationState>((set, get) => ({
   imageSource: "automatic",
   stockImageProvider: "unsplash",
   presentationStyle: "professional",
-  modelProvider: "openai",
-  modelId: "llama3.1:8b",
-  textContent: "concise",
+modelProvider: "openai",
+   modelId: "llama3.1:8b",
+   responseId: null,
+   previousResponseId: null,
+   responseChain: [],
+   textContent: "concise",
   tone: "auto",
   audience: "auto",
   scenario: "auto",
@@ -733,7 +758,7 @@ export const usePresentationState = create<PresentationState>((set, get) => ({
             isGeneratingPresentation: false,
           },
     ),
-  resetGeneration: () =>
+resetGeneration: () =>
     set({
       shouldStartOutlineGeneration: false,
       shouldStartPresentationGeneration: false,
@@ -741,9 +766,25 @@ export const usePresentationState = create<PresentationState>((set, get) => ({
       isGeneratingOutline: false,
       isGeneratingPresentation: false,
       searchResults: [],
+      responseId: null,
+      previousResponseId: null,
+      responseChain: [],
     }),
 
-  // Reset everything except ID and current input when starting new outline generation
+  setResponseId: (id) => set({ responseId: id }),
+  setPreviousResponseId: (id) => set({ previousResponseId: id }),
+  addResponseToChain: (response) =>
+    set((state) => ({
+      responseChain: [...state.responseChain, response],
+      responseId: response.id,
+    })),
+  clearResponseChain: () =>
+    set({
+      responseChain: [],
+      responseId: null,
+      previousResponseId: null,
+    }),
+
   resetForNewGeneration: () =>
     set(() => ({
       ...getPresentModeResetState(),

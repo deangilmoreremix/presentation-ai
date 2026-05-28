@@ -3,4 +3,5 @@ export {
   ensureModelIsReady,
   modelPicker,
   userModelPicker,
+  getResponsesClient,
 } from "./model-picker";

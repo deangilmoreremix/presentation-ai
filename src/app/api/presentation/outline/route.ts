@@ -7,11 +7,12 @@ import {
   assertModelIsConfigured,
   ensureModelIsReady,
   modelPicker,
+  getResponsesClient,
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { logger } from "@/lib/observability/server/logger";
 import { auth } from "@/server/auth";
-import { toBaseMessages, toUIMessageStream } from "@ai-sdk/langchain";
+import { toUIMessageStream, toBaseMessages } from "@ai-sdk/langchain";
 import {
   createUIMessageStreamResponse,
   type UIMessage,
