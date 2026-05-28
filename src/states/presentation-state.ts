@@ -173,8 +173,8 @@ interface PresentationState {
   setImageModel: (model: ImageModelList) => void;
   setImageSource: (source: "automatic" | "ai" | "stock") => void;
   setStockImageProvider: (provider: "unsplash" | "pixabay") => void;
-  setPresentationStyle: (style: string) => void;
-  setModelProvider: (provider: "openai" | "ollama" | "lmstudio") => void;
+setPresentationStyle: (style: string) => void;
+  setModelProvider: (provider: "openai" | "ollama" | "lmstudio" | "openai-responses") => void;
   setModelId: (id: string) => void;
   setTextContent: (
     content: "minimal" | "concise" | "detailed" | "extensive",
