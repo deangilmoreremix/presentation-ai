@@ -5,15 +5,15 @@ import {
   CodeLinePlugin,
   CodeSyntaxPlugin,
 } from "@platejs/code-block/react";
-import { all, createLowlight } from "lowlight";
+
+// @ts-expect-error - lowlight v2 has different module structure
+import lowlight from "lowlight/lib/common";
 
 import {
   CodeBlockElement,
   CodeLineElement,
   CodeSyntaxLeaf,
 } from "@/components/plate/ui/code-block-node";
-
-const lowlight = createLowlight(all);
 
 export const CodeBlockKit = [
   CodeBlockPlugin.configure({

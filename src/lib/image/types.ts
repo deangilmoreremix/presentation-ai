@@ -11,8 +11,11 @@ export type ImageModel =
   | "dall-e-3"
   | "dall-e-2";
 
-// Image Sizes (varies by model)
-export type ImageSize = "1024x1024" | "1536x1024" | "1024x1536" | "auto";
+// Image Sizes (varies by model) - for DALL-E, also includes legacy sizes
+export type ImageSize = "1024x1024" | "1536x1024" | "1024x1536";
+
+// Image Sizes for gpt-image models (includes auto)
+export type GptImageSize = ImageSize | "auto";
 
 // Image Quality
 export type ImageQuality = "low" | "medium" | "high" | "auto";

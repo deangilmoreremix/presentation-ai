@@ -3,15 +3,15 @@ import {
   BaseCodeLinePlugin,
   BaseCodeSyntaxPlugin,
 } from "@platejs/code-block";
-import { all, createLowlight } from "lowlight";
+
+// @ts-expect-error - lowlight v2 has different module structure
+import lowlight from "lowlight/lib/common";
 
 import {
   CodeBlockElementStatic,
   CodeLineElementStatic,
   CodeSyntaxLeafStatic,
 } from "@/components/plate/ui/code-block-node-static";
-
-const lowlight = createLowlight(all);
 
 export const BaseCodeBlockKit = [
   BaseCodeBlockPlugin.configure({

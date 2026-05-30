@@ -6,13 +6,13 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { UTFile } from "uploadthing/server";
+import OpenAI from "openai";
 import type {
   ImageModel,
   ImageSize,
   ImageQuality,
   OutputFormat,
   ImageBackground,
-  GeneratedImageWithMetadata,
 } from "@/lib/image/types";
 
 const DEFAULT_MODEL: ImageModel = "gpt-image-1";

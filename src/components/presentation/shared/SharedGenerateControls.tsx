@@ -138,7 +138,10 @@ export function SharedGenerateControls({
       const promises = Array(imageCount)
         .fill(null)
         .map(() =>
-          generateImageAction(fullPrompt, imageModel as ImageModelList, apiKey || undefined),
+          generateImageAction(fullPrompt, {
+            model: imageModel as ImageModelList,
+            apiKey: apiKey || undefined,
+          }),
         );
 
       const results = await Promise.all(promises);
