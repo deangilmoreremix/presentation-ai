@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ImageIcon, Download, RefreshCw } from "lucide-react";
 import { useAuth } from "@/components/supabase-provider";
 import type {
   ImageModel,
-  ImageSize,
+  GptImageSize,
   ImageQuality,
   OutputFormat,
   ImageBackground,
@@ -43,7 +44,7 @@ const CATEGORIES: { id: ImageCategory; label: string; icon: string }[] = [
 const IMAGE_MODELS: ImageModel[] = ["gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
 
 // Sizes
-const IMAGE_SIZES: ImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
+const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
 
 // Qualities
 const IMAGE_QUALITIES: ImageQuality[] = ["low", "medium", "high", "auto"];
@@ -64,10 +65,10 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
   const [prompt, setPrompt] = useState("");
   const [category, setCategory] = useState<ImageCategory>(initialCategory);
   const [model, setModel] = useState<ImageModel>("gpt-image-1");
-  const [size, setSize] = useState<ImageSize>("1024x1024");
+  const [size, setSize] = useState<GptImageSize>("1024x1024");
   const [quality, setQuality] = useState<ImageQuality>("high");
   const [format, setFormat] = useState<OutputFormat>("png");
-  const [compression, setCompression] = useState(90);
+  const [compression, setCompression] = useState<number>(90);
   const [background, setBackground] = useState<ImageBackground>("opaque");
   const [n, setN] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -174,7 +175,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
 
               <div>
                 <Label htmlFor="size">Size</Label>
-                <Select value={size} onValueChange={(v) => setSize(v as ImageSize)}>
+                <Select value={size} onValueChange={(v) => setSize(v as GptImageSize)}>
                   <SelectTrigger className="mt-1">
                     <SelectValue />
                   </SelectTrigger>
@@ -246,7 +247,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
               <Slider
                 id="compression"
                 value={[compression]}
-                onValueChange={([v]) => setCompression(v)}
+                onValueChange={([v]) => setCompression(v ?? 90)}
                 max={100}
                 min={0}
                 step={10}

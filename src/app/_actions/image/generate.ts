@@ -266,13 +266,12 @@ export async function createVariationAction(
   imageData: string | File | Blob,
   params?: {
     model?: ImageModel;
-    size?: ImageSize;
     n?: number;
     apiKey?: string;
   },
 ) {
   const session = await auth();
-  const { model = "dall-e-2", size = DEFAULT_SIZE, n = 1 } = params ?? {};
+  const { model = "dall-e-2", n = 1 } = params ?? {};
 
   try {
     const openai = await getOpenAIClient(session!.user.id, params?.apiKey);
@@ -285,7 +284,6 @@ export async function createVariationAction(
       model,
       image: imageFile as File,
       n,
-      size,
     });
 
     if (!response.data || response.data.length === 0) {
@@ -317,20 +315,19 @@ export async function createVariationAction(
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-    const dbImages = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt: "Variation of uploaded image",
-            userId: session.user.id,
-            model,
-            size,
-            n,
-          },
-        }),
-      ),
-    );
+const dbImages = await Promise.all(
+       uploadedUrls.map((url, index) =>
+         db.generatedImage.create({
+           data: {
+             url,
+             prompt: "Variation of uploaded image",
+             userId: session.user.id,
+             model,
+             n,
+           },
+         }),
+       ),
+     );
 
     return {
       success: true,

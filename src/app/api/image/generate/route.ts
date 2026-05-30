@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
@@ -6,11 +7,10 @@ import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
 import type {
   ImageModel,
-  ImageSize,
+  GptImageSize,
   ImageQuality,
   OutputFormat,
   ImageBackground,
-  GptImageSize,
 } from "@/lib/image/types";
 
 const ALLOWED_MODELS: ImageModel[] = [
@@ -21,9 +21,7 @@ const ALLOWED_MODELS: ImageModel[] = [
   "dall-e-2",
 ];
 
-// For gpt-image models, "auto" is allowed; for dall-e only standard sizes
-const DALL_E_SIZES: ImageSize[] = ["1024x1024"];
-const GPT_IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
+const ALLOWED_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
 const ALLOWED_QUALITIES: ImageQuality[] = ["low", "medium", "high", "auto"];
 const ALLOWED_FORMATS: OutputFormat[] = ["png", "jpeg", "webp"];
 

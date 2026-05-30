@@ -6,7 +6,6 @@ import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
 import type {
   ImageModel,
-  ImageSize,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
@@ -19,7 +18,6 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const imageFile = formData.get("image") as File | null;
     const model = (formData.get("model") as ImageModel) || "dall-e-2";
-    const size = (formData.get("size") as ImageSize) || "1024x1024";
     const n = Number(formData.get("n")) || 1;
     const apiKey = formData.get("apiKey") as string | undefined;
 
@@ -33,7 +31,6 @@ export async function POST(req: NextRequest) {
       model,
       image: imageFile,
       n,
-      size,
       response_format: "url",
     });
 
@@ -65,21 +62,20 @@ export async function POST(req: NextRequest) {
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-    const images = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt: "Variation of uploaded image",
-            userId: session.user.id,
-            model,
-            size,
-            action: "generate",
-            n,
-          },
-        }),
-      ),
-    );
+const images = await Promise.all(
+       uploadedUrls.map((url, index) =>
+         db.generatedImage.create({
+           data: {
+             url,
+             prompt: "Variation of uploaded image",
+             userId: session.user.id,
+             model,
+             action: "generate",
+             n,
+           },
+         }),
+       ),
+     );
 
     return NextResponse.json({ success: true, images, count: images.length });
   } catch (error) {
