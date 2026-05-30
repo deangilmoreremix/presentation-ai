@@ -182,11 +182,25 @@ model FavoriteDocument {
 }
 
 model GeneratedImage {
-  id        String   @id @default(cuid())
-  url       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    String
-  prompt    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  url              String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userId           String
+  prompt           String
+  model            String?   // e.g., "gpt-image-1", "dall-e-3"
+  size             String?   // e.g., "1024x1024", "1536x1024"
+  quality          String?   // "low", "medium", "high"
+  format           String?   // "png", "jpeg", "webp"
+  compression      Int?      // 0-100
+  background       String?   // "transparent", "opaque"
+  action           String?   // "generate", "edit" (for responses API)
+  previousResponseId String? // For multi-turn editing
+  n                Int?      // Number of images generated
+  inputImages      String[]  // For multi-image inputs (URLs)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([model])
+  @@index([createdAt(sort: Desc)])
 }
