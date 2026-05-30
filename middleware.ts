@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const session = await getSession();
   const isAuthPage = request.nextUrl.pathname.startsWith("/auth");
 
@@ -62,7 +62,7 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Add routes that should be processed by this proxy
+// Add routes that should be processed by this middleware
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
