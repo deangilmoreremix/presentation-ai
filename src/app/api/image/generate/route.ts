@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
+import OpenAI from "openai";
 import type {
   ImageModel,
   ImageSize,

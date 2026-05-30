@@ -7,8 +7,6 @@ import { UTFile } from "uploadthing/server";
 import type {
   ImageModel,
   ImageSize,
-  ImageQuality,
-  OutputFormat,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
