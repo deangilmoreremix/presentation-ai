@@ -4,8 +4,7 @@ import {
   BaseCodeSyntaxPlugin,
 } from "@platejs/code-block";
 
-// @ts-expect-error - lowlight v2 has different module structure
-import lowlight from "lowlight/lib/common";
+import { lowlight } from "lowlight";
 
 import {
   CodeBlockElementStatic,

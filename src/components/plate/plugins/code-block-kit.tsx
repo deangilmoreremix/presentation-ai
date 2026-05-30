@@ -6,8 +6,7 @@ import {
   CodeSyntaxPlugin,
 } from "@platejs/code-block/react";
 
-// @ts-expect-error - lowlight v2 has different module structure
-import lowlight from "lowlight/lib/common";
+import { lowlight } from "lowlight";
 
 import {
   CodeBlockElement,
