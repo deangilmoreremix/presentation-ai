@@ -1,4 +1,3 @@
-import { getUser } from "@/lib/supabase/server";
 import { NextResponse, type NextRequest } from "next/server";
 
 interface RateLimitConfig {
@@ -101,11 +100,10 @@ export async function authenticatedRateLimit(
   request: NextRequest,
   config: RateLimitConfig = DEFAULT_CONFIG,
 ): Promise<{ success: boolean; identifier: string }> {
-  const user = await getUser();
-
+  // Edge-compatible version - uses IP-based identification only
   const identifier =
-    user?.email ||
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
     "anonymous";
 
   const key = `auth:${identifier}:${request.nextUrl.pathname}`;

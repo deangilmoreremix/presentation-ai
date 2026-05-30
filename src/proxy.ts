@@ -2,6 +2,8 @@ import { getSession } from "@/lib/supabase/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { type NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function proxy(request: NextRequest) {
   const session = await getSession();
   const isAuthPage = request.nextUrl.pathname.startsWith("/auth");

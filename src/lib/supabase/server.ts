@@ -1,7 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { db } from "@/server/db";
-import type { Session } from "@supabase/supabase-js";
 
 export async function getUser() {
   const cookieStore = await cookies();
@@ -58,39 +56,7 @@ export async function getSession() {
 
   const { data: { session } } = await supabase.auth.getSession();
 
-  if (!session) {
-    return null;
-  }
-
-  // Fetch user profile from database to include custom fields (role, hasAccess, etc.)
-  const dbUser = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      role: true,
-      hasAccess: true,
-    },
-  });
-
-  const isAdmin = dbUser?.role === "ADMIN" || dbUser?.hasAccess === true;
-
-  // Augment the session's user with custom fields
-  const augmentedUser: typeof session.user & {
-    isAdmin?: boolean;
-    role?: string;
-    hasAccess?: boolean;
-  } = {
-    ...session.user,
-    isAdmin,
-    role: dbUser?.role,
-    hasAccess: dbUser?.hasAccess,
-  };
-
-  return {
-    ...session,
-    user: augmentedUser,
-  } as Session;
+  // Note: Database augmentation removed for Edge runtime compatibility
+  // Use getSessionWithProfile from server actions if user profile data is needed
+  return session;
 }
