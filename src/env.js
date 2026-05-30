@@ -10,7 +10,7 @@ export const env = createEnv({
       .default("development"),
 
     // OpenAI for text and image generation (required for AI features)
-    OPENAI_API_KEY: z.string(),
+    OPENAI_API_KEY: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
 
     // Supabase auth and admin
