@@ -1,28 +1,10 @@
 [build]
   command = "pnpm build"
-  publish = ".next/standalone"
-  ignore = "git diff --quiet HEAD^ HEAD ."
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
   PNPM_VERSION = "10.17.0"
 
-[functions]
-  directory = ".next/standalone"
-
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[dev]
-  command = "pnpm dev"
-  port = 3000
-  targetPort = 3000
-
-[context.production]
-  command = "pnpm build"
-
-[context.deploy-preview]
-  command = "pnpm build"
-
-[context.branch-deploy]
-  command = "pnpm build"
