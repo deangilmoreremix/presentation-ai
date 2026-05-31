@@ -1,14 +1,12 @@
 /**
- * Authentication helper that returns anonymous user for database operations
- * Authentication is removed but database functionality is preserved
+ * Authentication helper using Supabase
+ * Returns anonymous user when no auth is configured
  */
 
-import { db } from "@/server/db";
-
-const ANONYMOUS_USER_ID = "anonymous-user";
+import { getUser } from "@/lib/supabase/server";
 
 const ANONYMOUS_USER = {
-  id: ANONYMOUS_USER_ID,
+  id: "anonymous",
   email: null,
   name: "Anonymous User",
   image: null,
@@ -16,26 +14,25 @@ const ANONYMOUS_USER = {
 };
 
 export async function auth() {
-  // Ensure anonymous user exists in database
   try {
-    await db.user.upsert({
-      where: { id: ANONYMOUS_USER_ID },
-      update: {}, // No updates needed
-      create: {
-        id: ANONYMOUS_USER_ID,
-        name: "Anonymous User",
-        role: "USER",
-        hasAccess: false,
-      },
-    });
+    const user = await getUser();
+    
+    if (user) {
+      return {
+        user: {
+          ...user,
+          isAdmin: false,
+        },
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+      };
+    }
   } catch (error) {
-    console.error("Failed to create anonymous user:", error);
-    // Continue anyway - the user might already exist
+    console.error("Auth error:", error);
   }
-
-  // Always return anonymous user for database operations
+  
+  // Return anonymous user
   return {
     user: ANONYMOUS_USER,
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(), // 1 year
+    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
   };
 }

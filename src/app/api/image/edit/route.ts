@@ -1,30 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
 import OpenAI from "openai";
 import type {
   ImageModel,
-  ImageSize,
+  GptImageSize,
   ImageQuality,
   OutputFormat,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const formData = await req.formData();
     const prompt = formData.get("prompt") as string;
     const imageFile = formData.get("image") as File | null;
     const maskFile = formData.get("mask") as File | null;
     const model = (formData.get("model") as ImageModel) || "gpt-image-1";
-    const size = (formData.get("size") as ImageSize) || "1024x1024";
+    const size = (formData.get("size") as GptImageSize) || "1024x1024";
     const quality = formData.get("quality") as ImageQuality | undefined;
     const outputFormat = formData.get("outputFormat") as OutputFormat | undefined;
     const outputCompression = formData.get("outputCompression") ? Number(formData.get("outputCompression")) : undefined;
@@ -39,7 +32,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image file is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(session.user.id, apiKey);
+    const openai = await getOpenAIClient(undefined, apiKey);
 
     const requestParams: OpenAI.ImageEditParams = {
       model,
@@ -90,26 +83,7 @@ export async function POST(req: NextRequest) {
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-    const images = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt,
-            userId: session.user.id,
-            model,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            compression: outputCompression ?? undefined,
-            action: "edit",
-            n,
-          },
-        }),
-      ),
-    );
-
-    return NextResponse.json({ success: true, images, count: images.length });
+    return NextResponse.json({ success: true, images: uploadedUrls, count: uploadedUrls.length });
   } catch (error) {
     console.error("Image edit API error:", error);
     return NextResponse.json(

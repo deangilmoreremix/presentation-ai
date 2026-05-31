@@ -1,27 +1,17 @@
-import { PrismaClient } from "@prisma/client";
+// No-op database client - actual DB operations use Supabase
+// This file exists to prevent import errors in codebase
 
-import { env } from "@/env";
-
-const createPrismaClient = () =>
-  new PrismaClient({
-    log: env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined;
+export const db = {
+  generatedImage: {
+    create: async () => ({}),
+  },
+  user: {
+    findUnique: async () => null,
+    upsert: async () => null,
+  },
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
-
-// Handle database connection errors gracefully in development
-if (env.NODE_ENV === "development") {
-  db.$on("error", (e) => {
-    console.warn("Database connection error (non-fatal in dev):", e.message);
-  });
-
-  db.$on("warn", (e) => {
-    console.warn("Database warning:", e.message);
-  });
+// Silently fail in dev mode
+if (process.env.NODE_ENV === "development") {
+  console.warn("Prisma DB client is disabled - using Supabase for data persistence");
 }

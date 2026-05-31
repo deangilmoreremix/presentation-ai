@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
-import type {
-  ImageModel,
-} from "@/lib/image/types";
+import type { ImageModel } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const formData = await req.formData();
     const imageFile = formData.get("image") as File | null;
@@ -25,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image file is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(session.user.id, apiKey);
+    const openai = await getOpenAIClient(undefined, apiKey);
 
     const response = await openai.images.createVariation({
       model,
@@ -62,22 +53,7 @@ export async function POST(req: NextRequest) {
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-const images = await Promise.all(
-       uploadedUrls.map((url, index) =>
-         db.generatedImage.create({
-           data: {
-             url,
-             prompt: "Variation of uploaded image",
-             userId: session.user.id,
-             model,
-             action: "generate",
-             n,
-           },
-         }),
-       ),
-     );
-
-    return NextResponse.json({ success: true, images, count: images.length });
+    return NextResponse.json({ success: true, images: uploadedUrls, count: uploadedUrls.length });
   } catch (error) {
     console.error("Image variation API error:", error);
     return NextResponse.json(

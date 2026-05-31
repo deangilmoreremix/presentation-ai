@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
@@ -26,11 +24,6 @@ const ALLOWED_QUALITIES: ImageQuality[] = ["low", "medium", "high", "auto"];
 const ALLOWED_FORMATS: OutputFormat[] = ["png", "jpeg", "webp"];
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const body = await req.json();
     const {
@@ -67,7 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Invalid size. Allowed: ${ALLOWED_SIZES.join(", ")}` }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(session.user.id, apiKey);
+    const openai = await getOpenAIClient(undefined, apiKey);
 
     const requestParams: OpenAI.ImageGenerateParams = {
       model,
@@ -114,26 +107,7 @@ export async function POST(req: NextRequest) {
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-    const images = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt,
-            userId: session.user.id,
-            model,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            compression: outputCompression ?? undefined,
-            background: background ?? undefined,
-            n,
-          },
-        }),
-      ),
-    );
-
-    return NextResponse.json({ success: true, images, count: images.length });
+    return NextResponse.json({ success: true, images: uploadedUrls, count: uploadedUrls.length });
   } catch (error) {
     console.error("Image generation API error:", error);
     return NextResponse.json(
