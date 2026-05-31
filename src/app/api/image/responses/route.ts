@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
 import type {
   ImageModel,
-  ImageSize,
+  GptImageSize,
   ImageQuality,
   OutputFormat,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
     const body = await req.json();
     const {
@@ -34,7 +27,7 @@ export async function POST(req: NextRequest) {
       input: string;
       model?: string;
       imageModel?: ImageModel;
-      size?: ImageSize;
+      size?: GptImageSize;
       quality?: ImageQuality;
       outputFormat?: OutputFormat;
       outputCompression?: number;
@@ -47,7 +40,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Input is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(session.user.id, apiKey);
+    const openai = await getOpenAIClient(undefined, apiKey);
 
     console.log(`Generating with Responses API using model: ${model}`);
 
@@ -95,30 +88,10 @@ export async function POST(req: NextRequest) {
       uploadedUrls.push(uploadResult[0].data.ufsUrl);
     }
 
-    const dbImages = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt: input,
-            userId: session.user.id,
-            model: imageModel,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            compression: outputCompression ?? undefined,
-            previousResponseId,
-            action: previousResponseId ? "edit" : "generate",
-            n,
-          },
-        }),
-      ),
-    );
-
     return NextResponse.json({
       success: true,
-      images: dbImages,
-      count: dbImages.length,
+      images: uploadedUrls,
+      count: uploadedUrls.length,
       responseId: response.id,
     });
   } catch (error) {
