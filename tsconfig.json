@@ -41,7 +41,9 @@
     "*.js",
     "*.cjs",
     ".eslintrc.cjs",
-    "next-env.d.ts"
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
