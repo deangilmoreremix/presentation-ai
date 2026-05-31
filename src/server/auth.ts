@@ -15,17 +15,8 @@ const ANONYMOUS_USER = {
 
 export async function auth() {
   try {
-    const user = await getUser();
-    
-    if (user) {
-      return {
-        user: {
-          ...user,
-          isAdmin: false,
-        },
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
-      };
-    }
+    // getUser returns null in the stub implementation
+    // Auth is optional - always returns anonymous user
   } catch (error) {
     console.error("Auth error:", error);
   }

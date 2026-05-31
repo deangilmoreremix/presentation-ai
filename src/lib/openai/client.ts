@@ -1,4 +1,3 @@
-import { decryptApiKey } from "@/lib/crypto/key-encryption";
 import { env } from "@/env";
 import OpenAI from "openai";
 
@@ -19,4 +18,15 @@ export async function getOpenAIClient(userId?: string, providedApiKey?: string):
     apiKey,
     dangerouslyAllowBrowser: false, // Server-side only
   });
+}
+
+/**
+ * Stub function for user API key resolution.
+ * Database-dependent key lookup removed - returns null to fall back to env var.
+ * In Supabase architecture, users provide their API key via the apiKey parameter.
+ */
+export async function resolveUserApiKey(_userId?: string): Promise<string | null> {
+  // No database lookup in Supabase-only architecture
+  // Returns null to trigger fallback to env.OPENAI_API_KEY
+  return null;
 }
