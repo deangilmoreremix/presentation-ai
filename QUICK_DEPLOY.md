@@ -1,10 +1,10 @@
 # 🚀 FINAL DEPLOYMENT CHECKLIST
 
-## Your Supabase Project is Ready
+## Your Supabase Project Setup
 
-**Project ID:** `bzxohkrxcwodllketcpz`  
-**Database URL:** `postgresql://postgres:VideoRemix2026@db.bzxohkrxcwodllketcpz.supabase.co:5432/postgres`  
-**Anon Key:** Already in your `.env` as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+**Project ID:** Use your own Supabase project ID  
+**Database URL:** Configure in Netlify environment variables  
+**Anon Key:** Configure `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Netlify
 
 ---
 
@@ -27,12 +27,18 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | `postgresql://postgres:VideoRemix2026@db.bzxohkrxcwodllketcpz.supabase.co:5432/postgres` |
-| `NEXTAUTH_SECRET` | `ICsHeY100hVbnUUIuBwbcPx2nCeFr6wr/eUKx+bC/58=` |
+| `DATABASE_URL` | Your Supabase PostgreSQL connection string |
+| `NEXTAUTH_SECRET` | Generate with: `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | **Your Netlify site URL** (e.g., `https://your-site.netlify.app`) - set this AFTER you get your Netlify URL |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://bzxohkrxcwodllketcpz.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_-CX9glOjtolD9mPJqjHlaQ_bFxkQZn6` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your Supabase publishable key |
 | `SKIP_ENV_VALIDATION` | `true` |
+
+**To get your Supabase credentials:**
+1. Go to https://supabase.com/dashboard
+2. Select your project (or create a new one)
+3. Go to **Settings → Database** for `DATABASE_URL`
+4. Go to **Settings → API** for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 **Optional (for AI features):**
 | Variable | Value |
@@ -49,7 +55,7 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 4. You'll need to create a Google Cloud OAuth app:
    - Go to https://console.cloud.google.com/apis/credentials
    - Create OAuth 2.0 Client ID (Web application)
-   - Add authorized redirect URI: `https://bzxohkrxcwodllketcpz.supabase.co/auth/v1/callback/google`
+   - Add authorized redirect URI: `https://YOUR-PROJECT-ID.supabase.co/auth/v1/callback/google`
    - Copy Client ID and Client Secret
    - Paste into Supabase Google provider settings
 5. Save
@@ -182,8 +188,8 @@ This plugin automatically handles Next.js routing and serverless functions.
 3. **NEXTAUTH_URL must match** your Netlify site URL exactly (including https://). If it doesn't match, Google OAuth will fail.
 
 4. **Google OAuth redirect URIs** must include both:
-   - `https://your-site.netlify.app/api/auth/callback/google`
-   - `https://bzxohkrxcwodllketcpz.supabase.co/auth/v1/callback/google` (for Supabase)
+    - `https://your-site.netlify.app/api/auth/callback/google`
+    - `https://YOUR-PROJECT-ID.supabase.co/auth/v1/callback/google` (for Supabase)
 
 5. **First deployment may take 10-15 minutes** due to:
    - Installing dependencies

@@ -37,12 +37,8 @@ FAL_API_KEY=...
 # Required for app to work
 OPENAI_API_KEY=sk-...           # OpenAI API key (text + images)
 DATABASE_URL=postgresql://...  # Supabase PostgreSQL
-NEXT_PUBLIC_SUPABASE_URL=https://bzxohkrxcwodllketcpz.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-ID.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-
-# Optional
-UNSPLASH_ACCESS_KEY=...  # For stock images (if you want)
-TAVILY_API_KEY=...        # For web search (if you want)
 ```
 
 ## Current State
