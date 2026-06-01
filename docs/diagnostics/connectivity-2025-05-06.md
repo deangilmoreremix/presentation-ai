@@ -1,7 +1,7 @@
 # Network Connectivity Diagnostic Report
 
 **Project:** Presentation AI  
-**Supabase Project Ref:** `bzxohkrxcwodllketcpz`  
+**Supabase Project Ref:** `YOUR-PROJECT-REF`  
 **Date:** 2025-05-06  
 **Environment:** Azure Cloud App (Linux)
 
@@ -23,22 +23,22 @@ The Supabase database is unreachable with Prisma error **P1001: Can't reach data
 ### 1. Public IP Address
 ```
 curl -s https://api.ipify.org
-Result: 51.8.152.66
+Result: YOUR-IP-ADDRESS
 ```
 
 ### 2. DNS Resolution for Database Host
 ```bash
 # Using system resolver
-getent hosts db.bzxohkrxcwodllketcpz.supabase.co
-Result: 2600:1f18:2e13:9d41:35bf:498f:53b8:84f7
+getent hosts db.YOUR-PROJECT-REF.supabase.co
+Result: IPv6-ADDRESS-HERE
 
 # A record query (IPv4)
-socket.gethostbyname('db.bzxohkrxcwodllketcpz.supabase.co')
+socket.gethostbyname('db.YOUR-PROJECT-REF.supabase.co')
 Result: No address associated with hostname (gaierror -5)
 
 # AAAA record (IPv6)
-socket.getaddrinfo('db.bzxohkrxcwodllketcpz.supabase.co', 5432, AF_INET6)
-Result: 2600:1f18:2e13:9d41:35bf:498f:53b8:84f7
+socket.getaddrinfo('db.YOUR-PROJECT-REF.supabase.co', 5432, AF_INET6)
+Result: IPv6-ADDRESS-HERE
 ```
 
 **Conclusion:** The host resolves **IPv6 only**. No A (IPv4) record exists.
@@ -46,7 +46,7 @@ Result: 2600:1f18:2e13:9d41:35bf:498f:53b8:84f7
 ### 3. IPv6 Stack Status
 ```bash
 ip -6 addr show dev eth0
-Result: fe80::7e1e:52ff:fe9a:3353/64 (link-local only, no global IPv6)
+Result: fe80::... (link-local only, no global IPv6)
 
 ip -6 route show
 Default route ::/0 → NOT PRESENT
@@ -56,7 +56,7 @@ The system has a link-local IPv6 address but no global IPv6 address and no defau
 
 ### 4. Direct IPv6 Connectivity Test
 ```bash
-openssl s_client -connect db.bzxohkrxcwodllketcpz.supabase.co:5432 -brief
+openssl s_client -connect db.YOUR-PROJECT-REF.supabase.co:5432 -brief
 Error: BIO_connect: Network is unreachable (errno=101)
 ```
 
@@ -64,12 +64,12 @@ Error: BIO_connect: Network is unreachable (errno=101)
 ```bash
 # DNS for pooler endpoint
 aws-0-us-east-2.pooler.supabase.com
-Resolves to: 3.139.14.59, 3.13.175.194, 13.59.95.192 (IPv4 ✅)
+Resolves to: 3.139.14.59, 3.13.175.194, 13.59.95.192 (IPv4 address)
 
 # TCP connect test (Python socket) — succeeds
 # HTTP curl test
 curl -s --connect-timeout 5 https://aws-0-us-east-2.pooler.supabase.com
-Result: 404 Not Found (connection established ✅)
+Result: 404 Not Found (connection established)
 ```
 
 IPv4 egress to pooler hosts works fine.
@@ -93,7 +93,7 @@ However, Supavisor testing across all AWS regions (us-east-1, us-east-2, eu-west
 ### Option A: Enable IPv4 Add-On (Recommended, Cost $4/mo)
 - Go to Supabase Dashboard → Project Settings → Add-ons → IPv4
 - Enable the add-on. This attaches an IPv4 address to the database instance.
-- `db.bzxohkrxcwodllketcpz.supabase.co` gains an A record alongside AAAA.
+- `db.YOUR-PROJECT-REF.supabase.co` gains an A record alongside AAAA.
 - Existing `.env` DATABASE_URL works unchanged.
 - No further changes required.
 
@@ -113,55 +113,3 @@ However, Supavisor testing across all AWS regions (us-east-1, us-east-2, eu-west
 - Not feasible without admin rights in this environment.
 
 ---
-
-## Applied Changes
-
-### Files Modified
-
-- `src/app/api/health/route.ts` — now performs actual DB connectivity check using Prisma client
-- `scripts/verify-db-connection.ts` — new script to test DB connection
-
-### Files To Be Updated (Manual Steps Required)
-
-#### 1. `.env`
-The current `DATABASE_URL` uses the IPv6-only direct endpoint.  
-**Action Required:** Either enable the IPv4 Add-On (Option A) **or** replace the connection string with the Session Pooler string from your dashboard (Option B).
-
-#### 2. Run Verification
-After applying Option A or B:
-
-```bash
-# Generate Prisma client
-pnpm prisma generate
-
-# Test connection / push schema
-pnpm prisma db push --accept-data-loss
-
-# Or run the verification script
-npx tsx scripts/verify-db-connection.ts
-```
-
----
-
-## Verification Steps (Post-Fix)
-
-1. **Prisma connection test**: `pnpm prisma db push` should complete without P1001 errors.
-2. **Verification script**: `npx tsx scripts/verify-db-connection.ts` should print `✅ Database connection successful`.
-3. **Health endpoint**: `curl http://localhost:3000/api/health` returns `"database": "connected"` with status 200.
-4. **Dev server**: `pnpm dev` starts without database connection errors in logs.
-
----
-
-## Additional Findings
-
-- **IP Allowlist**: Unknown if enabled. If enabled, add your current IP `51.8.152.66` to Supabase Dashboard → Authentication → Settings → Network → IP allowlist.
-- **SSL**: `sslmode=require` is correctly set in `.env`.
-- **Port 5432**: Outbound traffic allowed (IPv4 test succeeded).
-
----
-
-## Conclusion
-
-The immediate blocker is missing IPv6 connectivity. The recommended resolution is to enable the **IPv4 Add-On** in the Supabase dashboard (approximately $4/month). Alternatively, switch to the Supavisor session pooler connection string.
-
-Once the user performs the manual step, all automated verification should pass.

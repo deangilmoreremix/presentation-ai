@@ -17,10 +17,16 @@ async function testConnection(url: string): Promise<boolean> {
   }
 }
 
-const password = 'VideoRemix2026';
-const projectRef = 'bzxohkrxcwodllketcpz';
+// Get credentials from environment
+const password = process.env.SUPABASE_DB_PASSWORD || process.env.DATABASE_PASSWORD;
+const projectRef = process.env.SUPABASE_PROJECT_REF || process.env.PROJECT_REF || 'YOUR-PROJECT-REF';
 
-// Expanded list of Supabase/AWS regions
+if (!password) {
+  console.log('❌ SUPABASE_DB_PASSWORD or DATABASE_PASSWORD environment variable required');
+  process.exit(1);
+}
+
+// Supabase pooler regions
 const regions = [
   'us-east-1',
   'us-east-2',
@@ -39,9 +45,6 @@ const regions = [
   'ap-south-1',
   'sa-east-1',
   'ca-central-1',
-  'me-south-1',
-  'af-south-1',
-  'ap-east-1',
 ];
 
 for (const region of regions) {
@@ -50,7 +53,7 @@ for (const region of regions) {
   console.log(`→ Testing ${region}...`);
   if (await testConnection(url)) {
     console.log(`\n✅ Success! Region: ${region}`);
-    console.log(`   Pooler URL: postgresql://postgres.${projectRef}:${password}@${host}:5432/postgres?sslmode=require`);
+    console.log(`   Pooler URL: postgresql://postgres.${projectRef}:***@${host}:5432/postgres?sslmode=require`);
     process.exit(0);
   }
 }

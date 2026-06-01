@@ -17,8 +17,15 @@ async function test(url: string): Promise<boolean> {
   }
 }
 
-const password = 'VideoRemix2026';
-const projectRef = 'bzxohkrxcwodllketcpz';
+// Get credentials from environment
+const password = process.env.SUPABASE_DB_PASSWORD || process.env.DATABASE_PASSWORD;
+const projectRef = process.env.SUPABASE_PROJECT_REF || process.env.PROJECT_REF || 'YOUR-PROJECT-REF';
+
+if (!password) {
+  console.log('❌ SUPABASE_DB_PASSWORD or DATABASE_PASSWORD environment variable required');
+  process.exit(1);
+}
+
 const regions = ['us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1', 'ap-southeast-2'];
 
 for (const region of regions) {
@@ -28,7 +35,7 @@ for (const region of regions) {
   console.log(`→ Tx mode ${region}...`);
   if (await test(url)) {
     console.log(`\n✅ Transaction mode success! Region: ${region}`);
-    console.log(`   URL: ${url}`);
+    console.log(`   URL: postgresql://postgres:***@${host}:6543/postgres?sslmode=require`);
     process.exit(0);
   }
 }
@@ -39,7 +46,7 @@ for (const region of regions) {
   console.log(`→ Session mode (postgres user) ${region}...`);
   if (await test(url)) {
     console.log(`\n✅ Session mode (postgres user) success! Region: ${region}`);
-    console.log(`   URL: ${url}`);
+    console.log(`   URL: postgresql://postgres:***@${host}:5432/postgres?sslmode=require`);
     process.exit(0);
   }
 }
