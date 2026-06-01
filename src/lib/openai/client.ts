@@ -6,7 +6,7 @@ import OpenAI from "openai";
  * Used by all AI generation actions.
  * Note: Database-dependent API key resolution removed - uses provided key or env var only.
  */
-export async function getOpenAIClient(userId?: string, providedApiKey?: string): Promise<OpenAI> {
+export async function getOpenAIClient(_userId?: string, providedApiKey?: string): Promise<OpenAI> {
   // Use provided API key, or fall back to environment
   const apiKey = providedApiKey || env.OPENAI_API_KEY;
 
