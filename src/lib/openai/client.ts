@@ -1,40 +1,32 @@
-import { decryptApiKey } from "@/lib/crypto/key-encryption";
-import { db } from "@/server/db";
 import { env } from "@/env";
 import OpenAI from "openai";
 
 /**
- * Resolves the API key for a user in the following order:
- * 1. Encrypted key from database (if user has one)
- * 2. Falls back to environment default
- */
-export async function resolveUserApiKey(userId: string): Promise<string | null> {
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { openaiApiKeyEncrypted: true, openaiApiKeyIv: true },
-  });
-
-  if (user?.openaiApiKeyEncrypted && user.openaiApiKeyIv) {
-    try {
-      return await decryptApiKey(user.openaiApiKeyEncrypted, userId, user.openaiApiKeyIv);
-    } catch (error) {
-      console.error("Failed to decrypt user API key:", error);
-      // Fall through to default
-    }
-  }
-
-  return null;
-}
-
-/**
- * Creates an OpenAI client with the user's API key or fallback.
+ * Creates an OpenAI client with the provided API key or fallback.
  * Used by all AI generation actions.
+ * Note: Database-dependent API key resolution removed - uses provided key or env var only.
  */
-export async function getOpenAIClient(userId: string, providedApiKey?: string): Promise<OpenAI> {
-  const apiKey = providedApiKey || (await resolveUserApiKey(userId)) || env.OPENAI_API_KEY;
+export async function getOpenAIClient(_userId?: string, providedApiKey?: string): Promise<OpenAI> {
+  // Use provided API key, or fall back to environment
+  const apiKey = providedApiKey || env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OpenAI API key is required. Provide one via apiKey parameter or OPENAI_API_KEY env var.");
+  }
 
   return new OpenAI({
     apiKey,
     dangerouslyAllowBrowser: false, // Server-side only
   });
+}
+
+/**
+ * Stub function for user API key resolution.
+ * Database-dependent key lookup removed - returns null to fall back to env var.
+ * In Supabase architecture, users provide their API key via the apiKey parameter.
+ */
+export async function resolveUserApiKey(_userId?: string): Promise<string | null> {
+  // No database lookup in Supabase-only architecture
+  // Returns null to trigger fallback to env.OPENAI_API_KEY
+  return null;
 }
