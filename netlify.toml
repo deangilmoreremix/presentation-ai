@@ -4,6 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Ignore PNPM_VERSION in secrets scanner - it's just a tool version, not a secret
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "PNPM_VERSION"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
