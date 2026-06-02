@@ -1,26 +1,15 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
-import { type ReactNode, useState } from "react";
-
 // Simplified provider for database-only access (no authentication)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+// Supabase client is optional - returns null if env vars not configured
 
 export function SupabaseProvider({
   children,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
-  const [supabase] = useState(() =>
-    createClient(supabaseUrl, supabaseAnonKey)
-  );
-
-  return (
-    <>
-      {children}
-    </>
-  );
+  // Return children without supabase context if not configured
+  return <>{children}</>;
 }
 
 export function useAuth() {

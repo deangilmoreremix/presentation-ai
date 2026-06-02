@@ -1,9 +1,10 @@
 [build]
   command = "pnpm build"
-  publish = ".next"
+  publish = ".next/standalone"
 
-[build.environment]
-  NODE_VERSION = "20"
+  [build.environment]
+    NODE_VERSION = "20"
+    NODE_OPTIONS = "--max-old-space-size=4096"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
