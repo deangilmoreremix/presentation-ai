@@ -6,6 +6,7 @@ import { auth } from "@/server/auth";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { NextResponse } from "next/server";
+import { LAYOUT_REFERENCE } from "@/lib/presentation/layout-catalog";
 
 interface GenerateSlideRequest {
   prompt: string;
@@ -17,193 +18,117 @@ interface GenerateSlideRequest {
   textDensity?: "Minimal" | "Balanced" | "Detailed";
 }
 
-const singleSlideTemplate = `
-You are an expert presentation designer. Your task is to create a SINGLE engaging slide in XML format.
+const singleSlideTemplate = `You are an expert presentation designer. Create an engaging presentation in XML format.
+Your output is consumed directly by a slide rendering engine that parses a custom XML schema -- it is NOT rendered as HTML or displayed as raw text. Every tag name, attribute, and structural rule described below is part of a strict schema.
 
-## SLIDE REQUIREMENTS
-1. Generate exactly ONE <SECTION> tag
-2. Use creative content based on the user's prompt
-3. Choose an appropriate layout component for the content
-4. Include an image query if relevant
+Your task: Create a SINGLE engaging slide in XML format based on the user's request.
 
-## USER REQUEST
+---
+
+# TASK CONTEXT
+
+## User Request
 {PROMPT}
 
-## CURRENT SLIDE CONTEXT (if provided)
+## Current Slide Context (if provided)
 {CURRENT_SLIDE}
 
-## LANGUAGE
+## Language
 {LANGUAGE}
 
-## OUTPUT FORMAT
-Return ONLY the XML for a single slide. No explanation, no wrapper tags.
+---
+
+# XML OUTPUT SCHEMA
+
+Return ONLY the XML for a single slide. No explanation, no wrapper tags. 
 
 \`\`\`xml
-<SECTION layout="left" | "right" | "vertical">
+<SECTION layout="left|right|vertical|background">
   <!-- Choose ONE layout component -->
-  <!-- Include an IMG tag with query if relevant -->
+  <!-- Optional: include an IMG tag with query after the content if relevant. Use layout="background" as a normal full-slide image layout when the image leaves enough contrast for readable foreground content. -->
 </SECTION>
 \`\`\`
 
-## AVAILABLE LAYOUTS
-Choose ONE layout component that best fits the content:
+---
 
-1. COLUMNS: For comparisons
-\`\`\`xml
-<COLUMNS>
-  <DIV><H3>First Concept</H3><P>Description</P></DIV>
-  <DIV><H3>Second Concept</H3><P>Description</P></DIV>
-</COLUMNS>
-\`\`\`
+${LAYOUT_REFERENCE}
 
-2. BULLETS: For key points
-\`\`\`xml
-<BULLETS>
-  <DIV><H3>Main Point 1</H3><P>Description</P></DIV>
-  <DIV><H3>Main Point 2</H3><P>Second point with details</P></DIV>
-</BULLETS>
-\`\`\`
+---
 
-3. ICONS: For concepts with symbols
-\`\`\`xml
-<ICONS>
-  <DIV icon="rocket"><H3>Innovation</H3><P>Description</P></DIV>
-  <DIV icon="shield"><H3>Security</H3><P>Description</P></DIV>
-</ICONS>
-\`\`\`
+# IMAGE HANDLING
 
-4. CYCLE: For processes and workflows
-\`\`\`xml
-<CYCLE>
-  <DIV><H3>Research</H3><P>Initial exploration phase</P></DIV>
-  <DIV><H3>Design</H3><P>Solution creation phase</P></DIV>
-  <DIV><H3>Implement</H3><P>Execution phase</P></DIV>
-</CYCLE>
-\`\`\`
-
-5. ARROWS: For cause-effect or flows
-\`\`\`xml
-<ARROWS>
-  <DIV><H3>Challenge</H3><P>Current market problem</P></DIV>
-  <DIV><H3>Solution</H3><P>Our innovative approach</P></DIV>
-  <DIV><H3>Result</H3><P>Measurable outcomes</P></DIV>
-</ARROWS>
-\`\`\`
-
-6. TIMELINE: For chronological progression
-\`\`\`xml
-<TIMELINE>
-  <DIV><H3>2022</H3><P>Market research completed</P></DIV>
-  <DIV><H3>2023</H3><P>Product development phase</P></DIV>
-  <DIV><H3>2024</H3><P>Global market expansion</P></DIV>
-</TIMELINE>
-\`\`\`
-
-7. PYRAMID: For hierarchical importance
-\`\`\`xml
-<PYRAMID>
-  <DIV><H3>Vision</H3><P>Our aspirational goal</P></DIV>
-  <DIV><H3>Strategy</H3><P>Key approaches to achieve vision</P></DIV>
-  <DIV><H3>Tactics</H3><P>Specific implementation steps</P></DIV>
-</PYRAMID>
-\`\`\`
-
-8. STAIRCASE: For progressive advancement
-\`\`\`xml
-<STAIRCASE>
-  <DIV><H3>Basic</H3><P>Foundational capabilities</P></DIV>
-  <DIV><H3>Advanced</H3><P>Enhanced features and benefits</P></DIV>
-  <DIV><H3>Expert</H3><P>Premium capabilities and results</P></DIV>
-</STAIRCASE>
-\`\`\`
-
-9. BOXES: For simple information tiles
-\`\`\`xml
-<BOXES>
-  <DIV><H3>Speed</H3><P>Faster delivery cycles.</P></DIV>
-  <DIV><H3>Quality</H3><P>Automated testing & reviews.</P></DIV>
-  <DIV><H3>Security</H3><P>Shift-left security practices.</P></DIV>
-</BOXES>
-\`\`\`
-
-10. COMPARE: For side-by-side comparison
-\`\`\`xml
-<COMPARE>
-  <DIV><H3>Solution A</H3><LI>Feature 1</LI><LI>Feature 2</LI></DIV>
-  <DIV><H3>Solution B</H3><LI>Feature 3</LI><LI>Feature 4</LI></DIV>
-</COMPARE>
-\`\`\`
-
-11. PROS-CONS: For trade-offs
-\`\`\`xml
-<PROS-CONS>
-  <PROS><H3>Pros</H3><LI>Pro 1</LI><LI>Pro 2</LI></PROS>
-  <CONS><H3>Cons</H3><LI>Con 1</LI><LI>Con 2</LI></CONS>
-</PROS-CONS>
-\`\`\`
-
-12. TABLE: For tabular data
-\`\`\`xml
-<TABLE>
-  <TR><TH>Header 1</TH><TH>Header 2</TH></TR>
-  <TR><TD>Data 1</TD><TD>Data 2</TD></TR>
-</TABLE>
-\`\`\`
-
-13. CHART: For data visualization
-\`\`\`xml
-<CHART charttype="bar|pie|line|area|radar">
-  <DATA><LABEL>Q1</LABEL><VALUE>24</VALUE></DATA>
-  <DATA><LABEL>Q2</LABEL><VALUE>36</VALUE></DATA>
-</CHART>
-\`\`\`
-
-14. SIMPLE CONTENT: Just headings and paragraphs
-\`\`\`xml
-<H1>Main Title</H1>
-<P>Description paragraph with details.</P>
-\`\`\`
-
-## IMAGE QUERY
 Include an image query in most slides:
 \`\`\`xml
+
 <IMG query="abstract background, minimalist design" />
 \`\`\`
 
-If you include an \`<IMG query="...">\` tag, the query text MUST always be in English for Unsplash compatibility, even if {LANGUAGE} is not English. Keep all other slide copy in {LANGUAGE}; only the image search query should be in English.
+If you include an \`<IMG query="...">\` tag, the query text MUST always be in English for stock or web image-provider compatibility, even if {LANGUAGE} is not English. Keep all other slide copy in {LANGUAGE}; only the image search query should be in English.
+For standard slides, generate the slide content before the root image: put headings/body/layout components first and place any direct child root \`<IMG ... />\` as the final child of \`<SECTION>\`.
+
+---
+
+# INFOGRAPHIC BLOCKS
+
+Use an infographic block when the slide needs a custom visual explanation: process map, hierarchy, lifecycle, relationship diagram, matrix, framework, or cause-and-effect flow.
+
+<SECTION layout="vertical">
+  <H2>Operating Model</H2>
+  <INFOGRAPHIC>Operating model with five connected parts: Inputs = customer data and market signals; Workflows = intake, prioritization, delivery; Governance = decision rights and risk checks; Metrics = cycle time, quality, adoption; Outcomes = faster launches and higher retention.</INFOGRAPHIC>
+</SECTION>
+
+Place the \`<INFOGRAPHIC>\` element as slide content inside \`<SECTION>\`. Its text must be fully self-contained: include the exact labels, entities, values, steps, sequence, relationships, and takeaway the infographic should show.
+For item-level content inside the infographic prompt, use labels of 20 characters or fewer and descriptions of 60 characters or fewer.
+For layout-based infographic prompts such as pyramids, quadrants, lists, hierarchies, sequences, matrices, and relationship diagrams, include only the strongest 4 to 5 visible items. Synthesize extra detail into those items. Word clouds and chart-style visuals may include more items when useful.
+When an \`<INFOGRAPHIC>\` is the main/root slide component, do not generate any other layout component on that slide. Only simple \`<H1>\`, \`<H2>\`, \`<H3>\`, or \`<P>\` text may accompany it.
+The infographic prompt must state the required visual orientation: \`layout="vertical"\` or \`layout="background"\` requires a horizontal/landscape infographic because the content area is wide; \`layout="left"\` or \`layout="right"\` requires a vertical/stacked infographic because the content area is a narrow side column.
+
+**CRITICAL INFOGRAPHIC RULE**: If the user's request explicitly mentions an "infographic", "diagram", "process map", or similar visual component, you MUST include an \`<INFOGRAPHIC>...</INFOGRAPHIC>\` element.
+
+---
+
+# HARD CONSTRAINTS
+
+These rules are non-negotiable. Violating any **MUST** rule will break the parser.
+
+### MUST (parsing will break)
+1. Generate exactly ONE \`<SECTION>\` with ONE main layout component.
+2. Use ONLY layout tags from the AVAILABLE LAYOUTS section -- unlisted tags cause parsing errors.
+3. Do NOT use CYCLE with a vertical root image layout. Give CYCLE enough horizontal room or omit the root image.
+
+### SHOULD (quality)
+4. Use supported attributes instead of plain defaults when they improve the slide: alignment, bulletType, orientation, sidedness, svgType, boxType, statstype, numbered, showLine, and isFunnel.
+5. Match nested layout orientation to the root image layout: vertical/background root image pairs with horizontal timelines; left/right root image pairs with vertical timelines.
+6. Do not force all visuals into the root image. Add nested \`<IMG query="..." />\` inside layout items when item-level imagery improves comprehension.
+7. For direct child root images, place \`<IMG ... />\` after the slide's content/layout component so the content is produced before the root image.
+8. Use an \`<INFOGRAPHIC>\` element when it communicates the idea better than another list, chart, or image.
+9. If the root slide component is \`<INFOGRAPHIC>\`, do not add COLUMNS, BULLETS, ICONS, CYCLE, ARROWS, TIMELINE, PYRAMID, BOXES, STEPS, COMPARE, TABLE, CHART, or any other layout component to the same slide.
 
 Now generate a single slide based on the user's request.
 `;
 
-const singleImageSlideTemplate = `
-You are an expert visual presentation designer. Create a SINGLE image-based slide in XML format.
+const singleImageSlideTemplate = `# ROLE
 
-## SLIDE REQUIREMENTS
-1. Generate exactly ONE <SECTION> tag with isImageSlide="true"
-2. The slide must be a full-bleed image with ALL text rendered inside the image itself (no H1/H2/H3/P/etc.)
-3. Output ONLY an <IMG query="..."> tag inside the SECTION
-4. The IMG query must be 60-120 words, highly descriptive, and include the exact on-image text in quotes
-5. Do NOT include any other tags or wrapper elements
+You are a visual presentation-to-XML compiler. Your output is consumed directly by a slide rendering engine -- it is NOT rendered as HTML. You produce a single full-bleed image slide where ALL text is rendered inside the generated image itself (no separate text overlays).
 
-## USER REQUEST
+---
+
+# TASK CONTEXT
+
+## User Request
 {PROMPT}
 
-## CURRENT SLIDE CONTEXT (if provided)
+## Current Slide Context (if provided)
 {CURRENT_SLIDE}
 
-## LANGUAGE
+## Language
 {LANGUAGE}
 
-## IMAGE STYLE
-{IMAGE_STYLE}
-{IMAGE_STYLE_GUIDANCE}
+---
 
-## TEXT DENSITY
-{TEXT_DENSITY}
-{TEXT_DENSITY_GUIDANCE}
+# XML OUTPUT SCHEMA
 
-## OUTPUT FORMAT
-Return ONLY the XML for a single slide. No explanation, no wrapper tags.
+Return ONLY the XML for a single image slide. No explanation, no wrapper tags.
 
 \`\`\`xml
 <SECTION isImageSlide="true">
@@ -211,11 +136,39 @@ Return ONLY the XML for a single slide. No explanation, no wrapper tags.
 </SECTION>
 \`\`\`
 
-## IMAGE PROMPT GUIDELINES
-- Describe the scene, composition, mood, color palette, and lighting
-- Include typography guidance (font style, size, placement, contrast)
-- Expand the prompt into the final copy for the slide (titles, subtitles, bullets, labels)
-- Do NOT use placeholders, brackets, or vague references
+Requirements:
+- The SECTION MUST have \`isImageSlide="true"\`
+- Output ONLY an \`<IMG query="...">\` tag inside the SECTION -- no H1/H2/H3/P or other elements
+- The IMG query must be 60-120 words, highly descriptive, and include the exact on-image text in quotes
+
+---
+
+# IMAGE GENERATION GUIDELINES
+
+## Visual Style
+- **Style**: {IMAGE_STYLE}
+- {IMAGE_STYLE_GUIDANCE}
+
+## Text Density
+- **Density**: {TEXT_DENSITY}
+- {TEXT_DENSITY_GUIDANCE}
+
+## Prompt Construction
+
+Create a detailed, artistic prompt that:
+- Describes the visual scene, composition, mood, color palette, and lighting
+- Includes typography guidance (font style, size, placement, contrast)
+- Expands the prompt into the final copy for the slide (titles, subtitles, bullets, labels)
+- Does NOT use placeholders, brackets, or vague references
+
+---
+
+# HARD CONSTRAINTS
+
+1. Generate exactly ONE \`<SECTION isImageSlide="true">\` containing exactly ONE \`<IMG query="...">\`
+2. Do NOT include any other tags -- no H1, H2, H3, P, COLUMNS, or any layout component
+3. The IMG query MUST be 60-120 words
+4. The IMG query MUST include the exact on-image text in quotes
 
 Now generate the single image slide.
 `;
@@ -241,7 +194,6 @@ function getTextDensityGuidance(density?: string): string {
       return "Text should be minimal: a short title and one short supporting line.";
     case "Detailed":
       return "Text should be detailed: title, subtitle, and 4-6 concise bullet lines or labels.";
-    case "Balanced":
     default:
       return "Text should be balanced: title, subtitle, and 2-3 concise supporting lines.";
   }

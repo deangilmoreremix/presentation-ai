@@ -29,6 +29,7 @@ interface OutlineMessageMetadata {
   modelId?: string;
   modelProvider?: "openai" | "ollama" | "lmstudio";
   webSearch?: boolean;
+  autoTheme?: boolean;
   textContent?: "minimal" | "concise" | "detailed" | "extensive";
   tone?: string;
   audience?: string;
@@ -79,7 +80,43 @@ Example:
 - Key point
 - Another point
 
+{themeInstructions}
+
 Remember: {finalInstruction}`;
+
+const autoThemeInstructions = `## Custom Theme Output:
+After the full outline is complete, you MUST emit one final THEME XML block. The THEME block must come after all outline sections, never before them.
+
+The THEME block is mandatory for this request. Create a custom visual direction that fits the user's topic, audience, tone, scenario, and any named brand or organization.
+
+Example theme block:
+<THEME>
+  <name>Short theme name</name>
+  <description>Short visual direction</description>
+  <mode>light</mode>
+  <primary>#2563EB</primary>
+  <accent>#F97316</accent>
+  <background>#F8FAFC</background>
+  <text>#1F2937</text>
+  <heading>#111827</heading>
+  <smartLayout>#2563EB</smartLayout>
+  <cardBackground>#FFFFFF</cardBackground>
+  <headingFont>Inter</headingFont>
+  <bodyFont>Inter</bodyFont>
+</THEME>
+
+Theme requirements:
+- Prefer known brand colors when the prompt clearly names a brand and the palette is already known to you.
+- If the brand palette is not known with confidence, create a topic-appropriate palette instead of inventing brand colors.
+- Generate colors that match the topic, audience, tone, and scenario.
+- Use only valid 6-digit hex colors.
+- Ensure text and heading colors have strong contrast against background and cardBackground.
+- Color field meanings:
+  - primary is the main brand/action color used for emphasis and prominent accents.
+  - smartLayout is the fill color for SVG-based visual structures such as pyramids, pie charts, staircase blocks, cycles, timelines, and diagrams. It usually belongs near primary or a deliberate variant of it, not a disconnected neutral color.
+  - cardBackground is the readable surface behind text in cards and containers. Do not use cardBackground as a substitute for smartLayout.
+- Include headingFont and bodyFont when you include a THEME block. Use real, well-known font family names that fit the brand and requirement. Do not invent font names. Good choices include Inter, Manrope, Poppins, IBM Plex Sans, Space Grotesk, Sora, Playfair Display, Merriweather, Lato, Open Sans, Work Sans, DM Sans, and Source Sans Pro.
+- Do not include prose before or after the THEME block.`;
 
 function buildOutlineSystemPrompt({
   actualLanguage,
@@ -90,6 +127,7 @@ function buildOutlineSystemPrompt({
   audience,
   scenario,
   webSearch,
+  autoTheme,
 }: {
   actualLanguage: string;
   numberOfCards: number;
@@ -99,6 +137,7 @@ function buildOutlineSystemPrompt({
   audience: string;
   scenario: string;
   webSearch: boolean;
+  autoTheme: boolean;
 }) {
   return outlineSystemPrompt
     .replace("{currentDate}", currentDate)
@@ -124,6 +163,7 @@ function buildOutlineSystemPrompt({
           ].join("\n")
         : "- Web search is disabled for this request.",
     )
+    .replace("{themeInstructions}", autoTheme ? autoThemeInstructions : "")
     .replace(
       "{finalInstruction}",
       webSearch
@@ -169,12 +209,14 @@ export async function POST(req: Request) {
     const modelProvider = metadata.modelProvider ?? "openai";
     const modelId = metadata.modelId;
     const webSearch = Boolean(metadata.webSearch);
+    const autoTheme = metadata.autoTheme ?? false;
 
     span.annotate({
       "allweone.presentation.cards.count": numberOfCards,
       "allweone.presentation.prompt.length": prompt.length,
       "allweone.presentation.language": language,
       "allweone.presentation.web_search": webSearch,
+      "allweone.presentation.auto_theme": autoTheme,
     });
     routeLogger.info("Validated outline request payload", {
       requestId,
@@ -279,6 +321,7 @@ export async function POST(req: Request) {
           audience: metadata.audience ?? "auto",
           scenario: metadata.scenario ?? "auto",
           webSearch,
+          autoTheme,
         }),
     });
 

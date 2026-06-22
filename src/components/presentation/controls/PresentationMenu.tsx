@@ -16,10 +16,10 @@ import { usePresentationHistoryState } from "@/states/presentation-history-state
 import { usePresentationState } from "@/states/presentation-state";
 import { useMutation } from "@tanstack/react-query";
 import {
-  Bot,
   Copy,
   FileEdit,
   FolderOpen,
+  Menu,
   Palette,
   Plus,
   Redo,
@@ -115,20 +115,29 @@ export function PresentationMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Open presentation menu">
-          <FolderOpen className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Open presentation menu"
+          className="rounded-full"
+        >
+          <Menu className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64">
+      <DropdownMenuContent className="w-64 p-2">
+        <div className="px-2 py-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+          File
+        </div>
         <DropdownMenuItem
           disabled={isCreatingBlank}
           onClick={() => void createBlankPresentationMutation()}
+          className="rounded-md"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Presentation
         </DropdownMenuItem>
         {!readOnly ? (
-          <DropdownMenuItem onClick={focusTitleInput}>
+          <DropdownMenuItem onClick={focusTitleInput} className="rounded-md">
             <FileEdit className="mr-2 h-4 w-4" />
             Rename
           </DropdownMenuItem>
@@ -136,6 +145,7 @@ export function PresentationMenu({
         <DropdownMenuItem
           disabled={isDuplicating}
           onClick={() => void duplicatePresentationMutation()}
+          className="rounded-md"
         >
           <Copy className="mr-2 h-4 w-4" />
           {readOnly ? "Clone to My Account" : "Duplicate"}
@@ -144,32 +154,70 @@ export function PresentationMenu({
         {!readOnly ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={!canUndo} onClick={undo}>
+            <div className="px-2 py-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+              Edit
+            </div>
+            <DropdownMenuItem
+              disabled={!canUndo}
+              onClick={undo}
+              className="rounded-md"
+            >
               <Undo className="mr-2 h-4 w-4" />
-              Undo
+              <span className="flex-1">Undo</span>
+              <span className="text-xs text-muted-foreground">Ctrl+Z</span>
             </DropdownMenuItem>
-            <DropdownMenuItem disabled={!canRedo} onClick={redo}>
+            <DropdownMenuItem
+              disabled={!canRedo}
+              onClick={redo}
+              className="rounded-md"
+            >
               <Redo className="mr-2 h-4 w-4" />
-              Redo
+              <span className="flex-1">Redo</span>
+              <span className="text-xs text-muted-foreground">Ctrl+Y</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setActiveRightPanel("globalSettings")}>
+            <div className="px-2 py-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+              Workspace
+            </div>
+            <DropdownMenuItem
+              onClick={() => setActiveRightPanel("globalSettings")}
+              className="rounded-md"
+            >
               <Settings className="mr-2 h-4 w-4" />
-              Page setup
+              Page Setup
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveRightPanel("theme")}>
+            <DropdownMenuItem
+              onClick={() => setActiveRightPanel("theme")}
+              className="rounded-md"
+            >
               <Palette className="mr-2 h-4 w-4" />
-              Theme panel
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveRightPanel("agent")}>
-              <Bot className="mr-2 h-4 w-4" />
-              Agent panel
+              Theme Panel
             </DropdownMenuItem>
           </>
         ) : null}
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/presentation")}>
+        <div className="px-2 py-1.5 text-xs font-medium tracking-[0.08em] text-muted-foreground uppercase">
+          View
+        </div>
+        {!readOnly ? (
+          <DropdownMenuItem
+            disabled={!currentPresentationId}
+            onClick={() => {
+              if (currentPresentationId) {
+                router.push(`/presentation/generate/${currentPresentationId}`);
+              }
+            }}
+            className="rounded-md"
+          >
+            <FolderOpen className="mr-2 h-4 w-4" />
+            Back to prompt
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem
+          onClick={() => router.push("/presentation")}
+          className="rounded-md"
+        >
           <FolderOpen className="mr-2 h-4 w-4" />
           All Presentations
         </DropdownMenuItem>

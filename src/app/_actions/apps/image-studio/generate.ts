@@ -1,14 +1,18 @@
 "use server";
 
 import { utapi } from "@/app/api/uploadthing/core";
+import {
+  DEFAULT_IMAGE_MODEL,
+  getFalImageGenerationInput,
+  type ImageAspectRatio,
+  type ImageModelList,
+} from "@/constants/image-models";
 import { env } from "@/env";
 import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import OpenAI from "openai";
+import { fal } from "@fal-ai/client";
 import { UTFile } from "uploadthing/server";
-
-export type ImageModelList = "dall-e-3" | "dall-e-2";
 
 async function persistGeneratedImage(
   imageUrl: string,
@@ -40,59 +44,75 @@ async function persistGeneratedImage(
   });
 }
 
+async function generateFalImage(
+  prompt: string,
+  model: ImageModelList,
+  userId: string,
+  aspectRatio: ImageAspectRatio,
+) {
+  const falConfig = requireOptionalIntegration({
+    integration: "FAL",
+    envVar: "FAL_API_KEY",
+    value: env.FAL_API_KEY,
+    feature: "AI image generation",
+  });
+
+  if (!falConfig.ok) {
+    return {
+      success: false,
+      error: falConfig.error,
+    };
+  }
+
+  fal.config({
+    credentials: falConfig.value,
+  });
+
+  const result = await fal.subscribe(model, {
+    input: getFalImageGenerationInput({ model, prompt, aspectRatio }),
+  });
+
+  const imageUrl = result.data?.images?.[0]?.url;
+  if (!imageUrl) {
+    throw new Error("Failed to generate image");
+  }
+
+  const image = await persistGeneratedImage(imageUrl, prompt, userId, "image");
+
+  return {
+    success: true,
+    image,
+  };
+}
+
 export async function generateImageAction(
   prompt: string,
-  model: ImageModelList = "dall-e-3",
+  model: ImageModelList = DEFAULT_IMAGE_MODEL,
+  aspectRatio: ImageAspectRatio = "16:9",
 ) {
   const session = await auth();
 
-  try {
-    const apiKeyToUse = model ? env.OPENAI_API_KEY : undefined;
-
-    if (!apiKeyToUse) {
-      return {
-        success: false,
-        error: "OpenAI API key is required for image generation",
-      };
-    }
-
-    const openai = new OpenAI({ apiKey: apiKeyToUse });
-
-    console.log(`Generating image with OpenAI DALL-E model: ${model}`);
-
-    const result = await openai.images.generate({
-      model,
-      prompt,
-      n: 1,
-      size: "1024x1024",
-      response_format: "url",
-    });
-
-    if (!result.data || result.data.length === 0) {
-      throw new Error("Failed to generate image: no data returned");
-    }
-
-    const firstImage = result.data[0];
-    if (!firstImage) {
-      throw new Error("Failed to generate image: no image data");
-    }
-
-    const imageUrl = firstImage.url;
-    if (!imageUrl) {
-      throw new Error("Failed to generate image: no URL returned");
-    }
-
-    const image = await persistGeneratedImage(imageUrl, prompt, session!.user.id, "image");
-
+  if (!session?.user?.id) {
     return {
-      success: true,
-      image,
+      success: false,
+      error: "You must be logged in to generate images",
     };
+  }
+
+  try {
+    const actualModel = session.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    return await generateFalImage(
+      prompt,
+      actualModel,
+      session.user.id,
+      aspectRatio,
+    );
   } catch (error) {
     console.error("Error generating image:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to generate image",
+      error:
+        error instanceof Error ? error.message : "Failed to generate image",
     };
   }
 }

@@ -20,6 +20,74 @@ import { Bot, Cpu, Loader2, Monitor } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 const modelPickerLogger = createLogger("client:model-picker");
+const OPENAI_MODELS = [
+  {
+    id: "gpt-4o-mini",
+    label: "GPT-4o-mini",
+    description: "Fast cloud model for everyday presentation drafts",
+  },
+  {
+    id: "gpt-4o",
+    label: "GPT-4o",
+    description: "Balanced cloud model for higher quality drafts",
+  },
+  {
+    id: "gpt-4.1-mini",
+    label: "GPT-4.1-mini",
+    description: "Efficient cloud model for structured generation",
+  },
+  {
+    id: "gpt-4.1-nano",
+    label: "GPT-4.1-nano",
+    description: "Fastest, lowest-cost GPT-4.1 model",
+  },
+  {
+    id: "gpt-4.1",
+    label: "GPT-4.1",
+    description: "Stronger cloud model for complex presentations",
+  },
+  {
+    id: "gpt-5.2",
+    label: "GPT-5.2",
+    description: "Latest flagship GPT model",
+  },
+  {
+    id: "gpt-5.2-chat-latest",
+    label: "GPT-5.2 Chat",
+    description: "Latest ChatGPT-style GPT-5.2 model",
+  },
+  {
+    id: "gpt-5.2-pro",
+    label: "GPT-5.2 Pro",
+    description: "More compute for harder problems",
+  },
+  {
+    id: "gpt-5.1",
+    label: "GPT-5.1",
+    description: "Flagship GPT model with configurable reasoning",
+  },
+  {
+    id: "gpt-5",
+    label: "GPT-5",
+    description: "Previous GPT-5 reasoning model",
+  },
+  {
+    id: "gpt-5-mini",
+    label: "GPT-5-mini",
+    description: "Faster, cost-efficient GPT-5 model",
+  },
+  {
+    id: "gpt-5-nano",
+    label: "GPT-5-nano",
+    description: "Fastest, most cost-efficient GPT-5 model",
+  },
+] as const;
+
+function getOpenAIModel(modelId: string) {
+  return (
+    OPENAI_MODELS.find((model) => model.id === modelId) ?? OPENAI_MODELS[0]
+  );
+}
 
 export function ModelPicker({
   shouldShowLabel = true,
@@ -92,15 +160,16 @@ export function ModelPicker({
       return `lmstudio-${modelId}`;
     }
 
-    return "openai";
+    return `openai-${getOpenAIModel(modelId).id}`;
   };
 
   const getCurrentModelOption = () => {
     const currentValue = getCurrentModelValue();
 
-    if (currentValue === "openai") {
+    if (modelProvider === "openai") {
+      const currentModel = getOpenAIModel(modelId);
       return {
-        label: "GPT-4o-mini",
+        label: currentModel.label,
         icon: Bot,
       };
     }
@@ -130,14 +199,16 @@ export function ModelPicker({
   };
 
   const handleModelChange = (value: string) => {
-    if (value === "openai") {
+    if (value.startsWith("openai-")) {
+      const selectedModelId = value.replace("openai-", "");
+      const selectedModel = getOpenAIModel(selectedModelId);
       modelPickerLogger.info("Selected OpenAI model", {
         modelProvider: "openai",
-        modelId: "gpt-4o-mini",
+        modelId: selectedModel.id,
       });
       setModelProvider("openai");
-      setModelId("");
-      setSelectedModel("openai", "");
+      setModelId(selectedModel.id);
+      setSelectedModel("openai", selectedModel.id);
       return;
     }
 
@@ -179,14 +250,14 @@ export function ModelPicker({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="min-w-0">
       {shouldShowLabel && (
         <label className="block text-xs font-medium text-muted-foreground">
           Text model
         </label>
       )}
       <Select value={getCurrentModelValue()} onValueChange={handleModelChange}>
-        <SelectTrigger className="overflow-hidden bg-background">
+        <SelectTrigger className="h-8 w-auto max-w-full gap-2 overflow-hidden rounded-full border-border bg-background px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent sm:h-9 sm:px-3.5 sm:text-sm">
           <div className="flex min-w-0 items-center gap-2">
             {(() => {
               const currentOption = getCurrentModelOption();
@@ -198,18 +269,18 @@ export function ModelPicker({
             </span>
           </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="w-80 max-w-[calc(100vw-1rem)]">
           {isLoading && !isInitialLoad && (
             <SelectGroup>
               <SelectLabel>Loading Models</SelectLabel>
-              <SelectItem value="loading" disabled>
-                <div className="flex items-center gap-3">
+              <SelectItem value="loading" disabled className="overflow-hidden">
+                <div className="flex min-w-0 max-w-full items-center gap-3">
                   <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin" />
-                  <div className="flex min-w-0 flex-col">
+                  <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                     <span className="truncate text-sm">
                       Refreshing models...
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
                       Checking for new models
                     </span>
                   </div>
@@ -220,17 +291,23 @@ export function ModelPicker({
 
           <SelectGroup>
             <SelectLabel>Cloud Models</SelectLabel>
-            <SelectItem value="openai">
-              <div className="flex items-center gap-3">
-                <Bot className="h-4 w-4 flex-shrink-0" />
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm">GPT-4o-mini</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    Cloud-based AI model
-                  </span>
+            {OPENAI_MODELS.map((model) => (
+              <SelectItem
+                key={model.id}
+                value={`openai-${model.id}`}
+                className="overflow-hidden"
+              >
+                <div className="flex min-w-0 max-w-full items-center gap-3">
+                  <Bot className="h-4 w-4 flex-shrink-0" />
+                  <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                    <span className="truncate text-sm">{model.label}</span>
+                    <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
+                      {model.description}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </SelectItem>
+              </SelectItem>
+            ))}
           </SelectGroup>
 
           {ollamaModels.length > 0 && (
@@ -241,14 +318,18 @@ export function ModelPicker({
                 const Icon = option.icon;
 
                 return (
-                  <SelectItem key={option.id} value={option.id}>
-                    <div className="flex items-center gap-3">
+                  <SelectItem
+                    key={option.id}
+                    value={option.id}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex min-w-0 max-w-full items-center gap-3">
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex min-w-0 flex-col">
+                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                         <span className="truncate text-sm">
                           {option.displayLabel}
                         </span>
-                        <span className="truncate text-xs text-muted-foreground">
+                        <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
                           {option.description}
                         </span>
                       </div>
@@ -267,14 +348,18 @@ export function ModelPicker({
                 const Icon = option.icon;
 
                 return (
-                  <SelectItem key={option.id} value={option.id}>
-                    <div className="flex items-center gap-3">
+                  <SelectItem
+                    key={option.id}
+                    value={option.id}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex min-w-0 max-w-full items-center gap-3">
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex min-w-0 flex-col">
+                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                         <span className="truncate text-sm">
                           {option.displayLabel}
                         </span>
-                        <span className="truncate text-xs text-muted-foreground">
+                        <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
                           {option.description}
                         </span>
                       </div>
@@ -288,14 +373,18 @@ export function ModelPicker({
           {lmStudioModels.length === 0 && (
             <SelectGroup>
               <SelectLabel>LM Studio</SelectLabel>
-              <SelectItem value="lmstudio-setup" disabled>
-                <div className="flex items-center gap-3">
+              <SelectItem
+                value="lmstudio-setup"
+                disabled
+                className="overflow-hidden"
+              >
+                <div className="flex min-w-0 max-w-full items-center gap-3">
                   <Monitor className="h-4 w-4 flex-shrink-0" />
-                  <div className="flex min-w-0 flex-col">
-                    <span className="truncate text-sm">
+                  <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                    <span className="line-clamp-2 whitespace-normal break-words text-sm leading-snug">
                       Start LM Studio to use local models
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
                       Turn on the server and load a model to make it selectable
                     </span>
                   </div>
@@ -312,14 +401,18 @@ export function ModelPicker({
                 const Icon = option.icon;
 
                 return (
-                  <SelectItem key={option.id} value={option.id}>
-                    <div className="flex items-center gap-3">
+                  <SelectItem
+                    key={option.id}
+                    value={option.id}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex min-w-0 max-w-full items-center gap-3">
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex min-w-0 flex-col">
+                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
                         <span className="truncate text-sm">
                           {option.displayLabel}
                         </span>
-                        <span className="truncate text-xs text-muted-foreground">
+                        <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
                           {option.description}
                         </span>
                       </div>

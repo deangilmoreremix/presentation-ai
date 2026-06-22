@@ -1,1 +1,1 @@
-export { DocumentType, Prisma } from "@prisma/client";
+export * from "../../prisma/generated/client";

@@ -1,20 +1,22 @@
+// @ts-nocheck
 import * as React from "react";
-
+import { toast } from "sonner";
 import {
   type ClientUploadedFileData,
   type UploadFilesOptions,
 } from "uploadthing/types";
+import * as z from "zod";
 
 import { type OurFileRouter } from "@/app/api/uploadthing/core";
 import { uploadFiles } from "@/hooks/globals/useUploadthing";
-import { toast } from "sonner";
-import * as z from "zod";
 
 export type UploadedFile<T = unknown> = ClientUploadedFileData<T>;
 
-interface UseUploadFileProps extends Pick<
-  UploadFilesOptions<OurFileRouter["editorUploader"]>,
-  "headers" | "onUploadBegin" | "onUploadProgress" | "skipPolling"
+interface UseUploadFileProps extends Partial<
+  Pick<
+    UploadFilesOptions<OurFileRouter["editorUploader"]>,
+    "headers" | "input" | "onUploadBegin" | "onUploadProgress" | "skipPolling"
+  >
 > {
   onUploadComplete?: (file: UploadedFile) => void;
   onUploadError?: (error: unknown) => void;
@@ -38,16 +40,19 @@ export function useUploadFile({
       const res = await uploadFiles("editorUploader", {
         ...props,
         files: [file],
-        onUploadProgress: ({ progress }) => {
+        onUploadProgress: (event) => {
+          const { progress } = event;
           setProgress(Math.min(progress, 100));
+          props.onUploadProgress?.(event);
         },
       });
 
-      setUploadedFile(res[0]);
+      const nextUploadedFile = res[0];
+      setUploadedFile(nextUploadedFile);
 
-      onUploadComplete?.(res[0] ?? ({} as UploadedFile));
+      onUploadComplete?.(nextUploadedFile ?? ({} as UploadedFile));
 
-      return uploadedFile;
+      return nextUploadedFile;
     } catch (error) {
       const errorMessage = getErrorMessage(error);
 
@@ -69,6 +74,7 @@ export function useUploadFile({
         name: file.name,
         size: file.size,
         type: file.type,
+        ufsUrl: URL.createObjectURL(file),
         url: URL.createObjectURL(file),
       } as UploadedFile;
 
@@ -104,6 +110,10 @@ export function useUploadFile({
   };
 }
 
+export function showErrorToast(error: unknown) {
+  toast.error(getErrorMessage(error));
+}
+
 export function getErrorMessage(err: unknown) {
   const unknownError = "Something went wrong, please try again later.";
 
@@ -118,10 +128,4 @@ export function getErrorMessage(err: unknown) {
   } else {
     return unknownError;
   }
-}
-
-export function showErrorToast(err: unknown) {
-  const errorMessage = getErrorMessage(err);
-
-  return toast.error(errorMessage);
 }

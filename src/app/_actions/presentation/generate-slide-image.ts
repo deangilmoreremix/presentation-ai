@@ -5,19 +5,25 @@ import { env } from "@/env";
 import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import OpenAI from "openai";
+import { fal } from "@fal-ai/client";
 import { UTFile } from "uploadthing/server";
 
-// OpenAI DALL-E models for slide images
-export type ImageModelList = "dall-e-3" | "dall-e-2";
-
-const DEFAULT_SLIDE_IMAGE_MODEL: ImageModelList = "dall-e-3";
+// Nano Banana Pro model for presentation slide images
+// const SLIDE_IMAGE_MODEL = "fal-ai/nano-banana-pro";
+const DEFAULT_SLIDE_IMAGE_MODEL = "fal-ai/flux-2/flash";
 
 export async function generateSlideImageAction(
   prompt: string,
-  imageModel: ImageModelList = DEFAULT_SLIDE_IMAGE_MODEL,
+  imageModel: string = DEFAULT_SLIDE_IMAGE_MODEL,
 ) {
   const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      error: "You must be logged in to generate images",
+    };
+  }
 
   // Admin only feature
   if (!session.user.isAdmin) {
@@ -28,42 +34,36 @@ export async function generateSlideImageAction(
   }
 
   try {
-    const openaiConfig = requireOptionalIntegration({
-      integration: "OpenAI",
-      envVar: "OPENAI_API_KEY",
-      value: env.OPENAI_API_KEY,
-      feature: "AI image generation",
+    const falConfig = requireOptionalIntegration({
+      integration: "FAL",
+      envVar: "FAL_API_KEY",
+      value: env.FAL_API_KEY,
+      feature: "slide image generation",
     });
 
-    if (!openaiConfig.ok) {
+    if (!falConfig.ok) {
       return {
         success: false,
-        error: openaiConfig.error,
+        error: falConfig.error,
       };
     }
 
-    const openai = new OpenAI({ apiKey: openaiConfig.value });
+    fal.config({
+      credentials: falConfig.value,
+    });
 
     console.log(`Generating slide image with model: ${imageModel}`);
 
-    const result = await openai.images.generate({
-      model: imageModel,
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-      response_format: "url",
+    const result = await fal.subscribe(imageModel, {
+      input: {
+        prompt: prompt,
+        num_images: 1,
+        aspect_ratio: "16:9",
+      },
     });
 
-    if (!result.data || result.data.length === 0) {
-      throw new Error("Failed to generate slide image: no data returned");
-    }
+    const imageUrl = result.data?.images?.[0]?.url;
 
-    const firstImage = result.data[0];
-    if (!firstImage) {
-      throw new Error("Failed to generate slide image: no image data");
-    }
-
-    const imageUrl = firstImage.url;
     if (!imageUrl) {
       console.log("Failed to generate slide image", result);
       throw new Error("Failed to generate slide image");
@@ -71,10 +71,10 @@ export async function generateSlideImageAction(
 
     console.log(`Generated slide image URL: ${imageUrl}`);
 
-    // Download the image from OpenAI's temporary URL
+    // Download the image from fal.ai URL
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
-      throw new Error("Failed to download image from OpenAI");
+      throw new Error("Failed to download image from fal.ai");
     }
 
     const imageBlob = await imageResponse.blob();

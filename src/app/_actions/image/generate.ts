@@ -2,452 +2,121 @@
 
 import { utapi } from "@/app/api/uploadthing/core";
 import { env } from "@/env";
+import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import { getOpenAIClient } from "@/lib/openai/client";
+import Together from "together-ai";
 import { UTFile } from "uploadthing/server";
-import OpenAI from "openai";
-import type {
-  ImageModel,
-  ImageSize,
-  ImageQuality,
-  OutputFormat,
-  ImageBackground,
-} from "@/lib/image/types";
 
-const DEFAULT_MODEL: ImageModel = "gpt-image-1";
-const DEFAULT_SIZE: ImageSize = "1024x1024";
+export type ImageModelList =
+  | "black-forest-labs/FLUX1.1-pro"
+  | "black-forest-labs/FLUX.1-schnell"
+  | "black-forest-labs/FLUX.1-schnell-Free"
+  | "black-forest-labs/FLUX.1-pro"
+  | "black-forest-labs/FLUX.1-dev";
 
-// Enhanced image generation supporting all OpenAI image models and parameters
 export async function generateImageAction(
   prompt: string,
-  params?: {
-    model?: ImageModel;
-    size?: ImageSize;
-    quality?: ImageQuality;
-    outputFormat?: OutputFormat;
-    outputCompression?: number;
-    background?: ImageBackground;
-    n?: number;
-    apiKey?: string;
-  },
+  model: ImageModelList = "black-forest-labs/FLUX.1-schnell-Free",
 ) {
+  // Get the current session
   const session = await auth();
 
+  // Check if user is authenticated
+  if (!session?.user?.id) {
+    throw new Error("You must be logged in to generate images");
+  }
+
   try {
-    const openai = await getOpenAIClient(session!.user.id, params?.apiKey);
-
-    const {
-      model = DEFAULT_MODEL,
-      size = DEFAULT_SIZE,
-      quality,
-      outputFormat,
-      outputCompression,
-      background,
-      n = 1,
-    } = params ?? {};
-
-    console.log(`Generating image with OpenAI model: ${model}`, {
-      size,
-      quality,
-      outputFormat,
-      n,
+    const togetherConfig = requireOptionalIntegration({
+      integration: "Together AI",
+      envVar: "TOGETHER_AI_API_KEY",
+      value: env.TOGETHER_AI_API_KEY,
+      feature: "AI image generation",
     });
 
-    // Build request params based on model type
-    const requestParams: OpenAI.ImageGenerateParams = {
-      model,
-      prompt,
-      n,
-      size,
-      response_format: "url",
+    if (!togetherConfig.ok) {
+      return {
+        success: false,
+        error: togetherConfig.error,
+      };
+    }
+
+    const together = new Together({ apiKey: togetherConfig.value });
+
+    console.log(`Generating image with model: ${model}`);
+
+    // Generate the image using Together AI
+    const response = (await together.images.create({
+      model: model,
+      prompt: prompt,
+      width: 1024,
+      height: 768,
+      steps: model.includes("schnell") ? 4 : 28, // Fewer steps for schnell models
+      n: 1,
+    })) as unknown as {
+      id: string;
+      model: string;
+      object: string;
+      data: {
+        url: string;
+      }[];
     };
 
-    // Add gpt-image-1+ specific parameters
-    if (model.startsWith("gpt-image")) {
-      if (quality) requestParams.quality = quality;
-      if (outputFormat) requestParams.output_format = outputFormat;
-      if (outputCompression !== undefined) requestParams.output_compression = outputCompression;
-      if (background) requestParams.background = background;
+    const imageUrl = response.data[0]?.url;
+
+    if (!imageUrl) {
+      throw new Error("Failed to generate image");
     }
 
-    const response = await openai.images.generate(requestParams);
+    console.log(`Generated image URL: ${imageUrl}`);
 
-    if (!response.data || response.data.length === 0) {
-      throw new Error("Failed to generate image: no data returned");
+    // Download the image from Together AI URL
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error("Failed to download image from Together AI");
     }
 
-    const images = response.data;
-    const uploadedUrls: string[] = [];
+    const imageBlob = await imageResponse.blob();
+    const imageBuffer = await imageBlob.arrayBuffer();
 
-    // Process each generated image
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = images[i]?.url;
-      if (!imageUrl) continue;
+    // Generate a filename based on the prompt
+    const filename = `${prompt.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}.png`;
 
-      // Download the image from OpenAI's temporary URL
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download image ${i}: ${imageResponse.statusText}`);
-      }
+    // Create a UTFile from the downloaded image
+    const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
 
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-      const filename = `${prompt.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}_${i}.${outputFormat || "png"}`;
-      const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
+    // Upload to UploadThing
+    const uploadResult = await utapi.uploadFiles([utFile]);
 
-      // Upload to UploadThing for permanent storage
-      const uploadResult = await utapi.uploadFiles([utFile]);
-      if (!uploadResult[0]?.data?.ufsUrl) {
-        throw new Error(`Failed to upload image ${i} to storage`);
-      }
-
-      uploadedUrls.push(uploadResult[0].data.ufsUrl);
+    if (!uploadResult[0]?.data?.ufsUrl) {
+      console.error("Upload error:", uploadResult[0]?.error);
+      throw new Error("Failed to upload image to UploadThing");
     }
 
-    // Save all images to database
-    const dbImages = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt,
-            userId: session.user.id,
-            model,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            compression: outputCompression ?? undefined,
-            background: background ?? undefined,
-            n,
-          },
-        }),
-      ),
-    );
+    console.log(uploadResult);
+    const permanentUrl = uploadResult[0].data.ufsUrl;
+    console.log(`Uploaded to UploadThing URL: ${permanentUrl}`);
 
-    return {
-      success: true,
-      images: dbImages,
-      count: dbImages.length,
-    };
-  } catch (error) {
-    console.error("Image generation error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to generate image",
-    };
-  }
-}
-
-// Image editing action - background replacement, object removal, inpainting
-export async function editImageAction(
-  imageData: string | File | Blob,
-  params: {
-    prompt: string;
-    mask?: string | File | Blob;
-    model?: ImageModel;
-    size?: ImageSize;
-    quality?: ImageQuality;
-    outputFormat?: OutputFormat;
-    outputCompression?: number;
-    background?: ImageBackground;
-    n?: number;
-    apiKey?: string;
-  },
-) {
-  const session = await auth();
-  const {
-    prompt,
-    mask,
-    model = "gpt-image-1",
-    size = DEFAULT_SIZE,
-    quality,
-    outputFormat,
-    outputCompression,
-    background,
-    n = 1,
-  } = params;
-
-  try {
-    const openai = await getOpenAIClient(session!.user.id, params.apiKey);
-
-    console.log(`Editing image with OpenAI model: ${model}`);
-
-    // Convert input to proper format for OpenAI
-    const imageFile = typeof imageData === "string" ? await fetch(imageData).then(r => r.blob()) : imageData;
-    const maskFile = mask ? (typeof mask === "string" ? await fetch(mask).then(r => r.blob()) : mask) : undefined;
-
-    // Build request params
-    const requestParams: OpenAI.ImageEditParams = {
-      model,
-      image: imageFile as File,
-      prompt,
-      n,
-      size,
-    };
-
-    if (maskFile) {
-      requestParams.mask = maskFile as File;
-    }
-
-    // Add gpt-image-1+ specific parameters
-    if (model.startsWith("gpt-image")) {
-      if (quality) requestParams.quality = quality;
-      if (outputFormat) requestParams.output_format = outputFormat;
-      if (outputCompression !== undefined) requestParams.output_compression = outputCompression;
-    }
-
-    const response = await openai.images.edit(requestParams);
-
-    if (!response.data || response.data.length === 0) {
-      throw new Error("Failed to edit image: no data returned");
-    }
-
-    const images = response.data;
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = images[i]?.url;
-      if (!imageUrl) continue;
-
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download edited image ${i}: ${imageResponse.statusText}`);
-      }
-
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-      const filename = `edited_${prompt.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}_${i}.${outputFormat || "png"}`;
-      const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
-
-      const uploadResult = await utapi.uploadFiles([utFile]);
-      if (!uploadResult[0]?.data?.ufsUrl) {
-        throw new Error(`Failed to upload edited image ${i} to storage`);
-      }
-
-      uploadedUrls.push(uploadResult[0].data.ufsUrl);
-    }
-
-    const dbImages = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt,
-            userId: session.user.id,
-            model,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            compression: outputCompression ?? undefined,
-            background: background ?? undefined,
-            n,
-          },
-        }),
-      ),
-    );
-
-    return {
-      success: true,
-      images: dbImages,
-      count: dbImages.length,
-    };
-  } catch (error) {
-    console.error("Image edit error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to edit image",
-    };
-  }
-}
-
-// Image variation action
-export async function createVariationAction(
-  imageData: string | File | Blob,
-  params?: {
-    model?: ImageModel;
-    n?: number;
-    apiKey?: string;
-  },
-) {
-  const session = await auth();
-  const { model = "dall-e-2", n = 1 } = params ?? {};
-
-  try {
-    const openai = await getOpenAIClient(session!.user.id, params?.apiKey);
-
-    console.log(`Creating variation with OpenAI model: ${model}`);
-
-    const imageFile = typeof imageData === "string" ? await fetch(imageData).then(r => r.blob()) : imageData;
-
-    const response = await openai.images.createVariation({
-      model,
-      image: imageFile as File,
-      n,
+    // Store in database with the permanent URL
+    const generatedImage = await db.generatedImage.create({
+      data: {
+        url: permanentUrl, // Store the UploadThing URL instead of the Together AI URL
+        prompt: prompt,
+        userId: session.user.id,
+      },
     });
 
-    if (!response.data || response.data.length === 0) {
-      throw new Error("Failed to create variation: no data returned");
-    }
-
-    const images = response.data;
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = images[i]?.url;
-      if (!imageUrl) continue;
-
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download variation ${i}: ${imageResponse.statusText}`);
-      }
-
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-      const filename = `variation_${Date.now()}_${i}.png`;
-      const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
-
-      const uploadResult = await utapi.uploadFiles([utFile]);
-      if (!uploadResult[0]?.data?.ufsUrl) {
-        throw new Error(`Failed to upload variation ${i} to storage`);
-      }
-
-      uploadedUrls.push(uploadResult[0].data.ufsUrl);
-    }
-
-const dbImages = await Promise.all(
-       uploadedUrls.map((url, index) =>
-         db.generatedImage.create({
-           data: {
-             url,
-             prompt: "Variation of uploaded image",
-             userId: session.user.id,
-             model,
-             n,
-           },
-         }),
-       ),
-     );
-
     return {
       success: true,
-      images: dbImages,
-      count: dbImages.length,
+      image: generatedImage,
     };
   } catch (error) {
-    console.error("Image variation error:", error);
+    console.error("Error generating image:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create variation",
-    };
-  }
-}
-
-// Responses API image generation (conversational, multi-turn)
-export async function generateWithResponsesAPI(
-  input: string,
-  params?: {
-    model?: string; // e.g., "gpt-4o-mini", "gpt-5"
-    imageModel?: ImageModel;
-    size?: ImageSize;
-    quality?: ImageQuality;
-    outputFormat?: OutputFormat;
-    previousResponseId?: string;
-    n?: number;
-    apiKey?: string;
-  },
-) {
-  const session = await auth();
-  const {
-    model = "gpt-4o-mini",
-    imageModel = DEFAULT_MODEL,
-    size = DEFAULT_SIZE,
-    quality,
-    outputFormat,
-    previousResponseId,
-    n = 1,
-  } = params ?? {};
-
-  try {
-    const openai = await getOpenAIClient(session!.user.id, params?.apiKey);
-
-    console.log(`Generating with Responses API using model: ${model}`);
-
-    const response = await openai.responses.create({
-      model,
-      input,
-      tools: [
-        {
-          type: "image_generation",
-          ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
-        },
-      ],
-      ...(n > 1 ? { n } : {}),
-    });
-
-    // Extract images from response
-    const images = response.output
-      ?.filter((item: any) => item.type === "image_generation_call")
-      .map((item: any) => item.results?.map((r: any) => r.url))
-      .flat()
-      .filter(Boolean) ?? [];
-
-    if (images.length === 0) {
-      throw new Error("No images generated from Responses API");
-    }
-
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < images.length; i++) {
-      const imageUrl = images[i];
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download response image ${i}: ${imageResponse.statusText}`);
-      }
-
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-      const filename = `response_${input.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}_${i}.${outputFormat || "png"}`;
-      const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
-
-      const uploadResult = await utapi.uploadFiles([utFile]);
-      if (!uploadResult[0]?.data?.ufsUrl) {
-        throw new Error(`Failed to upload response image ${i} to storage`);
-      }
-
-      uploadedUrls.push(uploadResult[0].data.ufsUrl);
-    }
-
-    const dbImages = await Promise.all(
-      uploadedUrls.map((url, index) =>
-        db.generatedImage.create({
-          data: {
-            url,
-            prompt: input,
-            userId: session.user.id,
-            model: imageModel,
-            size,
-            quality: quality ?? undefined,
-            format: outputFormat ?? undefined,
-            previousResponseId,
-            action: previousResponseId ? "edit" : "generate",
-            n,
-          },
-        }),
-      ),
-    );
-
-    return {
-      success: true,
-      images: dbImages,
-      count: dbImages.length,
-      responseId: response.id,
-    };
-  } catch (error) {
-    console.error("Responses API image generation error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to generate image with Responses API",
+      error:
+        error instanceof Error ? error.message : "Failed to generate image",
     };
   }
 }

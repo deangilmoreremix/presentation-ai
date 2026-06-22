@@ -1,10 +1,5 @@
 "use server";
 
-import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
-import {
-  getPresentationSlidesFromContent,
-  getPresentationThumbnailUrl,
-} from "@/lib/presentation/thumbnail";
 import { logger } from "@/lib/observability/server/logger";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
@@ -13,13 +8,13 @@ import { normalizeShareEmail } from "@/server/share/utils";
 
 type UpdatePresentationThumbnailUrlParams = {
   id: string;
-  slides?: PlateSlide[];
+  thumbnailUrl: string | null;
   onlyIfMissing?: boolean;
 };
 
 export async function updatePresentationThumbnailUrl({
   id,
-  slides,
+  thumbnailUrl,
   onlyIfMissing = false,
 }: UpdatePresentationThumbnailUrlParams) {
   const actionName =
@@ -34,6 +29,10 @@ export async function updatePresentationThumbnailUrl({
 
   try {
     const session = await auth();
+
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
 
     const canEdit = await canEditDocument(id, {
       userId: session.user.id,
@@ -50,19 +49,6 @@ export async function updatePresentationThumbnailUrl({
     }
 
     try {
-      const resolvedSlides =
-        slides ??
-        getPresentationSlidesFromContent(
-          (
-            await db.presentation.findUnique({
-              where: { id },
-              select: { content: true },
-            })
-          )?.content,
-        );
-
-      const thumbnailUrl = getPresentationThumbnailUrl(resolvedSlides);
-
       const updateResult = onlyIfMissing
         ? await db.baseDocument.updateMany({
             where: {
@@ -84,8 +70,7 @@ export async function updatePresentationThumbnailUrl({
         success: true,
         message: "Presentation thumbnail updated successfully",
         thumbnailUrl,
-        updated:
-          "count" in updateResult ? updateResult.count > 0 : true,
+        updated: "count" in updateResult ? updateResult.count > 0 : true,
       };
     } catch (error) {
       console.error(error);

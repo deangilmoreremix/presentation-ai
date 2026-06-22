@@ -7,6 +7,13 @@ import { db } from "@/server/db";
 export async function toggleFavoriteTheme(themeId: string) {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        message: "You must be signed in to favorite themes",
+        isFavorite: false,
+      };
+    }
 
     // Check if theme exists
     const theme = await db.presentationTheme.findUnique({
@@ -70,6 +77,13 @@ export async function toggleFavoriteTheme(themeId: string) {
 export async function getUserFavoriteThemes() {
   try {
     const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        message: "You must be signed in to view favorite themes",
+        themes: [],
+      };
+    }
 
     const favorites = await db.favoritePresentationTheme.findMany({
       where: {
@@ -121,36 +135,6 @@ export async function getUserFavoriteThemes() {
       success: false,
       message: "Unable to load favorite themes. Please try again later.",
       themes: [],
-    };
-  }
-}
-
-// Get favorite theme IDs for the current user
-export async function getUserFavoriteThemeIds() {
-  try {
-    const session = await auth();
-
-    const favorites = await db.favoritePresentationTheme.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      select: {
-        themeId: true,
-      },
-    });
-
-    const themeIds = favorites.map((fav) => fav.themeId);
-
-    return {
-      success: true,
-      themeIds,
-    };
-  } catch (error) {
-    console.error("Failed to fetch favorite theme IDs:", error);
-    return {
-      success: false,
-      message: "Unable to load favorite themes. Please try again later.",
-      themeIds: [],
     };
   }
 }

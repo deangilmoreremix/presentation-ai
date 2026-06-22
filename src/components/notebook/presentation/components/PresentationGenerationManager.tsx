@@ -13,13 +13,21 @@ import {
   getToolState,
   isToolPart,
 } from "@/lib/ai/uiMessageParts";
+import { collectNotebookAgentToolCalls } from "@/lib/notebook/agent-activity";
 import { isWebSearchToolName } from "@/lib/ai/tool-names";
 import { createLogger } from "@/lib/observability/logger";
 import { useDebouncedSave } from "@/hooks/presentation/useDebouncedSave";
+import { buildPresentationCustomization } from "@/lib/presentation/customization";
+import { extractGeneratedPresentationTheme } from "@/lib/presentation/generated-theme";
+import {
+  getPersistablePresentationTheme,
+  PRESENTATION_AUTO_THEME_ID,
+} from "@/lib/presentation/theme-resolution";
+import { type ThemeProperties } from "@/lib/presentation/themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { useChat, useCompletion } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useTheme } from "next-themes";
+import { usePresentationTheme } from "@/components/presentation/providers/PresentationThemeProvider";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SlideParser } from "../utils/parser";
@@ -34,6 +42,7 @@ interface PresentationOutlineMessageMetadata {
   modelId: string;
   modelProvider: "openai" | "ollama" | "lmstudio";
   webSearch: boolean;
+  autoTheme: boolean;
   presentationId: string | null;
   textContent: "minimal" | "concise" | "detailed" | "extensive";
   tone:
@@ -88,13 +97,13 @@ function parseOutlineItems(content: string): string[] {
 }
 
 function usesStockSearchForPresentation(
-  imageSource: "automatic" | "ai" | "stock",
+  imageSource: "automatic" | "ai" | "stock" | "gif",
 ): boolean {
   return imageSource === "automatic" || imageSource === "stock";
 }
 
 export function PresentationGenerationManager() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = usePresentationTheme();
   const {
     numSlides,
     language,
@@ -105,12 +114,14 @@ export function PresentationGenerationManager() {
     shouldStartPresentationGeneration,
     shouldStartImageSlideGeneration,
     webSearchEnabled,
+    autoThemeEnabled,
     setIsGeneratingOutline,
     setShouldStartOutlineGeneration,
     setShouldStartPresentationGeneration,
     setShouldStartImageSlideGeneration,
     resetGeneration,
     setOutline,
+    setOutlineToolCalls,
     setSearchResults,
     setSlides,
     setIsGeneratingPresentation,
@@ -151,6 +162,7 @@ export function PresentationGenerationManager() {
   const lastProcessedMessagesLength = useRef<number>(0);
   // Track if title has already been extracted to avoid unnecessary processing
   const titleExtractedRef = useRef<boolean>(false);
+  const latestGeneratedThemeDataRef = useRef<ThemeProperties | null>(null);
 
   // Function to update slides using requestAnimationFrame
   const updateSlidesWithRAF = (): void => {
@@ -278,9 +290,14 @@ export function PresentationGenerationManager() {
         latestTitle = title;
       }
 
-      const outlineItems = parseOutlineItems(cleanContent);
+      const generatedTheme = extractGeneratedPresentationTheme(cleanContent);
+      const outlineItems = parseOutlineItems(generatedTheme.cleanContent);
       if (outlineItems.length > 0) {
         latestOutlineItems = outlineItems;
+      }
+
+      if (generatedTheme.themeData) {
+        latestGeneratedThemeDataRef.current = generatedTheme.themeData;
       }
     }
 
@@ -295,6 +312,12 @@ export function PresentationGenerationManager() {
 
     if (latestOutlineItems.length > 0) {
       outlineBufferRef.current = latestOutlineItems;
+    }
+
+    if (latestGeneratedThemeDataRef.current) {
+      const state = usePresentationState.getState();
+      state.setGeneratedThemeData(latestGeneratedThemeDataRef.current);
+      state.setTheme(PRESENTATION_AUTO_THEME_ID);
     }
   };
 
@@ -340,6 +363,8 @@ export function PresentationGenerationManager() {
         currentPresentationTitle,
         imageSource,
       } = usePresentationState.getState();
+      const state = usePresentationState.getState();
+      const generatedThemeData = latestGeneratedThemeDataRef.current;
 
       setIsGeneratingOutline(false);
       setShouldStartOutlineGeneration(false);
@@ -368,13 +393,46 @@ export function PresentationGenerationManager() {
       });
 
       if (currentPresentationId) {
+        const outlineToolCalls = collectNotebookAgentToolCalls(outlineMessages);
+        setOutlineToolCalls(outlineToolCalls);
+
         void updatePresentation({
           id: currentPresentationId,
           outline,
           searchResults,
+          toolCalls: outlineToolCalls,
+          selectedChunks: state.selectedChunks.map(
+            ({ chunkId, slideNumber, content, ragId }) => ({
+              chunkId,
+              slideNumber,
+              content,
+              ragId,
+            }),
+          ),
           prompt: presentationInput,
           title: currentPresentationTitle ?? "",
           imageSource,
+          theme: getPersistablePresentationTheme({
+            fallbackTheme: resolvedTheme === "dark" ? "ebony" : "mystique",
+            theme: generatedThemeData ? PRESENTATION_AUTO_THEME_ID : state.theme,
+          }),
+          customization: buildPresentationCustomization({
+            customThemeData: generatedThemeData ?? state.customThemeData,
+            themeDataByTheme: state.themeDataByTheme,
+            generatedThemeData: generatedThemeData ?? state.generatedThemeData,
+            theme: generatedThemeData ? PRESENTATION_AUTO_THEME_ID : state.theme,
+            pageStyle: state.pageStyle,
+            presentationStyle: state.presentationStyle,
+            generationAspectRatio: state.generationAspectRatio,
+            textContent: state.textContent,
+            tone: state.tone,
+            audience: state.audience,
+            scenario: state.scenario,
+            pageBackground: state.pageBackground,
+            selectedSlideTemplates: state.selectedSlideTemplates,
+            outlineItemIds: state.outlineItemIds,
+            outlineTemplateOverrides: state.outlineTemplateOverrides,
+          }),
         });
       }
 
@@ -393,6 +451,7 @@ export function PresentationGenerationManager() {
       setShouldStartPresentationGeneration(false);
       toast.error("Failed to generate outline: " + error.message);
       resetGeneration();
+      setOutlineToolCalls([]);
 
       if (outlineRafIdRef.current !== null) {
         cancelAnimationFrame(outlineRafIdRef.current);
@@ -403,6 +462,8 @@ export function PresentationGenerationManager() {
 
   // Lightweight useEffect that only schedules RAF updates
   useEffect(() => {
+    setOutlineToolCalls(collectNotebookAgentToolCalls(outlineMessages));
+
     if (outlineMessages.length > 1) {
       lastProcessedMessagesLength.current = outlineMessages.length;
       processMessages(outlineMessages);
@@ -410,7 +471,7 @@ export function PresentationGenerationManager() {
         outlineRafIdRef.current = requestAnimationFrame(updateOutlineWithRAF);
       }
     }
-  }, [outlineMessages, webSearchEnabled]);
+  }, [outlineMessages, webSearchEnabled, setOutlineToolCalls]);
 
   // Watch for outline generation start
   useEffect(() => {
@@ -421,6 +482,7 @@ export function PresentationGenerationManager() {
           setOutlineMessages([]);
           outlineBufferRef.current = null;
           searchResultsBufferRef.current = null;
+          latestGeneratedThemeDataRef.current = null;
           lastProcessedMessagesLength.current = 0;
 
           const { presentationInput } = usePresentationState.getState();
@@ -450,6 +512,7 @@ export function PresentationGenerationManager() {
               modelId,
               modelProvider,
               webSearch: webSearchEnabled,
+              autoTheme: autoThemeEnabled,
               presentationId: currentPresentationId,
               textContent,
               tone,
@@ -483,13 +546,31 @@ export function PresentationGenerationManager() {
         });
         setIsGeneratingPresentation(false);
         setShouldStartPresentationGeneration(false);
-        const { theme } = usePresentationState.getState();
+        const state = usePresentationState.getState();
         if (currentPresentationId) {
           updatePresentation({
             id: currentPresentationId,
-            theme:
-              theme ??
-              (resolvedTheme === "dark" ? "ebony" : "mystique"),
+            theme: getPersistablePresentationTheme({
+              fallbackTheme: resolvedTheme === "dark" ? "ebony" : "mystique",
+              theme: state.theme,
+            }),
+            customization: buildPresentationCustomization({
+              customThemeData: state.customThemeData,
+              themeDataByTheme: state.themeDataByTheme,
+              generatedThemeData: state.generatedThemeData,
+              theme: state.theme,
+              pageStyle: state.pageStyle,
+              presentationStyle: state.presentationStyle,
+              generationAspectRatio: state.generationAspectRatio,
+              textContent: state.textContent,
+              tone: state.tone,
+              audience: state.audience,
+              scenario: state.scenario,
+              pageBackground: state.pageBackground,
+              selectedSlideTemplates: state.selectedSlideTemplates,
+              outlineItemIds: state.outlineItemIds,
+              outlineTemplateOverrides: state.outlineTemplateOverrides,
+            }),
           });
         }
       },
@@ -520,13 +601,31 @@ export function PresentationGenerationManager() {
         });
         setIsGeneratingPresentation(false);
         setShouldStartImageSlideGeneration(false);
-        const { theme } = usePresentationState.getState();
+        const state = usePresentationState.getState();
         if (currentPresentationId) {
           updatePresentation({
             id: currentPresentationId,
-            theme:
-              theme ??
-              (resolvedTheme === "dark" ? "ebony" : "mystique"),
+            theme: getPersistablePresentationTheme({
+              fallbackTheme: resolvedTheme === "dark" ? "ebony" : "mystique",
+              theme: state.theme,
+            }),
+            customization: buildPresentationCustomization({
+              customThemeData: state.customThemeData,
+              themeDataByTheme: state.themeDataByTheme,
+              generatedThemeData: state.generatedThemeData,
+              theme: state.theme,
+              pageStyle: state.pageStyle,
+              presentationStyle: state.presentationStyle,
+              generationAspectRatio: state.generationAspectRatio,
+              textContent: state.textContent,
+              tone: state.tone,
+              audience: state.audience,
+              scenario: state.scenario,
+              pageBackground: state.pageBackground,
+              selectedSlideTemplates: state.selectedSlideTemplates,
+              outlineItemIds: state.outlineItemIds,
+              outlineTemplateOverrides: state.outlineTemplateOverrides,
+            }),
           });
         }
       },
@@ -743,7 +842,7 @@ export function PresentationGenerationManager() {
             rootImageGeneration: {
               ...state.rootImageGeneration,
               [slideId]: {
-                ...(state.rootImageGeneration[slideId] ?? { query: gen.query }),
+                ...gen,
                 status: "generating",
               },
             },

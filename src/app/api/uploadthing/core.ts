@@ -15,8 +15,12 @@ export const ourFileRouter = {
       // This code runs on your server before upload
       const session = await auth();
 
+      console.log(session);
+      // If you throw, the user will not be able to upload
+      if (!session) throw new UploadThingError("Unauthorized");
+
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: session!.user.id };
+      return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -35,7 +39,8 @@ export const ourFileRouter = {
   })
     .middleware(async () => {
       const session = await auth();
-      return { userId: session!.user.id };
+      if (!session) throw new UploadThingError("Unauthorized");
+      return { userId: session.user.id };
     })
     .onUploadComplete(async ({ file }) => {
       // Simply return the file URL and name
@@ -53,7 +58,8 @@ export const ourFileRouter = {
   })
     .middleware(async () => {
       const session = await auth();
-      return { userId: session!.user.id };
+      if (!session) throw new UploadThingError("Unauthorized");
+      return { userId: session.user.id };
     })
     .onUploadComplete(async ({ file }) => {
       const familyName = file.name.replace(/\.[^.]+$/, "");

@@ -1,7 +1,9 @@
 "use client";
 
-import { type ImageModelList } from "@/app/_actions/apps/image-studio/generate";
-import { getPresentation } from "@/app/_actions/notebook/presentation/presentationActions";
+import {
+  getPresentation,
+  updatePresentation,
+} from "@/app/_actions/notebook/presentation/presentationActions";
 import { getCustomThemeById } from "@/app/_actions/presentation/theme-actions";
 import { Header } from "@/components/notebook/presentation/components/outline/Header";
 import { OutlineList } from "@/components/notebook/presentation/components/outline/OutlineList";
@@ -15,8 +17,12 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import {
   applyPageBackgroundToConfig,
+  buildPresentationCustomization,
   getPresentationCustomization,
 } from "@/lib/presentation/customization";
+import { type NotebookAgentToolCall } from "@/lib/notebook/agent-activity";
+import { type NotebookSelectedChunk } from "@/lib/notebook/attachments";
+import { getPersistablePresentationTheme } from "@/lib/presentation/theme-resolution";
 import {
   themes,
   type ThemeProperties,
@@ -25,32 +31,42 @@ import {
 import { usePresentationState } from "@/states/presentation-state";
 import { useQuery } from "@tanstack/react-query";
 import { Wand2 } from "lucide-react";
-import { useAuth } from "@/components/supabase-provider";
 import { useParams, useRouter } from "next/navigation";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-// Cookie name for presentation generation
+function parsePersistedArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) {
+    return value as T[];
+  }
 
-import { GenerateImageSlidesButton } from "@/components/notebook/presentation/components/outline/GenerateImageSlidesButton";
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
 
 export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { session } = useAuth();
   const { resolvedTheme } = usePresentationTheme();
   const {
     setCurrentPresentation,
     setPresentationInput,
     startOutlineGeneration,
     startPresentationGeneration,
-    startImageSlideGeneration,
     isGeneratingPresentation,
     isGeneratingOutline,
-    setImageModel,
     setOutline,
     setSearchResults,
+    setOutlineToolCalls,
     setTheme,
     setImageSource,
     setPresentationStyle,
@@ -61,20 +77,22 @@ export default function PresentationGenerateWithIdPage() {
     setTone,
     setAudience,
     setScenario,
+    setSelectedChunks,
     setPendingCreateRequest,
     outline,
     currentPresentationId,
   } = usePresentationState();
   const outlineSectionRef = useRef<HTMLDivElement>(null);
-  const canGenerateImageSlides = session?.user?.isAdmin === true;
+  const [isSavingBeforeGenerate, setIsSavingBeforeGenerate] = useState(false);
   const hasOutline = outline.some((item) => item.trim().length > 0);
-  const isOutlineUnavailable = isGeneratingOutline || !hasOutline;
   const isGeneratePresentationDisabled =
     isGeneratingPresentation || isGeneratingOutline;
   const generatePresentationButtonLabel = isGeneratingOutline
     ? "Generating Outline..."
     : isGeneratingPresentation
       ? "Generating Presentation..."
+      : isSavingBeforeGenerate
+        ? "Saving Outline..."
       : hasOutline
         ? "Generate Presentation"
         : "Generate Outline";
@@ -122,6 +140,17 @@ export default function PresentationGenerateWithIdPage() {
       if (presentationData.presentation?.outline) {
         setOutline(presentationData.presentation.outline);
       }
+
+      setOutlineToolCalls(
+        parsePersistedArray<NotebookAgentToolCall>(
+          presentationData.presentation?.toolCalls,
+        ),
+      );
+      setSelectedChunks(
+        parsePersistedArray<NotebookSelectedChunk>(
+          presentationData.presentation?.selectedChunks,
+        ),
+      );
 
       // Load search results if available
       if (presentationData.presentation?.searchResults) {
@@ -198,7 +227,11 @@ export default function PresentationGenerateWithIdPage() {
 
       if (presentationData?.presentation?.imageSource) {
         setImageSource(
-          presentationData.presentation.imageSource as "ai" | "stock",
+          presentationData.presentation.imageSource as
+            | "automatic"
+            | "ai"
+            | "stock"
+            | "gif",
         );
       }
 
@@ -225,6 +258,7 @@ export default function PresentationGenerateWithIdPage() {
     setOutline,
     setTheme,
     setImageSource,
+    setOutlineToolCalls,
     setPresentationStyle,
     setPageStyle,
     setLanguage,
@@ -232,15 +266,64 @@ export default function PresentationGenerateWithIdPage() {
     setTone,
     setAudience,
     setScenario,
+    setSelectedChunks,
     resolvedTheme,
   ]);
 
-  const handleGenerate = () => {
-    if (isGeneratingOutline || isGeneratingPresentation) {
+  async function persistCurrentGenerationSettings() {
+    const state = usePresentationState.getState();
+    const customization = buildPresentationCustomization({
+      customThemeData: state.customThemeData,
+      themeDataByTheme: state.themeDataByTheme,
+      generatedThemeData: state.generatedThemeData,
+      theme: state.theme,
+      pageStyle: state.pageStyle,
+      presentationStyle: state.presentationStyle,
+      generationAspectRatio: state.generationAspectRatio,
+      textContent: state.textContent,
+      tone: state.tone,
+      audience: state.audience,
+      scenario: state.scenario,
+      pageBackground: state.pageBackground,
+      selectedSlideTemplates: state.selectedSlideTemplates,
+      outlineItemIds: state.outlineItemIds,
+      outlineTemplateOverrides: state.outlineTemplateOverrides,
+    });
+
+    const result = await updatePresentation({
+      id,
+      title: state.currentPresentationTitle ?? "",
+      prompt: state.presentationInput,
+      outline: state.outline,
+      searchResults: state.searchResults,
+      toolCalls: state.outlineToolCalls,
+      imageSource: state.imageSource,
+      presentationStyle: state.presentationStyle,
+      language: state.language,
+      selectedChunks: state.selectedChunks,
+      theme: getPersistablePresentationTheme({
+        fallbackTheme: resolvedTheme === "dark" ? "ebony" : "mystique",
+        theme: state.theme,
+      }),
+      customization,
+    });
+
+    if (!result.success) {
+      throw new Error(result.message ?? "Failed to save presentation");
+    }
+  }
+
+  const handleGenerate = async () => {
+    if (isGeneratingOutline || isGeneratingPresentation || isSavingBeforeGenerate) {
       return;
     }
 
-    if (!hasOutline) {
+    const latestOutline = usePresentationState.getState().outline;
+    const hasLatestOutline = latestOutline.some(
+      (item) => item.trim().length > 0,
+    );
+
+    if (!hasLatestOutline) {
       outlineSectionRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "start",
@@ -249,23 +332,29 @@ export default function PresentationGenerateWithIdPage() {
       return;
     }
 
+    setIsSavingBeforeGenerate(true);
+    try {
+      await persistCurrentGenerationSettings();
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to save the latest outline.";
+      toast.error(message);
+      setIsSavingBeforeGenerate(false);
+      return;
+    }
+
     router.push(`/presentation/${id}`);
     startPresentationGeneration();
   };
 
-  const handleGenerateImageSlides = (model: ImageModelList) => {
+  const handleRegenerateOutline = () => {
     if (isGeneratingOutline || isGeneratingPresentation) {
       return;
     }
 
-    if (!hasOutline) {
-      toast.error("Generate an outline before generating image slides.");
-      return;
-    }
-
-    router.push(`/presentation/${id}`);
-    setImageModel(model);
-    startImageSlideGeneration();
+    startOutlineGeneration();
   };
 
   if (isLoadingPresentation) {
@@ -291,8 +380,13 @@ export default function PresentationGenerateWithIdPage() {
       <div className="flex justify-center pb-28">
         <div className="w-full max-w-4xl space-y-6 px-4 pt-14 pb-6 sm:p-8 sm:pt-6">
           <div className="space-y-6">
-            <Header />
-            <ToolCallDisplay />
+            <Header
+              onRegenerate={handleRegenerateOutline}
+              isGeneratingOutlineOverride={isGeneratingOutline}
+            />
+            <ToolCallDisplay
+              isGeneratingOutlineOverride={isGeneratingOutline}
+            />
             <div ref={outlineSectionRef}>
               <OutlineList />
             </div>
@@ -304,21 +398,14 @@ export default function PresentationGenerateWithIdPage() {
 
       <div className="fixed right-0 bottom-0 left-0 border-t bg-background/80 p-4 backdrop-blur-xs">
         <div className="mx-auto flex w-full max-w-4xl flex-col justify-center gap-3 sm:w-fit sm:max-w-none sm:flex-row sm:gap-4">
-          {canGenerateImageSlides ? (
-            <div className="w-full sm:w-fit sm:flex-none">
-              <GenerateImageSlidesButton
-                isGenerating={isGeneratingPresentation}
-                disabled={isOutlineUnavailable}
-                onGenerateImageSlides={handleGenerateImageSlides}
-              />
-            </div>
-          ) : null}
           <div className="w-full sm:w-fit sm:flex-none">
             <Button
               size="lg"
               className="w-full gap-2 px-8 sm:h-10 sm:w-auto sm:min-w-0 sm:px-5 sm:text-sm"
               onClick={handleGenerate}
-              disabled={isGeneratePresentationDisabled}
+              disabled={
+                isGeneratePresentationDisabled || isSavingBeforeGenerate
+              }
             >
               <Wand2 className="h-5 w-5 sm:h-4 sm:w-4" />
               {generatePresentationButtonLabel}

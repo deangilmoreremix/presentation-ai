@@ -18,6 +18,7 @@ interface ImageSlidesRequest {
   language: string;
   modelId?: string;
   modelProvider?: "openai" | "ollama" | "lmstudio";
+  presentationId?: string;
 }
 
 const IMAGE_SLIDES_TEMPLATE = `You are an expert visual presentation designer. Create image-based slides where each slide is a full-screen image with ALL text rendered inside the image itself (no separate text overlays).
@@ -30,9 +31,13 @@ const IMAGE_SLIDES_TEMPLATE = `You are an expert visual presentation designer. C
 - **Total Slides**: {TOTAL_SLIDES}
 
 ## Outline Reference
-\`\`\`md
+Each outline item below is user-editable markdown. Preserve explicit bullets,
+code fences, and formatting instructions when turning the item into on-image
+text.
+
+BEGIN OUTLINE
 {OUTLINE_FORMATTED}
-\`\`\`
+END OUTLINE
 
 # OUTPUT FORMAT
 
@@ -79,6 +84,12 @@ Create detailed, artistic prompts that:
 Now generate the complete XML presentation with exactly {TOTAL_SLIDES} image slides.
 `;
 
+function formatOutlineForPrompt(outline: string[]): string {
+  return outline
+    .map((item, index) => `Slide ${index + 1}:\n${item.trim()}`)
+    .join("\n\n---\n\n");
+}
+
 export async function POST(req: Request) {
   const requestId = crypto.randomUUID();
   const routeLogger = createLogger("api:presentation-generate-image-slides");
@@ -109,6 +120,7 @@ export async function POST(req: Request) {
       language,
       modelId,
       modelProvider = "openai",
+      presentationId,
     } = (await req.json()) as ImageSlidesRequest;
 
     if (!title || !outline || !Array.isArray(outline) || !language) {
@@ -137,6 +149,7 @@ export async function POST(req: Request) {
       language,
       modelProvider,
       modelId: modelId || "gpt-4o-mini",
+      presentationId,
     });
     try {
       assertModelIsConfigured(modelProvider, modelId);
@@ -196,7 +209,7 @@ export async function POST(req: Request) {
       TITLE: title,
       PROMPT: userPrompt || "No specific prompt provided",
       LANGUAGE: language,
-      OUTLINE_FORMATTED: outline.join("\n\n"),
+      OUTLINE_FORMATTED: formatOutlineForPrompt(outline),
       TOTAL_SLIDES: totalSlides,
     });
 

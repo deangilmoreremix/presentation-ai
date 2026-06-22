@@ -1,5 +1,6 @@
 import { updatePresentation } from "@/app/_actions/notebook/presentation/presentationActions";
 import { buildPresentationCustomization } from "@/lib/presentation/customization";
+import { getPersistablePresentationTheme } from "@/lib/presentation/theme-resolution";
 import { usePresentationState } from "@/states/presentation-state";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect } from "react";
@@ -11,6 +12,10 @@ interface UseDebouncedSaveOptions {
    */
   delay?: number;
 }
+
+type SaveOptions = {
+  includeMetadata?: boolean;
+};
 
 /**
  * Custom hook for debounced saving of presentation slides
@@ -37,7 +42,11 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
           pageBackground,
           thumbnailUrl,
           customThemeData,
+          theme,
+          themeDataByTheme,
+          generatedThemeData,
           pageStyle,
+          generationAspectRatio,
           textContent,
           tone,
           audience,
@@ -55,6 +64,10 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
               slides,
             },
             title: currentPresentationTitle ?? "",
+            theme: getPersistablePresentationTheme({
+              fallbackTheme: "mystique",
+              theme,
+            }),
             outline,
             imageSource,
             presentationStyle,
@@ -62,8 +75,12 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
             thumbnailUrl,
             customization: buildPresentationCustomization({
               customThemeData,
+              themeDataByTheme,
+              generatedThemeData,
+              theme,
               pageStyle,
               presentationStyle: presentationStyle ?? "",
+              generationAspectRatio,
               textContent,
               tone,
               audience,
@@ -96,7 +113,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   }, [debouncedSave]);
 
   // Save slides immediately (useful for manual saves)
-  const saveImmediately = useCallback(async () => {
+  const saveImmediately = useCallback(async (_options?: SaveOptions) => {
     debouncedSave.cancel();
 
     // Get the latest state directly from the store
@@ -111,7 +128,11 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
       pageBackground,
       thumbnailUrl,
       customThemeData,
+      theme,
+      themeDataByTheme,
+      generatedThemeData,
       pageStyle,
+      generationAspectRatio,
       textContent,
       tone,
       audience,
@@ -130,6 +151,10 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
           slides,
         },
         title: currentPresentationTitle ?? "",
+        theme: getPersistablePresentationTheme({
+          fallbackTheme: "mystique",
+          theme,
+        }),
         outline,
         language,
         imageSource,
@@ -137,8 +162,12 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
         thumbnailUrl,
         customization: buildPresentationCustomization({
           customThemeData,
+          themeDataByTheme,
+          generatedThemeData,
+          theme,
           pageStyle,
           presentationStyle: presentationStyle ?? "",
+          generationAspectRatio,
           textContent,
           tone,
           audience,
@@ -159,7 +188,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   }, [debouncedSave, setSavingStatus]);
 
   // Trigger save function
-  const save = useCallback(() => {
+  const save = useCallback((_options?: SaveOptions) => {
     setSavingStatus("saving");
     void debouncedSave();
   }, [debouncedSave, setSavingStatus]);
