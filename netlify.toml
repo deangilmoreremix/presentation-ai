@@ -1,6 +1,6 @@
 [build]
   command = "pnpm build"
-  publish = ".next/standalone"
+  publish = ".next"
 
   [build.environment]
     NODE_VERSION = "18"
@@ -12,9 +12,6 @@
   command = "pnpm dev"
   port = 3000
   targetPort = 3000
-  publish = ".next/standalone"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
