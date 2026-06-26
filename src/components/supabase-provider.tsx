@@ -1,30 +1,24 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import { type ReactNode, useState } from "react";
-
-// Simplified provider for database-only access (no authentication)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
 export function SupabaseProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [supabase] = useState(() =>
-    createClient(supabaseUrl, supabaseAnonKey)
+  const [_supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    ),
   );
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 export function useAuth() {
-  // Always return anonymous session to match server auth
   return {
     session: {
       user: {
@@ -36,7 +30,7 @@ export function useAuth() {
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     },
     isLoading: false,
-    isAuthenticated: true, // Consider anonymous as authenticated for the app
+    isAuthenticated: true,
     user: {
       id: "anonymous-user",
       email: null,

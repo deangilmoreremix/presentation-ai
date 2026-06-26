@@ -1,11 +1,36 @@
-// Supabase server helpers - optional configuration
-// If Supabase env vars are not set, return null (no auth)
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-export async function getUser(): Promise<null> {
-  // Supabase auth is optional - return null for anonymous user
-  return null;
+export async function createClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {}
+        },
+      },
+    },
+  );
 }
 
-export async function getSession(): Promise<null> {
-  return null;
+export async function getUser() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+export async function getSession() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  return session;
 }
