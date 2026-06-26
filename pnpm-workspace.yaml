@@ -1,0 +1,10 @@
+allowBuilds:
+  '@prisma/client': false
+  '@prisma/engines': false
+  '@tsparticles/engine': false
+  canvas: false
+  core-js: false
+  msgpackr-extract: false
+  prisma: false
+  sharp: false
+  unrs-resolver: false
