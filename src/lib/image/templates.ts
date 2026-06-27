@@ -1,495 +1,769 @@
 /**
  * Image Generation Templates by Category
- * Pre-defined prompts for the 15 image categories
+ *
+ * Comprehensive prompt template library covering all 15 Image Studio
+ * categories. Each template includes a `promptPrefix`/`promptSuffix` to
+ * wrap the user's prompt and `suggestedParams` to pre-fill the studio.
+ *
+ * `IMAGE_TEMPLATES` is exported as a flat array. Use `getTemplatesByCategory`
+ * to filter, `getTemplate` to look up by id, and `applyTemplate` to wrap a
+ * user prompt with prefix/suffix.
  */
 
-import type { ImageTemplate, ImageCategory, ImageGenerationParams } from "./types";
+import type {
+  ImageTemplate,
+  ImageCategory,
+  ImageGenerationParams,
+} from "./types";
 
-export const IMAGE_TEMPLATES: Record<ImageCategory, ImageTemplate[]> = {
-  core: [
-    {
-      id: "text-to-image",
-      category: "core",
-      name: "Text to Image",
-      description: "Transform any text description into a visual image",
-      promptPrefix: "Create a highly detailed, visually stunning image of: ",
-    },
-    {
-      id: "photorealistic",
-      category: "core",
-      name: "Photorealistic",
-      description: "Create realistic photography-style images",
-      promptPrefix: "Photorealistic image of ",
-      promptSuffix: ", professional photography, 8K resolution, sharp focus, natural lighting, realistic details",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "illustration",
-      category: "core",
-      name: "Illustration",
-      description: "Create artistic illustrations and drawings",
-      promptPrefix: "Beautiful illustration of ",
-      promptSuffix: ", digital art, vibrant colors, artistic style, high detail, creative composition",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "concept-art",
-      category: "core",
-      name: "Concept Art",
-      description: "Create concept art for games, movies, and creative projects",
-      promptPrefix: "Concept art of ",
-      promptSuffix: ", fantasy art style, digital painting, cinematic lighting, highly detailed, professional concept art",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "character",
-      category: "core",
-      name: "Character Creation",
-      description: "Generate original characters for stories, games, or branding",
-      promptPrefix: "Original character design of ",
-      promptSuffix: ", character concept art, detailed facial features, expressive, full body view, digital illustration",
-      suggestedParams: { size: "1024x1536" },
-    },
-  ],
+const HIGH: ImageGenerationParams["quality"] = "high";
+const MEDIUM: ImageGenerationParams["quality"] = "medium";
 
-  marketing: [
-    {
-      id: "social-post",
-      category: "marketing",
-      name: "Social Media Post",
-      description: "Create engaging social media content",
-      promptSuffix: ", bold typography, vibrant colors, social media aesthetic, Instagram style, eye-catching design",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "facebook-ad",
-      category: "marketing",
-      name: "Facebook Ad Creative",
-      description: "Professional Facebook advertisement visuals",
-      promptSuffix: ", Facebook ad format, clean layout, compelling visual, call-to-action button, professional marketing design",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "instagram-ad",
-      category: "marketing",
-      name: "Instagram Ad Creative",
-      description: "Vertical Instagram ad creatives",
-      promptSuffix: ", Instagram story ad format, vertical 9:16 aspect, bold text overlay, modern aesthetic, swipe-up design",
-      suggestedParams: { size: "1024x1536", quality: "high" },
-    },
-    {
-      id: "google-display-ad",
-      category: "marketing",
-      name: "Google Display Ad",
-      description: "Web banner advertisements",
-      promptSuffix: ", Google display ad format, horizontal banner, clean professional design, minimal text, brand-friendly",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "promotional-poster",
-      category: "marketing",
-      name: "Promotional Poster",
-      description: "Event and product promotion posters",
-      promptSuffix: ", promotional poster design, bold headline, event announcement, professional print layout, vibrant colors",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+/* -------------------------------------------------------------------------- */
+/*  Per-category templates                                                    */
+/* -------------------------------------------------------------------------- */
 
-  branding: [
-    {
-      id: "logo-concept",
-      category: "branding",
-      name: "Logo Concept",
-      description: "Generate logo design concepts",
-      promptSuffix: ", minimalist logo design, vector style, clean typography, brand identity, scalable logo, professional",
-      suggestedParams: { background: "transparent", quality: "high" },
-    },
-    {
-      id: "brand-identity",
-      category: "branding",
-      name: "Brand Identity Visual",
-      description: "Complete brand identity mockups",
-      promptSuffix: ", brand identity kit, color palette, business cards, letterhead, cohesive brand design, professional branding",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "app-icon",
-      category: "branding",
-      name: "App Icon",
-      description: "Mobile and web application icons",
-      promptSuffix: ", app icon design, iOS/Android style, simple recognizable symbol, gradient background, modern icon design",
-      suggestedParams: { size: "1024x1024", background: "transparent" },
-    },
-    {
-      id: "business-card",
-      category: "branding",
-      name: "Business Card Design",
-      description: "Professional business card layouts",
-      promptSuffix: ", business card design, professional layout, QR code, contact information, modern business card style",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const core: ImageTemplate[] = [
+  {
+    id: "core-photorealistic-portrait",
+    category: "core",
+    name: "Photorealistic Portrait",
+    description: "Studio-quality, photo-realistic portrait of a person",
+    emoji: "📸",
+    promptPrefix: "Photorealistic studio portrait of ",
+    promptSuffix:
+      ", 85mm lens, soft Rembrandt lighting, sharp eyes, natural skin texture, 8K, editorial photography",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "core-cinematic-landscape",
+    category: "core",
+    name: "Cinematic Landscape",
+    description: "Wide cinematic landscape with golden-hour atmosphere",
+    emoji: "🌄",
+    promptPrefix: "Cinematic landscape of ",
+    promptSuffix:
+      ", anamorphic widescreen, golden hour lighting, atmospheric haze, National Geographic style, ultra detailed",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "core-studio-product-shot",
+    category: "core",
+    name: "Studio Product Shot",
+    description: "Clean commercial product on a seamless backdrop",
+    emoji: "📦",
+    promptPrefix: "Studio product photograph of ",
+    promptSuffix:
+      ", seamless white sweep background, soft box lighting, no shadows, sharp focus, e-commerce hero shot",
+    suggestedParams: { background: "transparent", quality: HIGH },
+  },
+  {
+    id: "core-abstract-concept",
+    category: "core",
+    name: "Abstract Concept",
+    description: "Surreal abstract visualization of an idea",
+    emoji: "🌀",
+    promptPrefix: "Surreal abstract artwork visualizing the concept of ",
+    promptSuffix:
+      ", fluid shapes, vibrant gradient palette, dreamlike atmosphere, generative art, 8K",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "core-watercolor-illustration",
+    category: "core",
+    name: "Watercolor Illustration",
+    description: "Hand-painted watercolor style scene",
+    emoji: "🎨",
+    promptSuffix:
+      ", painted in soft watercolor style, paper texture, pastel palette, gentle brushstrokes, illustrative",
+    suggestedParams: { quality: HIGH },
+  },
+];
 
-  product: [
-    {
-      id: "product-mockup",
-      category: "product",
-      name: "Product Mockup",
-      description: "Showcase products in realistic settings",
-      promptSuffix: ", product mockup, lifestyle setting, professional product photography, clean white background, studio lighting",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "amazon-listing",
-      category: "product",
-      name: "Amazon Listing Image",
-      description: "E-commerce ready product images",
-      promptSuffix: ", Amazon product listing image, white background, professional lighting, clean presentation, e-commerce style",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "packaging-design",
-      category: "product",
-      name: "Packaging Design",
-      description: "Product packaging mockups",
-      promptSuffix: ", product packaging design, front view, branding elements, shelf-ready, professional packaging mockup",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "before-after",
-      category: "product",
-      name: "Before/After Product",
-      description: "Show product transformations",
-      promptSuffix: ", before and after comparison, split screen, product transformation, clear visual difference, professional layout",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const marketing: ImageTemplate[] = [
+  {
+    id: "marketing-hero-banner",
+    category: "marketing",
+    name: "Hero Banner",
+    description: "Wide hero banner for a landing page",
+    emoji: "🏔️",
+    promptSuffix:
+      ", hero banner composition, wide 16:9, generous negative space for headline overlay, modern brand aesthetic",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "marketing-social-media-ad",
+    category: "marketing",
+    name: "Social Media Ad",
+    description: "Square social ad creative with bold focal point",
+    emoji: "📱",
+    promptSuffix:
+      ", square social ad, bold focal subject, vibrant brand colors, scroll-stopping composition, conversion-focused",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "marketing-email-header",
+    category: "marketing",
+    name: "Email Header",
+    description: "Wide, on-brand header image for email campaigns",
+    emoji: "📧",
+    promptSuffix:
+      ", email header image, ultra-wide banner, soft brand palette, text-safe negative space, polished marketing look",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "marketing-promotional-poster",
+    category: "marketing",
+    name: "Promotional Poster",
+    description: "Print-ready event/promo poster",
+    emoji: "🪧",
+    promptSuffix:
+      ", promotional poster design, bold headline area, event branding, eye-catching layout, print-ready",
+    suggestedParams: { size: "1024x1536", quality: HIGH },
+  },
+];
 
-  content: [
-    {
-      id: "youtube-thumbnail",
-      category: "content",
-      name: "YouTube Thumbnail",
-      description: "Click-worthy video thumbnails",
-      promptSuffix: ", YouTube thumbnail design, bold text, expressive face, high contrast, 16:9 aspect, click-worthy design",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "blog-cover",
-      category: "content",
-      name: "Blog Cover Image",
-      description: "Article and blog header images",
-      promptSuffix: ", blog header image, professional blog design, text overlay friendly, clean aesthetic, reading-friendly image",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "podcast-cover",
-      category: "content",
-      name: "Podcast Cover Art",
-      description: "Podcast cover and branding",
-      promptSuffix: ", podcast cover art, square format, bold typography, music theme, professional podcast branding",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "course-thumbnail",
-      category: "content",
-      name: "Course Thumbnail",
-      description: "Online course promotional images",
-      promptSuffix: ", online course thumbnail, educational theme, text overlay space, engaging design, learning-focused visual",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const branding: ImageTemplate[] = [
+  {
+    id: "branding-logo-concept",
+    category: "branding",
+    name: "Logo Concept",
+    description: "Modern, minimalist logo mark on a transparent background",
+    emoji: "🔣",
+    promptSuffix:
+      ", minimalist logo mark, vector-style, clean geometry, balanced negative space, transparent background, scalable",
+    suggestedParams: { background: "transparent", quality: HIGH },
+  },
+  {
+    id: "branding-app-icon",
+    category: "branding",
+    name: "App Icon",
+    description: "iOS/Android-ready square app icon",
+    emoji: "📱",
+    promptSuffix:
+      ", square app icon, rounded corners, single bold symbol, gradient background, iOS/Android ready, 1024x1024",
+    suggestedParams: { size: "1024x1024", background: "transparent", quality: HIGH },
+  },
+  {
+    id: "branding-color-palette",
+    category: "branding",
+    name: "Color Palette Visual",
+    description: "Curated brand color palette visualization",
+    emoji: "🎨",
+    promptSuffix:
+      ", brand color palette swatches, harmonious gradient arrangement, modern brand identity mood board",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "branding-business-card",
+    category: "branding",
+    name: "Business Card",
+    description: "Mock business card layout",
+    emoji: "💳",
+    promptSuffix:
+      ", business card mockup, modern typography, contact details area, professional print layout, premium paper feel",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+];
 
-  editing: [
-    {
-      id: "background-remove",
-      category: "editing",
-      name: "Background Removal",
-      description: "Remove backgrounds from existing images",
-      promptSuffix: ", remove background, clean cutout, transparent background, professional masking, precise edges",
-      suggestedParams: { background: "transparent", quality: "high" },
-    },
-    {
-      id: "background-replace",
-      category: "editing",
-      name: "Background Replacement",
-      description: "Replace backgrounds in images",
-      promptSuffix: ", replace background with, seamless blend, professional compositing, realistic integration, studio quality",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "object-remove",
-      category: "editing",
-      name: "Object Removal",
-      description: "Remove unwanted objects cleanly",
-      promptSuffix: ", remove object seamlessly, content-aware fill, professional cleanup, invisible removal, clean result",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const product: ImageTemplate[] = [
+  {
+    id: "product-amazon-listing",
+    category: "product",
+    name: "Amazon Listing",
+    description: "E-commerce-ready product on pure white",
+    emoji: "🛒",
+    promptSuffix:
+      ", Amazon main image style, pure white background, no text, sharp focus, high-contrast, listing-ready",
+    suggestedParams: { background: "transparent", quality: HIGH },
+  },
+  {
+    id: "product-lifestyle-shot",
+    category: "product",
+    name: "Lifestyle Shot",
+    description: "Product shown in real-world lifestyle context",
+    emoji: "🛋️",
+    promptSuffix:
+      ", lifestyle product photography, contextual environment, warm natural light, aspirational mood",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "product-packaging",
+    category: "product",
+    name: "Packaging Mockup",
+    description: "3D product packaging render",
+    emoji: "📦",
+    promptSuffix:
+      ", photorealistic packaging mockup, front three-quarter view, shelf-ready, clean studio lighting",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "product-flat-lay",
+    category: "product",
+    name: "Flat Lay",
+    description: "Overhead product flat lay composition",
+    emoji: "🍱",
+    promptSuffix:
+      ", overhead flat lay composition, soft shadows, pastel surfaces, balanced arrangement, editorial style",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+];
 
-  composition: [
-    {
-      id: "inpaint",
-      category: "composition",
-      name: "Inpainting",
-      description: "Edit specific areas within images",
-      promptSuffix: ", edit specific area, seamless integration, content-aware modification, professional touch-up, natural blend",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "outpaint",
-      category: "composition",
-      name: "Outpainting",
-      description: "Extend images beyond original boundaries",
-      promptSuffix: ", extend image beyond borders, seamless extension, creative continuation, expanded canvas, artistic outpainting",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "scene-expansion",
-      category: "composition",
-      name: "Scene Expansion",
-      description: "Widen or expand the scene view",
-      promptSuffix: ", expand the scene, wider angle view, additional environment, cinematic expansion, panoramic feel",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const content: ImageTemplate[] = [
+  {
+    id: "content-youtube-thumbnail",
+    category: "content",
+    name: "YouTube Thumbnail",
+    description: "High-CTR YouTube thumbnail",
+    emoji: "▶️",
+    promptSuffix:
+      ", YouTube thumbnail, expressive face area, bold contrast, 16:9, leave space for text overlay, click-worthy",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "content-blog-cover",
+    category: "content",
+    name: "Blog Cover",
+    description: "Wide blog/article header image",
+    emoji: "📰",
+    promptSuffix:
+      ", blog header image, text-safe negative space, modern editorial style, balanced composition",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "content-podcast-cover",
+    category: "content",
+    name: "Podcast Cover Art",
+    description: "Square podcast cover artwork",
+    emoji: "🎙️",
+    promptSuffix:
+      ", square podcast cover art, bold typography area, music theme, 3000x3000 look, recognizable at small sizes",
+    suggestedParams: { size: "1024x1024", quality: HIGH },
+  },
+  {
+    id: "content-newsletter-graphic",
+    category: "content",
+    name: "Newsletter Graphic",
+    description: "Inline newsletter illustration",
+    emoji: "📨",
+    promptSuffix:
+      ", inline newsletter graphic, friendly illustration, brand-friendly palette, clear focal point",
+    suggestedParams: { quality: HIGH },
+  },
+];
 
-  consistency: [
-    {
-      id: "character-series",
-      category: "consistency",
-      name: "Character Consistency",
-      description: "Maintain character appearance across images",
-      promptSuffix: ", same character as reference, consistent appearance, maintain style, character continuity, uniform design",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "brand-series",
-      category: "consistency",
-      name: "Brand Consistency",
-      description: "Keep branding consistent across visuals",
-      promptSuffix: ", consistent with brand colors, maintain typography, brand guidelines adherence, uniform visual identity",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "style-variations",
-      category: "consistency",
-      name: "Style Variations",
-      description: "Multiple versions with consistent style",
-      promptSuffix: ", maintain consistent style, multiple variations, same artistic approach, uniform aesthetic, coherent design",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const editing: ImageTemplate[] = [
+  {
+    id: "editing-background-removal",
+    category: "editing",
+    name: "Background Removal",
+    description: "Cut out the subject onto a transparent background",
+    emoji: "✂️",
+    promptSuffix:
+      ", isolate subject on transparent background, precise edge masking, no halo, alpha channel preserved",
+    suggestedParams: { background: "transparent", quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "editing-style-transfer",
+    category: "editing",
+    name: "Style Transfer",
+    description: "Re-render an image in a new artistic style",
+    emoji: "🎭",
+    promptSuffix:
+      ", reinterpret this image in the requested style, preserve composition and subjects, refined artistic finish",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "editing-color-grading",
+    category: "editing",
+    name: "Color Grading",
+    description: "Apply cinematic color grade to an image",
+    emoji: "🎞️",
+    promptSuffix:
+      ", apply cinematic color grading, balanced contrast, cohesive palette, professional colorist look",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "editing-object-removal",
+    category: "editing",
+    name: "Object Removal",
+    description: "Seamlessly remove an object from an image",
+    emoji: "🧽",
+    promptSuffix:
+      ", remove the specified object cleanly, inpaint the area, match surrounding texture and lighting seamlessly",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+];
 
-  "ui-ux": [
-    {
-      id: "website-mockup",
-      category: "ui-ux",
-      name: "Website Mockup",
-      description: "Website design concepts and layouts",
-      promptSuffix: ", website mockup, clean UI design, modern web layout, responsive design, user interface concept",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "mobile-ui",
-      category: "ui-ux",
-      name: "Mobile UI Mockup",
-      description: "Mobile app interface designs",
-      promptSuffix: ", mobile app UI design, iOS/Android interface, clean screens, modern mobile design, user-friendly layout",
-      suggestedParams: { size: "1024x1536", quality: "high" },
-    },
-    {
-      id: "dashboard-design",
-      category: "ui-ux",
-      name: "Dashboard Design",
-      description: "Admin and analytics dashboard visuals",
-      promptSuffix: ", dashboard design, analytics charts, clean data visualization, professional admin UI, modern dashboard layout",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const composition: ImageTemplate[] = [
+  {
+    id: "composition-inpaint",
+    category: "composition",
+    name: "Inpainting",
+    description: "Edit only the masked region of an image",
+    emoji: "🖌️",
+    promptSuffix:
+      ", edit only the masked region, seamless integration with the rest of the image, natural blend",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "composition-outpaint",
+    category: "composition",
+    name: "Outpainting",
+    description: "Extend an image beyond its original borders",
+    emoji: "🖼️",
+    promptSuffix:
+      ", extend the image beyond its original borders, seamless continuation, consistent perspective and lighting",
+    suggestedParams: { size: "1536x1024", quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "composition-scene-expansion",
+    category: "composition",
+    name: "Scene Expansion",
+    description: "Widen the camera angle / expand the scene",
+    emoji: "🎬",
+    promptSuffix:
+      ", widen the camera angle, expand the scene, cinematic expansion, consistent visual language with the original",
+    suggestedParams: { size: "1536x1024", quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "composition-multi-image-blend",
+    category: "composition",
+    name: "Multi-Image Blend",
+    description: "Combine multiple input images into one scene",
+    emoji: "🧩",
+    promptSuffix:
+      ", combine the provided reference images into a single coherent scene, harmonize lighting and perspective",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+    supportsMultiImage: true,
+  },
+];
 
-  educational: [
-    {
-      id: "infographic",
-      category: "educational",
-      name: "Infographic",
-      description: "Data visualization and infographics",
-      promptSuffix: ", infographic design, data visualization, charts and graphs, educational content, clear information hierarchy",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "diagram",
-      category: "educational",
-      name: "Process Diagram",
-      description: "Process flows and system diagrams",
-      promptSuffix: ", process diagram, flowchart style, clear steps, professional diagram, educational infographic",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "educational-illustration",
-      category: "educational",
-      name: "Educational Illustration",
-      description: "Teaching and learning visuals",
-      promptSuffix: ", educational illustration, teaching diagram, clear learning visual, student-friendly, informative design",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const consistency: ImageTemplate[] = [
+  {
+    id: "consistency-character-series",
+    category: "consistency",
+    name: "Character Series",
+    description: "Same character across multiple images",
+    emoji: "🧍",
+    promptSuffix:
+      ", preserve the character's face, clothing and style from the reference, consistent character across scenes",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+    supportsMultiImage: true,
+  },
+  {
+    id: "consistency-brand-series",
+    category: "consistency",
+    name: "Brand Series",
+    description: "Maintain brand identity across variations",
+    emoji: "🏷️",
+    promptSuffix:
+      ", maintain brand colors, typography style and visual language from the reference assets",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+    supportsMultiImage: true,
+  },
+  {
+    id: "consistency-style-variations",
+    category: "consistency",
+    name: "Style Variations",
+    description: "Multiple variations with a unified style",
+    emoji: "🧪",
+    promptSuffix:
+      ", keep a consistent artistic style, vary the subject or composition, cohesive set of images",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "consistency-product-lineup",
+    category: "consistency",
+    name: "Product Lineup",
+    description: "Multiple products in a consistent family",
+    emoji: "🧴",
+    promptSuffix:
+      ", product family lineup, consistent lighting, angle and background, retail-ready collection",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+    supportsMultiImage: true,
+  },
+];
 
-  storytelling: [
-    {
-      id: "storyboard",
-      category: "storytelling",
-      name: "Storyboard",
-      description: "Video and animation storyboards",
-      promptSuffix: ", storyboard panel, shot composition, cinematic framing, scene planning, film storyboard style",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "comic-panel",
-      category: "storytelling",
-      name: "Comic Panel",
-      description: "Comic book style illustrations",
-      promptSuffix: ", comic book panel, action scene, bold lines, speech bubble, dynamic composition, comic art style",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "character-sheet",
-      category: "storytelling",
-      name: "Character Sheet",
-      description: "Character design reference sheets",
-      promptSuffix: ", character reference sheet, multiple poses, detailed expression chart, turn-around view, character design sheet",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const uiUx: ImageTemplate[] = [
+  {
+    id: "uiux-website-mockup",
+    category: "ui-ux",
+    name: "Website Mockup",
+    description: "Modern website hero / landing page mockup",
+    emoji: "💻",
+    promptSuffix:
+      ", modern website mockup, clean UI, balanced typography, desktop hero section, realistic shadows",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "uiux-mobile-app-screen",
+    category: "ui-ux",
+    name: "Mobile App Screen",
+    description: "Mobile app interface mockup",
+    emoji: "📱",
+    promptSuffix:
+      ", mobile app UI, iOS/Android screen mockup, modern design system, clean iconography, realistic device frame",
+    suggestedParams: { size: "1024x1536", quality: HIGH },
+  },
+  {
+    id: "uiux-dashboard",
+    category: "ui-ux",
+    name: "Dashboard",
+    description: "Analytics / admin dashboard mockup",
+    emoji: "📊",
+    promptSuffix:
+      ", dashboard UI mockup, charts, KPIs, clean data visualization, modern admin panel layout",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "uiux-design-system",
+    category: "ui-ux",
+    name: "Design System",
+    description: "Visual design system / component library showcase",
+    emoji: "🧱",
+    promptSuffix:
+      ", design system showcase, component grid, typography scale, color tokens, UI kit overview",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+];
 
-  "real-estate": [
-    {
-      id: "interior-design",
-      category: "real-estate",
-      name: "Interior Design Render",
-      description: "Room and interior visualizations",
-      promptSuffix: ", interior design render, architectural visualization, modern furniture, real estate listing style, staged room",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "exterior-building",
-      category: "real-estate",
-      name: "Exterior Building",
-      description: "Building and property exteriors",
-      promptSuffix: ", exterior building visualization, architectural rendering, professional real estate photo, property listing",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "before-after-renovation",
-      category: "real-estate",
-      name: "Renovation Before/After",
-      description: "Show property transformations",
-      promptSuffix: ", before and after renovation, property transformation, remodeling comparison, real estate upgrade visual",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-  ],
+const educational: ImageTemplate[] = [
+  {
+    id: "educational-infographic",
+    category: "educational",
+    name: "Infographic",
+    description: "Educational infographic with charts",
+    emoji: "📊",
+    promptSuffix:
+      ", infographic layout, charts, icons, clear information hierarchy, engaging educational design",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "educational-flowchart",
+    category: "educational",
+    name: "Flowchart",
+    description: "Process / system flowchart",
+    emoji: "🗂️",
+    promptSuffix:
+      ", process flowchart, clear steps and connectors, professional diagram, easy to follow, instructional",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "educational-illustration",
+    category: "educational",
+    name: "Educational Illustration",
+    description: "Teaching-friendly illustration",
+    emoji: "🧑‍🏫",
+    promptSuffix:
+      ", educational illustration, clear labels area, friendly style, student-friendly visual",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "educational-anatomy-diagram",
+    category: "educational",
+    name: "Anatomy Diagram",
+    description: "Labeled anatomy / scientific diagram",
+    emoji: "🧬",
+    promptSuffix:
+      ", labeled anatomy diagram, scientific accuracy, clean lines, textbook illustration style",
+    suggestedParams: { quality: HIGH },
+  },
+];
 
-  fashion: [
-    {
-      id: "outfit-generation",
-      category: "fashion",
-      name: "Outfit Generation",
-      description: "Fashion and style outfit concepts",
-      promptSuffix: ", fashion outfit, model wearing clothes, runway style, high-fashion photography, stylish composition",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "fashion-lookbook",
-      category: "fashion",
-      name: "Fashion Lookbook",
-      description: "Professional fashion lookbooks",
-      promptSuffix: ", fashion lookbook, editorial style, professional model, studio photography, clothing showcase",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "beauty-campaign",
-      category: "fashion",
-      name: "Beauty Campaign",
-      description: "Cosmetics and beauty advertising",
-      promptSuffix: ", beauty campaign visual, makeup close-up, glamorous lighting, cosmetics advertisement, editorial beauty shot",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const storytelling: ImageTemplate[] = [
+  {
+    id: "storytelling-storyboard",
+    category: "storytelling",
+    name: "Storyboard Panel",
+    description: "Single film / animation storyboard panel",
+    emoji: "🎞️",
+    promptSuffix:
+      ", film storyboard panel, cinematic framing, shot composition, clear action, directors notes area",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "storytelling-comic-panel",
+    category: "storytelling",
+    name: "Comic Panel",
+    description: "Comic book panel with action and style",
+    emoji: "💥",
+    promptSuffix:
+      ", comic book panel, bold inks, dynamic composition, halftone shading, speech bubble space",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "storytelling-character-sheet",
+    category: "storytelling",
+    name: "Character Sheet",
+    description: "Character design reference sheet",
+    emoji: "🧑‍🎨",
+    promptSuffix:
+      ", character reference sheet, multiple poses and expressions, turnaround view, design notes",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "storytelling-book-cover",
+    category: "storytelling",
+    name: "Book Cover",
+    description: "Fiction / non-fiction book cover",
+    emoji: "📚",
+    promptSuffix:
+      ", book cover design, bold title area, evocative scene, genre-appropriate typography",
+    suggestedParams: { size: "1024x1536", quality: HIGH },
+  },
+];
 
-  automation: [
-    {
-      id: "multi-step-pipeline",
-      category: "automation",
-      name: "Multi-step Pipeline",
-      description: "Automated image generation workflows",
-      promptSuffix: ", automated creative pipeline, multi-step process, iterative refinement, AI workflow visualization",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "a-b-testing",
-      category: "automation",
-      name: "A/B Testing Variants",
-      description: "Multiple image variations for testing",
-      promptSuffix: ", A/B testing variant, alternative design, multiple options, split testing visual, comparison layout",
-      suggestedParams: { quality: "high", n: 4 },
-    },
-    {
-      id: "bulk-generation",
-      category: "automation",
-      name: "Bulk Generation",
-      description: "Generate multiple images at scale",
-      promptSuffix: ", bulk generation batch, multiple variations, scalable creative, automated production",
-      suggestedParams: { quality: "medium", n: 4 },
-    },
-  ],
+const realEstate: ImageTemplate[] = [
+  {
+    id: "realestate-interior-render",
+    category: "real-estate",
+    name: "Interior Render",
+    description: "Architectural interior visualization",
+    emoji: "🛋️",
+    promptSuffix:
+      ", interior design render, architectural visualization, staged room, real-estate listing quality",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "realestate-exterior-render",
+    category: "real-estate",
+    name: "Exterior Render",
+    description: "Architectural exterior of a building",
+    emoji: "🏡",
+    promptSuffix:
+      ", exterior architectural rendering, golden hour, landscaping, real-estate marketing photo style",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "realestate-virtual-staging",
+    category: "real-estate",
+    name: "Virtual Staging",
+    description: "Virtually stage an empty room",
+    emoji: "🪑",
+    promptSuffix:
+      ", virtually stage this empty room with tasteful furniture, neutral palette, photorealistic lighting",
+    suggestedParams: { quality: HIGH, inputFidelity: "high" },
+    requiresEdit: true,
+  },
+  {
+    id: "realestate-floor-plan-visual",
+    category: "real-estate",
+    name: "Floor Plan Visual",
+    description: "Stylized 3D floor plan illustration",
+    emoji: "📐",
+    promptSuffix:
+      ", stylized 3D floor plan illustration, top-down with slight perspective, furniture, soft shadows",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+];
 
-  "saas-products": [
-    {
-      id: "ai-thumbnail-generator",
-      category: "saas-products",
-      name: "AI Thumbnail Generator",
-      description: "SaaS-ready thumbnail creation",
-      promptSuffix: ", YouTube short thumbnail, viral style, bold text, high CTR design, click-worthy thumbnail",
-      suggestedParams: { size: "1536x1024", quality: "high" },
-    },
-    {
-      id: "ai-ad-creative",
-      category: "saas-products",
-      name: "AI Ad Creative Engine",
-      description: "Complete ad creative generation",
-      promptSuffix: ", professional ad creative, multi-platform design, conversion optimized, brand-aligned advertisement",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "ai-storyboard-builder",
-      category: "saas-products",
-      name: "AI Storyboard Builder",
-      description: "Automated storyboard creation",
-      promptSuffix: ", storyboard sequence, scene breakdown, visual narrative, automated storyboarding, professional panels",
-      suggestedParams: { quality: "high" },
-    },
-    {
-      id: "ai-social-media",
-      category: "saas-products",
-      name: "AI Social Media Engine",
-      description: "Social content at scale",
-      promptSuffix: ", social media carousel, Instagram post, viral content, engaging design, shareable visual",
-      suggestedParams: { quality: "high" },
-    },
-  ],
+const fashion: ImageTemplate[] = [
+  {
+    id: "fashion-lookbook",
+    category: "fashion",
+    name: "Fashion Lookbook",
+    description: "Editorial fashion lookbook image",
+    emoji: "👗",
+    promptSuffix:
+      ", fashion lookbook, editorial style, studio lighting, model in motion, magazine-quality",
+    suggestedParams: { size: "1024x1536", quality: HIGH },
+  },
+  {
+    id: "fashion-street-style",
+    category: "fashion",
+    name: "Street Style",
+    description: "Candid street-style fashion shot",
+    emoji: "🕶️",
+    promptSuffix:
+      ", candid street-style fashion photo, urban backdrop, natural light, editorial composition",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "fashion-beauty-campaign",
+    category: "fashion",
+    name: "Beauty Campaign",
+    description: "Cosmetics / skincare beauty campaign",
+    emoji: "💄",
+    promptSuffix:
+      ", beauty campaign visual, close-up, soft glowing skin, cosmetic product area, glamorous lighting",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "fashion-look-collage",
+    category: "fashion",
+    name: "Outfit Collage",
+    description: "Flat-lay outfit composition",
+    emoji: "👚",
+    promptSuffix:
+      ", flat-lay outfit collage, coordinated accessories, soft pastel background, editorial composition",
+    suggestedParams: { size: "1024x1024", quality: HIGH },
+  },
+];
+
+const automation: ImageTemplate[] = [
+  {
+    id: "automation-pipeline",
+    category: "automation",
+    name: "Pipeline Diagram",
+    description: "Visualize an AI image pipeline",
+    emoji: "🔁",
+    promptSuffix:
+      ", AI image pipeline diagram, stages and arrows, automation workflow, clean technical illustration",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "automation-ab-variants",
+    category: "automation",
+    name: "A/B Test Variants",
+    description: "Generate variants for A/B testing",
+    emoji: "🆎",
+    promptSuffix:
+      ", A/B testing variant set, same brief different executions, comparison layout",
+    suggestedParams: { quality: MEDIUM, n: 4 },
+  },
+  {
+    id: "automation-bulk-batch",
+    category: "automation",
+    name: "Bulk Batch",
+    description: "Generate many variations in a single batch",
+    emoji: "📦",
+    promptSuffix:
+      ", bulk creative batch, many variations, scalable creative production",
+    suggestedParams: { quality: MEDIUM, n: 4 },
+  },
+  {
+    id: "automation-template-grid",
+    category: "automation",
+    name: "Template Grid",
+    description: "Grid layout of generated images",
+    emoji: "🗂️",
+    promptSuffix:
+      ", grid of generated images, consistent style, automation-friendly output",
+    suggestedParams: { quality: MEDIUM, n: 4 },
+  },
+];
+
+const saasProducts: ImageTemplate[] = [
+  {
+    id: "saas-thumbnail-generator",
+    category: "saas-products",
+    name: "AI Thumbnail Generator",
+    description: "SaaS-ready thumbnail output",
+    emoji: "🖼️",
+    promptSuffix:
+      ", viral-style thumbnail, bold focal subject, CTR-optimized layout",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "saas-ad-creative-engine",
+    category: "saas-products",
+    name: "Ad Creative Engine",
+    description: "Multi-platform ad creative",
+    emoji: "🚀",
+    promptSuffix:
+      ", multi-platform ad creative, conversion-optimized, brand-aligned, professional marketing output",
+    suggestedParams: { quality: HIGH },
+  },
+  {
+    id: "saas-storyboard-builder",
+    category: "saas-products",
+    name: "Storyboard Builder",
+    description: "Auto-generated storyboard sequence",
+    emoji: "🎬",
+    promptSuffix:
+      ", automated storyboard sequence, scene breakdown, narrative flow, professional panels",
+    suggestedParams: { size: "1536x1024", quality: HIGH },
+  },
+  {
+    id: "saas-social-media-engine",
+    category: "saas-products",
+    name: "Social Media Engine",
+    description: "Scalable social content",
+    emoji: "📲",
+    promptSuffix:
+      ", scalable social content, on-brand carousel layout, shareable visual, consistent identity",
+    suggestedParams: { quality: HIGH },
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/*  Exports                                                                   */
+/* -------------------------------------------------------------------------- */
+
+export const IMAGE_TEMPLATES: ImageTemplate[] = [
+  ...core,
+  ...marketing,
+  ...branding,
+  ...product,
+  ...content,
+  ...editing,
+  ...composition,
+  ...consistency,
+  ...uiUx,
+  ...educational,
+  ...storytelling,
+  ...realEstate,
+  ...fashion,
+  ...automation,
+  ...saasProducts,
+];
+
+/**
+ * Templates grouped by category, derived from IMAGE_TEMPLATES.
+ * Provided for consumers that previously used a Record-based structure.
+ */
+export const IMAGE_TEMPLATES_BY_CATEGORY: Record<ImageCategory, ImageTemplate[]> = {
+  core,
+  marketing,
+  branding,
+  product,
+  content,
+  editing,
+  composition,
+  consistency,
+  "ui-ux": uiUx,
+  educational,
+  storytelling,
+  "real-estate": realEstate,
+  fashion,
+  automation,
+  "saas-products": saasProducts,
 };
 
-// Helper to get template by ID
-export function getTemplate(category: ImageCategory, templateId: string): ImageTemplate | undefined {
-  return IMAGE_TEMPLATES[category]?.find((t) => t.id === templateId);
+/** Lookup a template by its id. */
+export function getTemplateById(id: string): ImageTemplate | undefined {
+  return IMAGE_TEMPLATES.find((t) => t.id === id);
 }
 
-// Helper to get all templates for a category
+/** Backwards-compatible lookup by (category, id). */
+export function getTemplate(
+  category: ImageCategory,
+  templateId: string,
+): ImageTemplate | undefined {
+  return IMAGE_TEMPLATES_BY_CATEGORY[category]?.find((t) => t.id === templateId);
+}
+
+/** Return all templates for a category. */
 export function getTemplatesByCategory(category: ImageCategory): ImageTemplate[] {
-  return IMAGE_TEMPLATES[category] ?? [];
+  return IMAGE_TEMPLATES_BY_CATEGORY[category] ?? [];
 }
 
-// Helper to apply template to a prompt
+/**
+ * Apply a template's prefix/suffix to a user-supplied prompt and return the
+ * resulting params (prompt + suggested defaults).
+ */
 export function applyTemplate(
   category: ImageCategory,
   templateId: string,
@@ -499,7 +773,6 @@ export function applyTemplate(
   if (!template) {
     return { prompt: userPrompt };
   }
-
   const prompt = `${template.promptPrefix ?? ""}${userPrompt}${template.promptSuffix ?? ""}`;
   return { prompt, params: template.suggestedParams };
 }
