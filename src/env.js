@@ -15,6 +15,18 @@ export const env = createEnv({
 
     // Supabase auth and admin
     SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+
+    // API key encryption master key
+    API_KEY_ENCRYPTION_MASTER_KEY: z.string().optional(),
+
+    // UploadThing
+    UPLOADTHING_TOKEN: z.string().optional(),
+  },
+
+  client: {
+    NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
+    NEXT_PUBLIC_APP_URL: z.string().optional(),
   },
 
   runtimeEnv: {
@@ -24,6 +36,12 @@ export const env = createEnv({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    API_KEY_ENCRYPTION_MASTER_KEY: process.env.API_KEY_ENCRYPTION_MASTER_KEY,
+    UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

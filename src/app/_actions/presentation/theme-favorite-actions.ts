@@ -104,12 +104,16 @@ export async function getUserFavoriteThemes() {
       },
     });
 
-    const themes = favorites.map((fav) => ({
-      ...fav.theme,
-      likeCount: fav.theme._count.presentationThemeLikes,
-      isLiked: !!fav.theme.presentationThemeLikes?.length,
-      isFavorite: true,
-    }));
+    const themes = favorites
+      .filter((fav) => fav.theme)
+      .map((fav) => ({
+        ...(fav.theme as NonNullable<typeof fav.theme>),
+        likeCount:
+          (fav.theme as NonNullable<typeof fav.theme>)._count
+            ?.presentationThemeLikes ?? 0,
+        isLiked: !!fav.theme?.presentationThemeLikes?.length,
+        isFavorite: true,
+      }));
 
     return {
       success: true,

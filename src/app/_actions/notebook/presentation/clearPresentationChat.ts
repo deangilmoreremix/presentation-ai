@@ -22,9 +22,12 @@ export async function clearPresentationChat(presentationId: string) {
   await ensureCheckpointerSetup();
 
   await db.$transaction([
-    db.$executeRaw`DELETE FROM checkpoint_blobs WHERE thread_id = ${presentationId}`,
-    db.$executeRaw`DELETE FROM checkpoint_writes WHERE thread_id = ${presentationId}`,
-    db.$executeRaw`DELETE FROM checkpoints WHERE thread_id = ${presentationId}`,
+    async () =>
+      db.$executeRaw`DELETE FROM checkpoint_blobs WHERE thread_id = ${presentationId}`,
+    async () =>
+      db.$executeRaw`DELETE FROM checkpoint_writes WHERE thread_id = ${presentationId}`,
+    async () =>
+      db.$executeRaw`DELETE FROM checkpoints WHERE thread_id = ${presentationId}`,
   ]);
 
   return { success: true };

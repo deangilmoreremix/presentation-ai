@@ -36,8 +36,8 @@ import { GenerateImageSlidesButton } from "@/components/notebook/presentation/co
 
 export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
+  const params = useParams<{ id: string }>();
+  const id = typeof params.id === "string" ? params.id : (params.id?.[0] ?? "");
   const { session } = useAuth();
   const { resolvedTheme } = usePresentationTheme();
   const {

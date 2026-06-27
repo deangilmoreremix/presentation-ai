@@ -24,6 +24,19 @@ type StubUser = {
   openaiApiKeyIv?: string | null;
 };
 
+type StubBaseDocumentPresentation = {
+  id?: string;
+  prompt?: string;
+  content?: unknown;
+  theme?: string;
+  outline?: string[];
+  language?: string;
+  presentationStyle?: string;
+  imageSource?: string;
+  customization?: unknown;
+  searchResults?: unknown;
+};
+
 type StubBaseDocument = {
   id: string;
   title: string;
@@ -31,10 +44,11 @@ type StubBaseDocument = {
   userId: string;
   createdAt: Date;
   updatedAt: Date;
-  presentation?: Record<string, unknown>;
+  presentation?: StubBaseDocumentPresentation;
   thumbnailUrl?: string;
   isPublic?: boolean;
   type?: string;
+  favorites?: { id: string }[];
 };
 
 type StubFontPair = {
@@ -64,6 +78,8 @@ type StubPresentationTheme = {
   themeData?: Record<string, unknown>;
   createdAt: Date;
   userId: string;
+  presentationThemeLikes?: { id: string }[];
+  favoritePresentationThemes?: { id: string }[];
   _count?: { presentationThemeLikes: number; favoritePresentationThemes: number };
 };
 
@@ -72,7 +88,7 @@ type StubPresentationThemeLike = {
   themeId: string;
   userId: string;
   createdAt: Date;
-  _count?: number;
+  _count?: { id: number };
 };
 
 type StubFavoritePresentationTheme = {
@@ -140,7 +156,12 @@ export const db = {
     create: stubFn<StubFavoritePresentationTheme>({} as StubFavoritePresentationTheme),
     findMany: stubFn<StubFavoritePresentationTheme[]>([]),
   },
-  $transaction: async (fn: () => Promise<unknown> | Promise<unknown>[]) => {
+  $transaction: async (
+    fn:
+      | (() => Promise<unknown>)
+      | (() => Promise<unknown>)[]
+      | Promise<unknown>[],
+  ) => {
     if (Array.isArray(fn)) {
       return fn.map((f) => (typeof f === "function" ? f() : f));
     }

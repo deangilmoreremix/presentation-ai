@@ -18,7 +18,9 @@ import {
   CheckCircle,
   ArrowRight,
   Github,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Settings as SettingsIcon
 } from "lucide-react";
 
 const features = [
@@ -65,6 +67,30 @@ const techStack = [
   { name: "UploadThing", color: "bg-orange-500" }
 ];
 
+const apps = [
+  {
+    href: "/presentation",
+    icon: FileText,
+    title: "AI Presentation",
+    description: "Generate complete slide decks on any topic with AI, then customize with themes and rich editing.",
+    cta: "Open Presentation"
+  },
+  {
+    href: "/image-studio",
+    icon: ImageIcon,
+    title: "AI Image Studio",
+    description: "Create, edit, and remix images with powerful AI tools — perfect for slides, blogs, and social.",
+    cta: "Open Image Studio"
+  },
+  {
+    href: "/settings",
+    icon: SettingsIcon,
+    title: "Settings",
+    description: "Manage your API keys, theme preferences, and account in one place.",
+    cta: "Open Settings"
+  }
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -77,7 +103,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-center mb-6">
               <Badge variant="secondary" className="px-4 py-2 text-sm">
-                <Star className="h-4 w-4 mr-2 fill-current" />
+                <Star className="h-4 w-4 mr-2 fill-current" aria-hidden="true" />
                 Open Source AI Presentation Generator
               </Badge>
             </div>
@@ -93,27 +119,36 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/presentation">
+              <Link href="/presentation" aria-label="Start creating a presentation">
                 <Button size="lg" className="w-full sm:w-auto">
-                  <Sparkles className="h-5 w-5 mr-2" />
+                  <Sparkles className="h-5 w-5 mr-2" aria-hidden="true" />
                   Start Creating Free
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <ArrowRight className="h-5 w-5 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
-              <Link href="http://presentation.allweone.com" target="_blank">
+              <Link
+                href="http://presentation.allweone.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View live demo (opens in new tab)"
+              >
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Play className="h-5 w-5 mr-2" />
+                  <Play className="h-5 w-5 mr-2" aria-hidden="true" />
                   View Live Demo
-                  <ExternalLink className="h-5 w-5 ml-2" />
+                  <ExternalLink className="h-5 w-5 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
 
             {/* Demo Video Placeholder */}
             <div className="max-w-4xl mx-auto mb-12">
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center border">
+              <div
+                className="aspect-video bg-muted rounded-lg flex items-center justify-center border"
+                role="img"
+                aria-label="Product demo video placeholder"
+              >
                 <div className="text-center">
-                  <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" aria-hidden="true" />
                   <p className="text-muted-foreground">Demo Video Coming Soon</p>
                   <p className="text-sm text-muted-foreground">Watch how easy it is to create presentations with AI</p>
                 </div>
@@ -141,7 +176,7 @@ export default function LandingPage() {
               <Card key={index} className="border-0 shadow-md hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
+                    <feature.icon className="h-6 w-6 text-primary" aria-hidden="true" />
                   </div>
                   <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </CardHeader>
@@ -149,6 +184,47 @@ export default function LandingPage() {
                   <CardDescription className="text-base">
                     {feature.description}
                   </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Apps Section */}
+      <section className="py-20 px-4" aria-labelledby="apps-heading">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 id="apps-heading" className="text-3xl md:text-4xl font-bold mb-4">
+              One Platform. Three Powerful Apps.
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Jump straight into the tool you need — every app is included.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {apps.map((app) => (
+              <Card
+                key={app.href}
+                className="border-0 shadow-md hover:shadow-lg transition-shadow flex flex-col"
+              >
+                <CardHeader>
+                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <app.icon className="h-6 w-6 text-primary" aria-hidden="true" />
+                  </div>
+                  <CardTitle className="text-xl">{app.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-between">
+                  <CardDescription className="text-base mb-4">
+                    {app.description}
+                  </CardDescription>
+                  <Link href={app.href} aria-label={`${app.cta}: ${app.title}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      {app.cta}
+                      <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
@@ -245,33 +321,38 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="/presentation">
+              <Link href="/presentation" aria-label="Start creating a presentation">
                 <Button size="lg" className="w-full sm:w-auto">
-                  <Sparkles className="h-5 w-5 mr-2" />
+                  <Sparkles className="h-5 w-5 mr-2" aria-hidden="true" />
                   Start Creating Now
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <ArrowRight className="h-5 w-5 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
-              <Link href="https://github.com/allweonedev/presentation-ai" target="_blank">
+              <Link
+                href="https://github.com/allweonedev/presentation-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View source on GitHub (opens in new tab)"
+              >
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Github className="h-5 w-5 mr-2" />
+                  <Github className="h-5 w-5 mr-2" aria-hidden="true" />
                   View on GitHub
-                  <ExternalLink className="h-5 w-5 ml-2" />
+                  <ExternalLink className="h-5 w-5 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
 
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                 <span>Free to use</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                 <span>Open source</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
                 <span>No data collection</span>
               </div>
             </div>
@@ -285,16 +366,28 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-primary-foreground" />
+                <Sparkles className="h-4 w-4 text-primary-foreground" aria-hidden="true" />
               </div>
               <span className="font-semibold">ALLWEONE®</span>
             </div>
 
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-              <Link href="https://discord.gg/fsMHMhAHRV" target="_blank" className="hover:text-foreground">
+              <Link
+                href="https://discord.gg/fsMHMhAHRV"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join Discord (opens in new tab)"
+                className="hover:text-foreground"
+              >
                 Discord
               </Link>
-              <Link href="https://github.com/allweonedev/presentation-ai" target="_blank" className="hover:text-foreground">
+              <Link
+                href="https://github.com/allweonedev/presentation-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View on GitHub (opens in new tab)"
+                className="hover:text-foreground"
+              >
                 GitHub
               </Link>
               <Link href="/presentation" className="hover:text-foreground">
