@@ -254,9 +254,11 @@ export function PresentationDashboard() {
                   </span>
                   <span className="text-sm text-muted-foreground">
                     Updated{" "}
-                    {formatDistanceToNow(new Date(item.updatedAt), {
-                      addSuffix: true,
-                    })}
+                    {item.updatedAt
+                      ? formatDistanceToNow(new Date(item.updatedAt), {
+                          addSuffix: true,
+                        })
+                      : "—"}
                   </span>
                 </button>
               ))

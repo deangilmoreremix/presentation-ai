@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+import { SupabaseProvider } from "@/components/supabase-provider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { type Metadata } from "next";
@@ -20,9 +21,11 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <TanStackQueryProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
+          <SupabaseProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+            </ThemeProvider>
+          </SupabaseProvider>
         </TanStackQueryProvider>
       </body>
     </html>

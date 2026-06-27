@@ -1,16 +1,15 @@
 "use server";
 import "server-only";
 
-import { type Prisma, DocumentType } from "@/prisma/client";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 
-export type PresentationDocument = Prisma.BaseDocumentGetPayload<{
-  include: {
-    presentation: true;
-    favorites: true;
-  };
-}>;
+const DocumentType = { PRESENTATION: "PRESENTATION" } as const;
+
+export type PresentationDocument = Awaited<ReturnType<typeof db.baseDocument.findMany>>[number] & {
+  presentation: unknown;
+  favorites: { id: string }[];
+};
 
 const ITEMS_PER_PAGE = 10;
 

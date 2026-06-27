@@ -1,6 +1,5 @@
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { uploadFiles } from "@/hooks/globals/useUploadthing";
-import { type JsonValue } from "@prisma/client/runtime/client";
 import {
   type BackgroundRectExportElement,
   type DecorExportElement,
@@ -172,7 +171,7 @@ async function uploadBase64Image(
 export async function convertToFabricValues(
   scanResults: ScanResult[],
   slides: PlateSlide[],
-): Promise<JsonValue> {
+): Promise<unknown> {
   // Process all slides in parallel using Promise.allSettled for resilience
   const pageResults = await Promise.allSettled(
     scanResults.map(async (scanResult, i) => {
@@ -208,7 +207,7 @@ export async function convertToFabricValues(
     lastModified: new Date().toISOString(),
   };
 
-  return JSON.parse(JSON.stringify(designContent)) as JsonValue;
+  return JSON.parse(JSON.stringify(designContent)) as unknown;
 }
 
 async function createPageFromSlide(

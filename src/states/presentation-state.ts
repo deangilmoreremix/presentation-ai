@@ -131,7 +131,7 @@ interface PresentationState {
   completeRootImageGeneration: (slideId: string, url: string) => void;
   failRootImageGeneration: (slideId: string, error: string) => void;
   clearRootImageGeneration: (slideId: string) => void;
-  setCurrentPresentation: (id: string | null, title: string | null) => void;
+  setCurrentPresentation: (id: string | null | undefined, title: string | null | undefined) => void;
   setIsGridView: (isGrid: boolean) => void;
   setIsSheetOpen: (isOpen: boolean) => void;
   setNumSlides: (num: number) => void;
@@ -147,7 +147,7 @@ interface PresentationState {
   setLanguage: (lang: string) => void;
   setPageStyle: (style: string) => void;
   setShowTemplates: (show: boolean) => void;
-  setPresentationInput: (input: string) => void;
+  setPresentationInput: (input: string | null | undefined) => void;
   setOutline: (topics: string[]) => void;
   setSearchResults: (
     results: Array<{ query: string; results: unknown[] }>,
@@ -608,7 +608,7 @@ export const usePresentationState = create<PresentationState>((set, get) => ({
   },
   setPageStyle: (style) => set({ pageStyle: style }),
   setShowTemplates: (show) => set({ showTemplates: show }),
-  setPresentationInput: (input) => set({ presentationInput: input }),
+  setPresentationInput: (input) => set({ presentationInput: input ?? "" }),
   setOutline: (topics) => set({ outline: topics }),
   setSearchResults: (results) => set({ searchResults: results }),
   setWebSearchEnabled: (enabled) => set({ webSearchEnabled: enabled }),
