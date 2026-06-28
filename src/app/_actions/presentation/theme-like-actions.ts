@@ -101,7 +101,7 @@ export async function getThemeLikes(themeIds: string[]) {
 
     const likesMap: Record<string, number> = {};
     likes.forEach((like) => {
-      likesMap[like.themeId] = like._count.id;
+      likesMap[like.themeId] = like._count?.id ?? 0;
     });
 
     // Ensure all themeIds are in the map (even if count is 0)

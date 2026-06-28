@@ -18,7 +18,9 @@ import {
   CheckCircle,
   ArrowRight,
   Github,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon,
+  Presentation,
 } from "lucide-react";
 
 const features = [
@@ -72,9 +74,11 @@ export default function LandingPage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-slate-100 dark:bg-grid-slate-900 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] -z-10" />
+
         <div className="container mx-auto text-center">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-center mb-6">
               <Badge variant="secondary" className="px-4 py-2 text-sm">
                 <Star className="h-4 w-4 mr-2 fill-current" />
@@ -82,39 +86,59 @@ export default function LandingPage() {
               </Badge>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
               Create Beautiful Presentations
-              <span className="text-primary block">with AI in Minutes</span>
+              <span className="text-primary block mt-2">with AI in Minutes</span>
             </h1>
 
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
               The open-source alternative to Gamma.app. Generate complete presentations on any topic,
               customize with 40+ themes, and export to PowerPoint or PDF with professional results.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Link href="/presentation">
-                <Button size="lg" className="w-full sm:w-auto">
+              <Link href="/presentation/create">
+                <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg shadow-lg hover:shadow-xl transition-all">
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Start Creating Free
+                  Create Presentation
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </Link>
-              <Link href="http://presentation.allweone.com" target="_blank">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  <Play className="h-5 w-5 mr-2" />
-                  View Live Demo
-                  <ExternalLink className="h-5 w-5 ml-2" />
+              <Link href="/presentation">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg">
+                  <Presentation className="h-5 w-5 mr-2" />
+                  Browse Presentations
+                </Button>
+              </Link>
+              <Link href="/image-studio">
+                <Button variant="ghost" size="lg" className="w-full sm:w-auto h-14 px-8 text-lg">
+                  <ImageIcon className="h-5 w-5 mr-2" />
+                  Image Studio
                 </Button>
               </Link>
             </div>
 
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Free to use</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>40+ themes</span>
+              </div>
+            </div>
+
             {/* Demo Video Placeholder */}
-            <div className="max-w-4xl mx-auto mb-12">
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center border">
+            <div className="max-w-5xl mx-auto mt-16">
+              <div className="aspect-video bg-muted/50 rounded-xl flex items-center justify-center border shadow-inner">
                 <div className="text-center">
-                  <Play className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Demo Video Coming Soon</p>
+                  <Play className="h-20 w-20 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-lg font-medium text-muted-foreground">Demo Video Coming Soon</p>
                   <p className="text-sm text-muted-foreground">Watch how easy it is to create presentations with AI</p>
                 </div>
               </div>
