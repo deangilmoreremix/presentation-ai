@@ -1,7 +1,7 @@
 [build]
-  base = "sessions/agent_d8f81e2f-13a3-4a2f-b10a-fd496890e595"
+  base = "."
   command = "pnpm build"
-  publish = "sessions/agent_d8f81e2f-13a3-4a2f-b10a-fd496890e595/.next"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
