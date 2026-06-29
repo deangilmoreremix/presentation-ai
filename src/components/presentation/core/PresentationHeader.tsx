@@ -8,9 +8,10 @@ import { useEffect, useState } from "react";
 // Import our new components
 import { updatePresentationTitle } from "@/app/_actions/notebook/presentation/presentationActions";
 import AllweoneText from "@/components/globals/allweone-logo";
-import { ExportButton } from "@/components/presentation/buttons/ExportButton";
 import { PresentButton } from "@/components/presentation/buttons/PresentButton";
 import { ShareButton } from "@/components/presentation/buttons/ShareButton";
+import { ExportButton } from "@/components/presentation/buttons/ExportButton";
+import { SaveStatus } from "@/components/presentation/buttons/SaveStatus";
 import { PresentationMenu } from "@/components/presentation/controls/PresentationMenu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,7 +146,10 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
         )}
 
         {/* Export button - Only in presentation page, not outline or present mode */}
-        {isPresentationPage && !isPresenting && <ExportButton />}
+        {isPresentationPage && !isPresenting && !isReadOnly && <ExportButton />}
+
+        {/* Save status - Only in presentation page, not outline or present mode */}
+        {isPresentationPage && !isPresenting && !isReadOnly && <SaveStatus />}
 
         {/* Share button - Only in presentation page, not outline */}
         {isPresentationPage && !isPresenting && !isReadOnly && <ShareButton />}

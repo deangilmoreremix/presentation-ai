@@ -69,9 +69,10 @@ export default function Page() {
       }
     } catch (error) {
       setIsGeneratingOutline(false);
+      handledRequestRef.current = null;
       console.error("Error creating presentation:", error);
       toast.error("Failed to create presentation");
-        router.push("/presentation");
+      router.push("/presentation");
     }
   };
 
@@ -92,7 +93,7 @@ export default function Page() {
 
     if (!request || !request.prompt) {
       presentationState.setPendingCreateRequest(null);
-        router.replace("/presentation");
+      router.replace("/presentation");
       return;
     }
 

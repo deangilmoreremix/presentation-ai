@@ -23,7 +23,6 @@ import {
   exportPresentationToPptx,
   scanAllSlides,
 } from "../export";
-import { SaveStatus } from "./SaveStatus";
 
 type ExportFormat = "pptx" | "pdf";
 
@@ -151,7 +150,6 @@ export function ExportButton() {
           className="relative h-9 w-9 px-0 text-muted-foreground hover:text-foreground sm:h-9 sm:w-auto sm:gap-1.5 sm:px-3"
           aria-label="Export presentation"
         >
-          <SaveStatus className="absolute top-1 right-1 sm:static" />
           <Download className="h-4 w-4 sm:mr-1" />
           <span className="hidden sm:inline">Export</span>
         </Button>

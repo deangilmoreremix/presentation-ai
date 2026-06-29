@@ -7,7 +7,7 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { canEditDocument, canReadDocument } from "@/server/share/authorization";
 import { normalizeShareEmail } from "@/server/share/utils";
-import { type InputJsonValue } from "@prisma/client/runtime/library";
+import { type InputJsonValue } from "@/prisma/client";
 import { notFound } from "next/navigation";
 
 export async function createPresentation({
