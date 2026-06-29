@@ -190,7 +190,16 @@ export function OutlineList() {
   const hideOutline =
     webSearchEnabled && items.length === 0 && !isGeneratingOutline;
   if (hideOutline) {
-    return null;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm text-foreground">Outline</h2>
+        </div>
+        <p className="text-sm text-muted-foreground py-8 text-center">
+          No outline items yet. Try adjusting your prompt or disabling web search to generate an outline.
+        </p>
+      </div>
+    );
   }
 
   return (
