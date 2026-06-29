@@ -1,8 +1,7 @@
+"use client";
+
+import { PresentationDashboard } from "@/components/notebook/presentation/components/PresentationDashboard";
+
 export default function PresentationPage() {
-  return (
-    <div>
-      <h1>Presentation Page</h1>
-      <p>This is working</p>
-    </div>
-  );
+  return <PresentationDashboard />;
 }

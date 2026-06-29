@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -349,7 +350,7 @@ const pricingTiers = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const { resolvedTheme } = usePresentationState();
+  const { resolvedTheme } = useTheme();
   const [localPrompt, setLocalPrompt] = useState("");
   const [numSlides, setNumSlides] = useState("5");
   const [language, setLanguage] = useState("en-US");
@@ -380,8 +381,8 @@ export default function LandingPage() {
   };
 
   const handleExampleClick = (example: typeof examples[0]) => {
-    setLocalPrompt(example.title);
-    setNumSlides(example.slides.split(" ")[0]);
+    setLocalPrompt(example.title ?? "");
+    setNumSlides(example.slides?.split(" ")[0] ?? "5");
   };
 
   return (
