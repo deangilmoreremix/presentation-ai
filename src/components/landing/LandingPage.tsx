@@ -882,7 +882,7 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="/presentation/create">
+            <Link href="/presentation">
                 <Button size="lg" className="w-full sm:w-auto">
                   <Sparkles className="h-5 w-5 mr-2" />
                   Start Creating Now
