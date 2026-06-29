@@ -252,7 +252,7 @@ export async function getPublicCustomThemes() {
     const shapedThemes = themes.map((theme) => ({
       ...theme,
       name: theme.name,
-      likeCount: theme._count.presentationThemeLikes,
+      likeCount: theme._count?.presentationThemeLikes ?? 0,
       isLiked: !!theme.presentationThemeLikes?.length,
       isFavorite: !!theme.favoritePresentationThemes?.length,
     }));

@@ -31,10 +31,20 @@ type StubBaseDocument = {
   userId: string;
   createdAt: Date;
   updatedAt: Date;
-  presentation?: Record<string, unknown>;
+  presentation?: StubPresentation;
   thumbnailUrl?: string;
   isPublic?: boolean;
   type?: string;
+  prompt?: string;
+  outline?: string[];
+  imageSource?: string;
+  presentationStyle?: string;
+  customization?: Record<string, unknown>;
+  language?: string;
+  searchResults?: string | unknown[];
+  favorites?: Array<{ id: string }>;
+  user?: { name?: string; image?: string };
+  documentType?: string;
 };
 
 type StubFontPair = {
@@ -54,6 +64,13 @@ type StubPresentation = {
   createdAt: Date;
   userId: string;
   content?: string;
+  prompt?: string;
+  outline?: string[];
+  imageSource?: string;
+  presentationStyle?: string;
+  customization?: Record<string, unknown>;
+  language?: string;
+  searchResults?: string | unknown[];
 };
 
 type StubPresentationTheme = {
@@ -64,7 +81,11 @@ type StubPresentationTheme = {
   themeData?: Record<string, unknown>;
   createdAt: Date;
   userId: string;
+  isPublic?: boolean;
+  isAdmin?: boolean;
   _count?: { presentationThemeLikes: number; favoritePresentationThemes: number };
+  presentationThemeLikes?: Array<{ id: string }>;
+  favoritePresentationThemes?: Array<{ id: string }>;
 };
 
 type StubPresentationThemeLike = {
@@ -72,7 +93,7 @@ type StubPresentationThemeLike = {
   themeId: string;
   userId: string;
   createdAt: Date;
-  _count?: number;
+  _count?: { id: number };
 };
 
 type StubFavoritePresentationTheme = {
@@ -80,7 +101,10 @@ type StubFavoritePresentationTheme = {
   themeId: string;
   userId: string;
   createdAt: Date;
-  theme?: StubPresentationTheme & { _count?: { presentationThemeLikes: number; favoritePresentationThemes: number } };
+  theme?: StubPresentationTheme & {
+    _count?: { presentationThemeLikes: number; favoritePresentationThemes: number };
+    presentationThemeLikes?: Array<{ id: string }>;
+  };
 };
 
 // Generic stub function that accepts any args and returns appropriate type
@@ -140,7 +164,7 @@ export const db = {
     create: stubFn<StubFavoritePresentationTheme>({} as StubFavoritePresentationTheme),
     findMany: stubFn<StubFavoritePresentationTheme[]>([]),
   },
-  $transaction: async (fn: () => Promise<unknown> | Promise<unknown>[]) => {
+  $transaction: async (fn: (() => Promise<unknown>) | (() => Promise<unknown>)[] | Promise<unknown>[]) => {
     if (Array.isArray(fn)) {
       return fn.map((f) => (typeof f === "function" ? f() : f));
     }
