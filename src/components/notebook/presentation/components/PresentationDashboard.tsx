@@ -5,6 +5,8 @@ import { fetchPresentations } from "@/app/_actions/notebook/presentation/fetchPr
 import { ModelPicker } from "@/components/notebook/presentation/components/ModelPicker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageSourceSelector } from "@/components/ui/image-source-selector";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { themes } from "@/lib/presentation/themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -53,9 +56,26 @@ export function PresentationDashboard() {
     setNumSlides,
     webSearchEnabled,
     setWebSearchEnabled,
+    theme,
+    setTheme,
+    pageStyle,
+    setPageStyle,
+    presentationStyle,
+    setPresentationStyle,
+    tone,
+    setTone,
+    audience,
+    setAudience,
+    scenario,
+    setScenario,
+    imageSource,
+    setImageSource,
+    imageModel,
+    setImageModel,
+    stockImageProvider,
+    setStockImageProvider,
     setCurrentPresentation,
     setPendingCreateRequest,
-    setTheme,
     resetPresentationState,
   } = usePresentationState();
 
@@ -221,6 +241,131 @@ export function PresentationDashboard() {
                 Blank presentation
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60 bg-background/70 shadow-xs">
+          <CardHeader>
+            <CardTitle className="text-xl">Customization</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Theme</Label>
+              <Select value={theme} onValueChange={(value) => setTheme(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(themes).map(([key, themeOption]) => (
+                    <SelectItem key={key} value={key}>
+                      {themeOption.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Page Style</Label>
+                <Select value={pageStyle} onValueChange={setPageStyle}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select page style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
+                    <SelectItem value="modern">Modern</SelectItem>
+                    <SelectItem value="minimal">Minimal</SelectItem>
+                    <SelectItem value="classic">Classic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Presentation Style</Label>
+                <Select
+                  value={presentationStyle}
+                  onValueChange={setPresentationStyle}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select presentation style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">
+                      Professional
+                    </SelectItem>
+                    <SelectItem value="casual">Casual</SelectItem>
+                    <SelectItem value="creative">Creative</SelectItem>
+                    <SelectItem value="academic">Academic</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Tone</Label>
+                <Select value={tone} onValueChange={setTone}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="persuasive">Persuasive</SelectItem>
+                    <SelectItem value="inspiring">Inspiring</SelectItem>
+                    <SelectItem value="instructive">Instructive</SelectItem>
+                    <SelectItem value="engaging">Engaging</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Audience</Label>
+                <Select value={audience} onValueChange={setAudience}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                    <SelectItem value="investor">Investor</SelectItem>
+                    <SelectItem value="teacher">Teacher</SelectItem>
+                    <SelectItem value="student">Student</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-sm font-medium">Scenario</Label>
+                <Select value={scenario} onValueChange={setScenario}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select scenario" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="analysis-report">Analysis Report</SelectItem>
+                    <SelectItem value="teaching-training">Teaching</SelectItem>
+                    <SelectItem value="promotional-materials">
+                      Promotional
+                    </SelectItem>
+                    <SelectItem value="public-speeches">
+                      Public Speeches
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <ImageSourceSelector
+              imageSource={imageSource}
+              imageModel={imageModel}
+              stockImageProvider={stockImageProvider}
+              onImageSourceChange={setImageSource}
+              onImageModelChange={setImageModel}
+              onStockImageProviderChange={setStockImageProvider}
+              showLabel={true}
+            />
           </CardContent>
         </Card>
 

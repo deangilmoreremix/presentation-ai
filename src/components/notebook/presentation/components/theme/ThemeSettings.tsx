@@ -40,9 +40,7 @@ export function ThemeSettings() {
             </ThemeModal>
           </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            {Object.entries(themes)
-              .splice(0, 9)
-              .map(([key, themeOption]) => {
+            {Object.entries(themes).map(([key, themeOption]) => {
                 return (
                   <div key={key} className="h-44">
                     <ThemeCard
