@@ -1,10 +1,14 @@
 "use client";
 
-import { createBlankPresentation } from "@/app/_actions/notebook/presentation/presentationActions";
+import { createBlankPresentation, createEmptyPresentation } from "@/app/_actions/notebook/presentation/presentationActions";
 import { fetchPresentations } from "@/app/_actions/notebook/presentation/fetchPresentations";
 import { ModelPicker } from "@/components/notebook/presentation/components/ModelPicker";
+import { CreateThemeModal } from "@/components/notebook/presentation/components/theme/create-theme/CreateThemeModal";
+import { ThemeModal } from "@/components/notebook/presentation/components/theme/ThemeModal";
+import { SaveStatus } from "@/components/presentation/buttons/SaveStatus";
+import { useThemePanelState } from "@/components/presentation/edit-panel/sections/theme/theme-panel-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -14,13 +18,17 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageSourceSelector } from "@/components/ui/image-source-selector";
+import { ThemeCard } from "@/components/presentation/edit-panel/sections/theme/ThemeCard";
+import { Label } from "@/components/ui/label";
+import { themes } from "@/lib/presentation/themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { FilePlus2, Globe, Loader2, Presentation, Sparkles } from "lucide-react";
+import { FilePlus2, Globe, Loader2, Palette, Presentation, Sparkles, Wand2, Plus } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 
 const LANGUAGES = [
@@ -38,10 +46,51 @@ const LANGUAGES = [
   ["ar", "Arabic"],
 ] as const;
 
+const TONE_OPTIONS = [
+  { id: "auto", label: "Auto" },
+  { id: "general", label: "General" },
+  { id: "persuasive", label: "Persuasive" },
+  { id: "inspiring", label: "Inspiring" },
+  { id: "instructive", label: "Instructive" },
+  { id: "engaging", label: "Engaging" },
+] as const;
+
+const AUDIENCE_OPTIONS = [
+  { id: "auto", label: "Auto" },
+  { id: "general", label: "General" },
+  { id: "business", label: "Business" },
+  { id: "investor", label: "Investor" },
+  { id: "teacher", label: "Teacher" },
+  { id: "student", label: "Student" },
+] as const;
+
+const SCENARIO_OPTIONS = [
+  { id: "auto", label: "Auto" },
+  { id: "general", label: "General" },
+  { id: "analysis-report", label: "Analysis Report" },
+  { id: "teaching-training", label: "Teaching" },
+  { id: "promotional-materials", label: "Promotional" },
+  { id: "public-speeches", label: "Public Speeches" },
+] as const;
+
+const STYLE_OPTIONS = [
+  { id: "professional", label: "Professional" },
+  { id: "casual", label: "Casual" },
+  { id: "modern", label: "Modern" },
+  { id: "minimal", label: "Minimal" },
+] as const;
+
+const TEXT_CONTENT_OPTIONS = [
+  { id: "minimal", label: "Minimal" },
+  { id: "concise", label: "Concise" },
+  { id: "detailed", label: "Detailed" },
+  { id: "extensive", label: "Extensive" },
+] as const;
+
 export function PresentationDashboard() {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
-  const [isCreating, setIsCreating] = useState(false);
+  const { setOpenCreateThemeModal } = useThemePanelState();
   const {
     presentationInput,
     setPresentationInput,
@@ -56,7 +105,23 @@ export function PresentationDashboard() {
     setCurrentPresentation,
     setPendingCreateRequest,
     setTheme,
-    resetPresentationState,
+    theme,
+    tone,
+    setTone,
+    audience,
+    setAudience,
+    scenario,
+    setScenario,
+    textContent,
+    setTextContent,
+    presentationStyle,
+    setPresentationStyle,
+    imageModel,
+    setImageModel,
+    imageSource,
+    setImageSource,
+    stockImageProvider,
+    setStockImageProvider,
   } = usePresentationState();
 
   const { data, isLoading } = useQuery({
@@ -66,50 +131,72 @@ export function PresentationDashboard() {
 
   const items = data?.items ?? [];
   const slidesOptions = useMemo(
-    () => Array.from({ length: 12 }, (_, index) => `${index + 1}`),
+    () => Array.from({ length: 20 }, (_, index) => `${index + 1}`),
     [],
   );
 
+  const themeEntries = useMemo(
+    () => Object.entries(themes).slice(0, 6),
+    [],
+  );
+  const currentTheme =
+    themes[theme as keyof typeof themes] ?? themes.mystique;
+  const fallbackTheme =
+    resolvedTheme === "dark" ? "ebony" : "mystique";
+  const fallbackThemeOption =
+    themes[fallbackTheme as keyof typeof themes] ?? themes.mystique;
+
   const createPresentation = async () => {
-    setIsCreating(true);
     const prompt = presentationInput.trim();
+    if (!prompt) {
+      toast.error("Please enter a prompt first");
+      return;
+    }
+
     const selectedLanguage = language;
     const selectedNumSlides = numSlides;
     const selectedWebSearchEnabled = webSearchEnabled;
-    resetPresentationState();
+    const selectedTheme = (theme as string) || fallbackTheme;
+
+    setPendingCreateRequest({
+      prompt,
+      language: selectedLanguage,
+      modelId,
+      modelProvider,
+      numSlides: selectedNumSlides,
+      webSearchEnabled: selectedWebSearchEnabled,
+    });
 
     try {
-      setPendingCreateRequest({
-        prompt,
+      const result = await createEmptyPresentation({
+        title: prompt.substring(0, 50) || "Untitled Presentation",
+        theme: selectedTheme,
         language: selectedLanguage,
-        modelId,
-        modelProvider,
-        numSlides: selectedNumSlides,
-        webSearchEnabled: selectedWebSearchEnabled,
       });
-      router.push("/presentation/create");
+
+      if (!result.success || !result.presentation) {
+        toast.error(result.message ?? "Failed to create presentation");
+        return;
+      }
+
+      setCurrentPresentation(result.presentation.id, result.presentation.title);
+      setTheme(selectedTheme);
+      router.replace(`/presentation/generate/${result.presentation.id}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create presentation");
-    } finally {
-      setIsCreating(false);
     }
   };
 
   const createBlank = async () => {
-    if (isCreating) {
-      return;
-    }
-
-    setIsCreating(true);
     const title = presentationInput.trim() || "Blank presentation";
     const selectedLanguage = language;
+    const selectedTheme = (theme as string) || fallbackTheme;
 
     try {
-      const theme = resolvedTheme === "dark" ? "ebony" : "mystique";
       const result = await createBlankPresentation(
         title,
-        theme,
+        selectedTheme,
         selectedLanguage,
       );
 
@@ -118,14 +205,12 @@ export function PresentationDashboard() {
         return;
       }
 
-      setTheme(theme);
+      setTheme(selectedTheme);
       setCurrentPresentation(result.presentation.id, result.presentation.title);
       router.replace(`/presentation/${result.presentation.id}`);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create presentation");
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -138,20 +223,84 @@ export function PresentationDashboard() {
               <Sparkles className="h-6 w-6 text-primary" />
               Create a presentation
             </CardTitle>
+            <CardDescription>
+              Describe your topic, pick a theme, then generate an outline you can edit before building slides.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-6">
             <Textarea
               value={presentationInput}
               onChange={(event) => setPresentationInput(event.target.value)}
               placeholder="Describe the presentation you want to build."
-              className="min-h-36 resize-none"
+              className="min-h-32 resize-none"
             />
+
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Theme</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOpenCreateThemeModal(true)}
+                    className="gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Create theme
+                  </Button>
+                  <ThemeModal>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-sm font-medium"
+                    >
+                      Browse all 40+ themes
+                    </Button>
+                  </ThemeModal>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                {themeEntries.map(([key, themeOption]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTheme(key)}
+                    className={`relative overflow-hidden rounded-lg border-2 transition-all ${
+                      (theme as string) === key
+                        ? "border-primary ring-2 ring-primary/30"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="h-16 overflow-hidden">
+                      <ThemeCard
+                        theme={themeOption}
+                        themeId={key}
+                        isSelected={(theme as string) === key}
+                        showEllipsis={false}
+                        showFavoriteButton={false}
+                        onSelect={() => setTheme(key)}
+                      />
+                    </div>
+                    <div className="bg-background px-2 py-1 text-center text-xs font-medium">
+                      {themeOption.name ?? key}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Selected: {currentTheme?.name ?? fallbackThemeOption?.name}
+              </p>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <ModelPicker />
 
               <div className="space-y-2">
-                <div className="text-sm font-medium">Slides</div>
+                <Label className="text-sm font-medium">Slides</Label>
                 <Select
                   value={String(numSlides)}
                   onValueChange={(value) => setNumSlides(Number(value))}
@@ -170,7 +319,7 @@ export function PresentationDashboard() {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium">Language</div>
+                <Label className="text-sm font-medium">Language</Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger>
                     <SelectValue />
@@ -186,40 +335,180 @@ export function PresentationDashboard() {
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm font-medium">Web search</div>
-                <div className="flex h-10 items-center justify-between rounded-md border px-3">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Globe className="h-4 w-4" />
-                    {webSearchEnabled ? "Enabled" : "Disabled"}
-                  </div>
-                  <Switch
-                    checked={webSearchEnabled}
-                    onCheckedChange={setWebSearchEnabled}
-                  />
-                </div>
+                <Label className="text-sm font-medium">Style</Label>
+                <Select
+                  value={presentationStyle}
+                  onValueChange={setPresentationStyle}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STYLE_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <ImageSourceSelector
+              imageSource={imageSource}
+              imageModel={imageModel}
+              stockImageProvider={stockImageProvider}
+              onImageSourceChange={setImageSource}
+              onImageModelChange={setImageModel}
+              onStockImageProviderChange={setStockImageProvider}
+              className="rounded-lg border bg-background/40 p-4"
+              showLabel={true}
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Content depth</Label>
+                <Select
+                  value={textContent}
+                  onValueChange={(value) =>
+                    setTextContent(
+                      value as "minimal" | "concise" | "detailed" | "extensive",
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEXT_CONTENT_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Tone</Label>
+                <Select
+                  value={tone}
+                  onValueChange={(value) =>
+                    setTone(
+                      value as
+                        | "auto"
+                        | "general"
+                        | "persuasive"
+                        | "inspiring"
+                        | "instructive"
+                        | "engaging",
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TONE_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Audience</Label>
+                <Select
+                  value={audience}
+                  onValueChange={(value) =>
+                    setAudience(
+                      value as
+                        | "auto"
+                        | "general"
+                        | "business"
+                        | "investor"
+                        | "teacher"
+                        | "student",
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AUDIENCE_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Scenario</Label>
+                <Select
+                  value={scenario}
+                  onValueChange={(value) =>
+                    setScenario(
+                      value as
+                        | "auto"
+                        | "general"
+                        | "analysis-report"
+                        | "teaching-training"
+                        | "promotional-materials"
+                        | "public-speeches",
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCENARIO_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-lg border bg-background/40 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">Web search</p>
+                  <p className="text-xs text-muted-foreground">
+                    Augment outline with live web results
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={webSearchEnabled}
+                onCheckedChange={setWebSearchEnabled}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 onClick={() => void createPresentation()}
-                disabled={isCreating || !presentationInput.trim()}
+                disabled={!presentationInput.trim()}
               >
-                {isCreating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
-                )}
+                <Wand2 className="mr-2 h-4 w-4" />
                 Generate outline
               </Button>
               <Button
                 variant="outline"
                 onClick={() => void createBlank()}
-                disabled={isCreating}
               >
                 <FilePlus2 className="mr-2 h-4 w-4" />
                 Blank presentation
               </Button>
+              <SaveStatus className="ml-auto text-xs text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -264,6 +553,8 @@ export function PresentationDashboard() {
           </CardContent>
         </Card>
       </section>
+
+      <CreateThemeModal />
     </div>
   );
 }
