@@ -8,6 +8,8 @@ const sql = readFileSync(join(__dirname, "..", "supabase", "schema.sql"), "utf8"
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  // Supabase's Postgres certificate chain isn't trusted by Node's default CA store.
+  ssl: { rejectUnauthorized: false },
 });
 
 async function main() {
