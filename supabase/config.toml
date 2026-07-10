@@ -1,0 +1,56 @@
+# Supabase CLI configuration for the ALLWEONE Presentation app.
+#
+# NOTE: To push migrations to the hosted Supabase project you must first link
+# it with a Supabase Personal Access Token (PAT), which is NOT available in
+# every environment:
+#
+#   supabase login                       # stores the PAT
+#   supabase link --project-ref bzxohkrxcwodllketcpz
+#   supabase db push                     # applies supabase/migrations/*.sql
+#
+# Without linking, `supabase db push` cannot reach the live project. The
+# migration files under supabase/migrations/ are still version-controlled and
+# can be applied to FRESH databases (e.g. local `supabase start` or a new
+# project) via `supabase db push` once linked.
+
+project_id = "bzxohkrxcwodllketcpz"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+# Email auth defaults; the app uses Supabase Auth for users.
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://bzxohkrxcwodllketcpz.supabase.co"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+[analytics]
+enabled = false
+
+[realtime]
+enabled = true
