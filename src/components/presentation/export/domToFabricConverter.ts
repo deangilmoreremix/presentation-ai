@@ -1,6 +1,6 @@
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { uploadFiles } from "@/hooks/globals/useUploadthing";
-import { type JsonValue } from "@/prisma/client";
+import { type JsonValue } from "@/lib/types/prisma-shim";
 import {
   type BackgroundRectExportElement,
   type DecorExportElement,

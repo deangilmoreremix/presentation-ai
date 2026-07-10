@@ -117,7 +117,7 @@ function condToOrToken(cond: Record<string, any>): string {
     }
     return `${k}.eq.${v}`;
   });
-  return parts.length > 1 ? `and(${parts.join(",")})` : parts[0];
+  return parts.length > 1 ? `and(${parts.join(",")})` : (parts[0] ?? "");
 }
 
 function applyOrderBy(qb: any, orderBy: any): any {
@@ -213,7 +213,7 @@ async function resolveIncludes(rows: any[], model: string, includeSpec: any): Pr
 }
 
 function createModel(model: string) {
-  const table = MODEL_TABLE[model];
+  const table = MODEL_TABLE[model] as string;
 
   async function insertRow(data: Record<string, any>) {
     const clean = removeUndefined(data);
@@ -245,7 +245,7 @@ function createModel(model: string) {
       }
       const row = await insertRow(parentData);
       for (const { key, childData } of nested) {
-        const rel = RELATIONS[model][key];
+        const rel = (RELATIONS[model] as Record<string, Relation>)[key] as Relation;
         const childRow = { ...childData, [rel.refKey]: row[rel.localKey] };
         await insertRow(childRow);
       }
@@ -301,7 +301,7 @@ function createModel(model: string) {
       }
       await updateRow(where, parentData);
       for (const { key, childData } of nested) {
-        const rel = RELATIONS[model][key];
+        const rel = (RELATIONS[model] as Record<string, Relation>)[key] as Relation;
         const childWhere = { [rel.refKey]: where.id ?? where[rel.refKey] };
         let cqb: any = sb().from(rel.table).update(removeUndefined(childData));
         cqb = applyWhere(cqb, childWhere);
@@ -314,6 +314,16 @@ function createModel(model: string) {
       return await findOneWhere(where, table, model);
     },
 
+    async updateMany({ where, data }: { where: any; data: any }) {
+      const clean = removeUndefined(data);
+      if (HAS_UPDATED_AT.has(table)) clean.updatedAt = new Date().toISOString();
+      let qb: any = sb().from(table).update(clean, { count: "exact" });
+      qb = applyWhere(qb, where);
+      const { count, error } = await qb;
+      if (error) throw error;
+      return { count: count ?? 0 };
+    },
+
     async delete({ where }: { where: any }) {
       let qb: any = sb().from(table).delete();
       qb = applyWhere(qb, where);
@@ -322,7 +332,7 @@ function createModel(model: string) {
     },
 
     async deleteMany({ where }: { where: any }) {
-      let qb: any = sb().from(table).delete({ count: "exact", head: true });
+      let qb: any = sb().from(table).delete({ count: "exact", head: true } as any);
       qb = applyWhere(qb, where);
       const { count, error } = await qb;
       if (error) throw error;

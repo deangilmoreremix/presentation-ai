@@ -1,7 +1,7 @@
 "use server";
 import "server-only";
 
-import { type Prisma, DocumentType } from "@/prisma/client";
+import { type Prisma, DocumentType } from "@/lib/types/prisma-shim";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 

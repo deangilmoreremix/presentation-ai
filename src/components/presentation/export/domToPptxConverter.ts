@@ -4,7 +4,7 @@
  */
 
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
-import PptxGenJS from "pptxgenjs/dist/pptxgen.bundle.js";
+import PptxGenJS from "pptxgenjs";
 import {
   type BackgroundRectExportElement,
   type DecorExportElement,

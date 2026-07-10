@@ -214,22 +214,5 @@
     "vite": "^8.0.10",
     "vitest": "^4.1.5",
     "webpack": "^5.97.1"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowAny": [
-        "react",
-        "react-dom",
-        "@types/react"
-      ]
-    },
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "core-js",
-      "es5-ext",
-      "esbuild",
-      "protobufjs",
-      "unrs-resolver"
-    ]
   }
 }
