@@ -1,9 +1,25 @@
 "use server";
 
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export type Image = Awaited<ReturnType<typeof getUserImages>>[number];
+
+type GeneratedImageRow = {
+  id: string;
+  url: string;
+  prompt: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  model: string | null;
+  size: string | null;
+  quality: string | null;
+  format: string | null;
+  compression: number | null;
+  background: string | null;
+  action: string | null;
+  previous_response_id: string | null;
+};
 
 export async function getUserImages({
   page = 1,
@@ -12,17 +28,27 @@ export async function getUserImages({
   page?: number;
   limit?: number;
 } = {}) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user?.id) {
     return [];
   }
 
-  return db.generatedImage.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-    skip: Math.max(page - 1, 0) * limit,
-    take: limit,
-  });
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("generated_images")
+    .select("*")
+    .eq("user_id", currentUser.user.id)
+    .order("created_at", { ascending: false })
+    .range(Math.max(page - 1, 0) * limit, Math.max(page - 1, 0) * limit + limit - 1);
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return (data ?? []) as GeneratedImageRow[];
 }
 
 export async function fetchGeneratedImages() {

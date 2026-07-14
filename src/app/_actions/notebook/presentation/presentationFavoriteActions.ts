@@ -1,8 +1,7 @@
 "use server";
 
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
-import { DocumentType } from "@/prisma/client";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 type PresentationFavoriteResult = {
   success: boolean;
@@ -10,35 +9,57 @@ type PresentationFavoriteResult = {
   isFavorite?: boolean;
 };
 
-async function canFavoritePresentation(documentId: string, userId: string) {
-  const document = await db.baseDocument.findUnique({
-    where: { id: documentId },
-    select: {
-      isPublic: true,
-      type: true,
-      userId: true,
-    },
-  });
+type DocumentAccessRow = {
+  is_public: boolean;
+  type: string;
+  user_id: string;
+};
+
+type FavoriteRow = {
+  id: string;
+  user_id: string;
+  document_id: string;
+};
+
+async function canFavoritePresentation(
+  documentId: string,
+  userId: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+  if (!supabase) return false;
+
+  const { data: document, error } = await supabase
+    .from("base_documents")
+    .select("is_public, type, user_id")
+    .eq("id", documentId)
+    .maybeSingle<DocumentAccessRow>();
+
+  if (error || !document) return false;
 
   return (
-    document?.type === DocumentType.PRESENTATION &&
-    (document.isPublic || document.userId === userId)
+    document.type === "PRESENTATION" &&
+    (document.is_public || document.user_id === userId)
   );
 }
 
 export async function addPresentationToFavorites(
   documentId: string,
 ): Promise<PresentationFavoriteResult> {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     return { success: false, message: "Unauthorized", isFavorite: false };
   }
 
-  const canFavorite = await canFavoritePresentation(
-    documentId,
-    session.user.id,
-  );
-  if (!canFavorite) {
+  const supabase = await createClient();
+  if (!supabase) {
+    return {
+      success: false,
+      message: "Supabase is not configured",
+      isFavorite: false,
+    };
+  }
+
+  if (!(await canFavoritePresentation(documentId, currentUser.id))) {
     return {
       success: false,
       message: "Presentation not found",
@@ -46,19 +67,18 @@ export async function addPresentationToFavorites(
     };
   }
 
-  await db.favoriteDocument.upsert({
-    where: {
-      userId_documentId: {
-        userId: session.user.id,
-        documentId,
-      },
-    },
-    update: {},
-    create: {
-      userId: session.user.id,
-      documentId,
-    },
-  });
+  // Upsert on the (user_id, document_id) unique constraint.
+  const { error } = await supabase
+    .from("favorite_documents")
+    .upsert(
+      { user_id: currentUser.id, document_id: documentId },
+      { onConflict: "user_id,document_id", ignoreDuplicates: true },
+    );
+
+  if (error) {
+    console.error(error);
+    return { success: false, message: "Failed to add favorite", isFavorite: false };
+  }
 
   return {
     success: true,
@@ -70,16 +90,21 @@ export async function addPresentationToFavorites(
 export async function removePresentationFromFavorites(
   documentId: string,
 ): Promise<PresentationFavoriteResult> {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     return { success: false, message: "Unauthorized", isFavorite: false };
   }
 
-  const canFavorite = await canFavoritePresentation(
-    documentId,
-    session.user.id,
-  );
-  if (!canFavorite) {
+  const supabase = await createClient();
+  if (!supabase) {
+    return {
+      success: false,
+      message: "Supabase is not configured",
+      isFavorite: false,
+    };
+  }
+
+  if (!(await canFavoritePresentation(documentId, currentUser.id))) {
     return {
       success: false,
       message: "Presentation not found",
@@ -87,12 +112,16 @@ export async function removePresentationFromFavorites(
     };
   }
 
-  await db.favoriteDocument.deleteMany({
-    where: {
-      userId: session.user.id,
-      documentId,
-    },
-  });
+  const { error } = await supabase
+    .from("favorite_documents")
+    .delete()
+    .eq("user_id", currentUser.id)
+    .eq("document_id", documentId);
+
+  if (error) {
+    console.error(error);
+    return { success: false, message: "Failed to remove favorite", isFavorite: false };
+  }
 
   return {
     success: true,
@@ -104,16 +133,21 @@ export async function removePresentationFromFavorites(
 export async function togglePresentationFavorite(
   documentId: string,
 ): Promise<PresentationFavoriteResult> {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     return { success: false, message: "Unauthorized", isFavorite: false };
   }
 
-  const canFavorite = await canFavoritePresentation(
-    documentId,
-    session.user.id,
-  );
-  if (!canFavorite) {
+  const supabase = await createClient();
+  if (!supabase) {
+    return {
+      success: false,
+      message: "Supabase is not configured",
+      isFavorite: false,
+    };
+  }
+
+  if (!(await canFavoritePresentation(documentId, currentUser.id))) {
     return {
       success: false,
       message: "Presentation not found",
@@ -121,21 +155,27 @@ export async function togglePresentationFavorite(
     };
   }
 
-  const favorite = await db.favoriteDocument.findUnique({
-    where: {
-      userId_documentId: {
-        userId: session.user.id,
-        documentId,
-      },
-    },
-    select: { id: true },
-  });
+  const { data: existing, error: findErr } = await supabase
+    .from("favorite_documents")
+    .select("id")
+    .eq("user_id", currentUser.id)
+    .eq("document_id", documentId)
+    .maybeSingle<FavoriteRow>();
 
-  if (favorite) {
-    await db.favoriteDocument.delete({
-      where: { id: favorite.id },
-    });
+  if (findErr) {
+    console.error(findErr);
+    return { success: false, message: "Failed to check favorite", isFavorite: false };
+  }
 
+  if (existing) {
+    const { error: delErr } = await supabase
+      .from("favorite_documents")
+      .delete()
+      .eq("id", existing.id);
+    if (delErr) {
+      console.error(delErr);
+      return { success: false, message: "Failed to remove favorite", isFavorite: false };
+    }
     return {
       success: true,
       message: "Presentation removed from favorites",
@@ -143,12 +183,14 @@ export async function togglePresentationFavorite(
     };
   }
 
-  await db.favoriteDocument.create({
-    data: {
-      userId: session.user.id,
-      documentId,
-    },
-  });
+  const { error: insErr } = await supabase
+    .from("favorite_documents")
+    .insert({ user_id: currentUser.id, document_id: documentId });
+
+  if (insErr) {
+    console.error(insErr);
+    return { success: false, message: "Failed to add favorite", isFavorite: false };
+  }
 
   return {
     success: true,

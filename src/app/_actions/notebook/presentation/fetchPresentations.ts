@@ -3,34 +3,51 @@
 import "server-only";
 
 import { logger } from "@/lib/observability/server/logger";
-import { DocumentType, type Prisma } from "@/prisma/client";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 const ITEMS_PER_PAGE = 10;
-const PRESENTATION_DOCUMENT_TYPES = [DocumentType.PRESENTATION] as const;
-export type PresentationDocumentTypeFilter =
-  (typeof PRESENTATION_DOCUMENT_TYPES)[number];
+// In Prisma, `DocumentType.PRESENTATION === "PRESENTATION"`. We keep the
+// string value stable in Supabase so existing rows match.
+const PRESENTATION_DOCUMENT_TYPE = "PRESENTATION" as const;
+export type PresentationDocumentTypeFilter = typeof PRESENTATION_DOCUMENT_TYPE;
+
+type PresentationRow = {
+  id: string;
+  title: string;
+  type: string;
+  thumbnail_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_public: boolean;
+  user_id: string;
+};
+
+type PresentationContentRow = {
+  content: unknown;
+};
+
+type FavoriteRow = {
+  id: string;
+  user_id: string;
+  document_id: string;
+};
 
 type PresentationContentShape = {
   slides?: unknown;
 };
 
-function hasSlideContent(value: Prisma.JsonValue): boolean {
+function hasSlideContent(value: unknown): boolean {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return false;
   }
-
   const content = value as PresentationContentShape;
   return Array.isArray(content.slides) && content.slides.length > 0;
 }
 
 export async function fetchPresentations(
   page = 0,
-  type?: PresentationDocumentTypeFilter,
-  options?: {
-    favoritesOnly?: boolean;
-  },
+  type: PresentationDocumentTypeFilter = PRESENTATION_DOCUMENT_TYPE,
+  options?: { favoritesOnly?: boolean },
 ) {
   const actionName = "presentation.fetchPresentations.fetchPresentations";
   const span = logger.startSpan(`notebook.server_action.${actionName}`, {
@@ -42,72 +59,99 @@ export async function fetchPresentations(
   });
 
   try {
-    const session = await auth();
-    const userId = session?.user.id;
+    const currentUser = await getCurrentUser();
+    const userId = currentUser?.id;
 
     if (!userId) {
-      return {
-        items: [],
-        hasMore: false,
-      };
+      return { items: [], hasMore: false };
+    }
+
+    const supabase = await createClient();
+    if (!supabase) {
+      return { items: [], hasMore: false };
     }
 
     const skip = page * ITEMS_PER_PAGE;
-    const documentType = type ?? PRESENTATION_DOCUMENT_TYPES[0];
 
-    const rows = await db.baseDocument.findMany({
-      where: {
-        userId,
-        type: documentType,
-        ...(options?.favoritesOnly
-          ? {
-              favorites: {
-                some: { userId },
-              },
-            }
-          : {}),
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      skip,
-      take: ITEMS_PER_PAGE + 1,
-      include: {
-        favorites: {
-          where: { userId },
-          select: { id: true },
-          take: 1,
-        },
-        presentation: {
-          select: {
-            content: true,
-          },
-        },
-      },
-    });
+    if (options?.favoritesOnly) {
+      // Two-step: get the favorite document ids, then load those base documents.
+      const { data: favRows, error: favErr } = await supabase
+        .from("favorite_documents")
+        .select("document_id")
+        .eq("user_id", userId);
 
-    const hasMore = rows.length > ITEMS_PER_PAGE;
-    const items = hasMore ? rows.slice(0, ITEMS_PER_PAGE) : rows;
+      if (favErr) throw favErr;
 
-    return {
-      items: items.map((item) => ({
-        id: item.id,
-        title: item.title,
-        type: item.type,
-        thumbnailUrl: item.thumbnailUrl,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        isOwnedByCurrentUser: true,
-        favorites: item.favorites,
-        hasSlides: hasSlideContent(item.presentation?.content ?? null),
-        hasContent: hasSlideContent(item.presentation?.content ?? null),
-      })),
-      hasMore,
-    };
+      const ids = (favRows ?? []).map((r: Pick<FavoriteRow, "document_id">) => r.document_id);
+      if (ids.length === 0) {
+        return { items: [], hasMore: false };
+      }
+
+      const { data: docs, error: docsErr } = await supabase
+        .from("base_documents")
+        .select(
+          "id, title, type, thumbnail_url, created_at, updated_at, is_public, user_id, presentation:presentations(content)",
+        )
+        .eq("user_id", userId)
+        .eq("type", type)
+        .in("id", ids)
+        .order("updated_at", { ascending: false })
+        .range(skip, skip + ITEMS_PER_PAGE);
+
+      if (docsErr) throw docsErr;
+
+      return shapeResult(docs ?? [], ITEMS_PER_PAGE);
+    }
+
+    const { data: rows, error } = await supabase
+      .from("base_documents")
+      .select(
+        "id, title, type, thumbnail_url, created_at, updated_at, is_public, user_id, presentation:presentations(content)",
+      )
+      .eq("user_id", userId)
+      .eq("type", type)
+      .order("updated_at", { ascending: false })
+      .range(skip, skip + ITEMS_PER_PAGE);
+
+    if (error) throw error;
+
+    return shapeResult(rows ?? [], ITEMS_PER_PAGE);
   } catch (error) {
     span.error(error);
     throw error;
   } finally {
     span.end();
   }
+}
+
+type BaseDocumentWithPresentation = PresentationRow & {
+  presentation: PresentationContentRow | PresentationContentRow[] | null;
+};
+
+function shapeResult(rows: BaseDocumentWithPresentation[], perPage: number) {
+  const hasMore = rows.length > perPage;
+  const items = (hasMore ? rows.slice(0, perPage) : rows).map((item) => {
+    // `presentation` is a one-to-one via FK on `presentations.document_id`,
+    // but Supabase returns it as an object or array depending on the
+    // relationship. Normalize to a single object.
+    const pres = Array.isArray(item.presentation)
+      ? item.presentation[0]
+      : item.presentation;
+    const content = (pres?.content ?? null) as unknown;
+
+    return {
+      id: item.id,
+      title: item.title,
+      type: item.type,
+      thumbnailUrl: item.thumbnail_url,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      isOwnedByCurrentUser: true,
+      favorites: [] as { id: string }[],
+      hasSlides: hasSlideContent(content),
+      hasContent: hasSlideContent(content),
+    };
+  });
+
+  return { items, hasMore };
 }

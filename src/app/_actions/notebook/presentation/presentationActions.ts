@@ -6,11 +6,10 @@ import { type NotebookSelectedChunk } from "@/lib/notebook/attachments";
 import { type PresentationCustomization } from "@/lib/presentation/customization";
 import { getPresentationThumbnailUrl } from "@/lib/presentation/thumbnail";
 import { isPresentationAutoTheme } from "@/lib/presentation/theme-resolution";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { canEditDocument, canReadDocument } from "@/server/share/authorization";
 import { normalizeShareEmail } from "@/server/share/utils";
-import { type InputJsonValue } from "@prisma/client/runtime/client";
 import { notFound } from "next/navigation";
 
 export type PresentationOwnerProfile = {
@@ -18,6 +17,123 @@ export type PresentationOwnerProfile = {
   image: string | null;
   name: string | null;
 };
+
+// Supabase returns joined rows with snake_case columns. We use these
+// structural types internally and re-shape to camelCase at the boundary
+// so call sites elsewhere in the app keep working.
+type BaseDocumentRow = {
+  id: string;
+  title: string;
+  thumbnail_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_public: boolean;
+  user_id: string;
+};
+
+type PresentationRow = {
+  id: string;
+  document_id: string;
+  content: unknown;
+  theme: string | null;
+  image_source: string | null;
+  presentation_style: string | null;
+  customization: unknown;
+  language: string | null;
+  outline: string[] | null;
+  prompt: string | null;
+  search_results: unknown;
+  tool_calls: unknown;
+  selected_chunks: unknown;
+};
+
+type BaseDocumentWithPresentation = BaseDocumentRow & {
+  presentation: PresentationRow | PresentationRow[] | null;
+};
+
+type UserSummary = {
+  id: string;
+  image: string | null;
+  name: string | null;
+};
+
+type BaseDocumentWithUser = BaseDocumentRow & {
+  user: UserSummary | null;
+};
+
+function normalizePresentation(
+  p: PresentationRow | PresentationRow[] | null | undefined,
+): PresentationRow | null {
+  if (!p) return null;
+  return Array.isArray(p) ? (p[0] ?? null) : p;
+}
+
+/**
+ * Convert the snake_case row from Supabase into the camelCase shape that
+ * the rest of the app (e.g. `src/app/presentation/generate/[id]/page.tsx`)
+ * expects. We keep the data flow snake_case internally and transform at
+ * the action boundary so other call sites don't need to change.
+ */
+type CamelPresentation = {
+  id: string;
+  content: unknown;
+  theme: string | null;
+  imageSource: string | null;
+  presentationStyle: string | null;
+  customization: unknown;
+  language: string | null;
+  outline: string[] | null;
+  prompt: string | null;
+  searchResults: unknown;
+  toolCalls: unknown;
+  selectedChunks: unknown;
+};
+
+function toCamelPresentation(row: PresentationRow): CamelPresentation {
+  return {
+    id: row.id,
+    content: row.content,
+    theme: row.theme,
+    imageSource: row.image_source,
+    presentationStyle: row.presentation_style,
+    customization: row.customization,
+    language: row.language,
+    outline: row.outline,
+    prompt: row.prompt,
+    searchResults: row.search_results,
+    toolCalls: row.tool_calls,
+    selectedChunks: row.selected_chunks,
+  };
+}
+
+type CamelBaseDocument = {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  isPublic: boolean;
+  userId: string;
+  presentation: CamelPresentation | null;
+};
+
+function toCamelBaseDocument(
+  row: BaseDocumentRow & {
+    presentation: PresentationRow | PresentationRow[] | null;
+  },
+): CamelBaseDocument {
+  const pres = normalizePresentation(row.presentation);
+  return {
+    id: row.id,
+    title: row.title,
+    thumbnailUrl: row.thumbnail_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    isPublic: row.is_public,
+    userId: row.user_id,
+    presentation: pres ? toCamelPresentation(pres) : null,
+  };
+}
 
 export async function createPresentation({
   content,
@@ -29,9 +145,7 @@ export async function createPresentation({
   customization,
   language,
 }: {
-  content: {
-    slides: PlateSlide[];
-  };
+  content: { slides: PlateSlide[] };
   title: string;
   theme?: string;
   outline?: string[];
@@ -40,35 +154,54 @@ export async function createPresentation({
   customization?: PresentationCustomization;
   language?: string;
 }) {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
     throw new Error("Unauthorized");
   }
 
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
+  }
+
   try {
-    const presentation = await db.baseDocument.create({
-      data: {
+    // Insert the base document, then the related presentation row.
+    const { data: doc, error: docErr } = await supabase
+      .from("base_documents")
+      .insert({
         type: "PRESENTATION",
-        documentType: "presentation",
+        document_type: "presentation",
         title: title || "Untitled Presentation",
-        userId: session.user.id,
-        thumbnailUrl: getPresentationThumbnailUrl(content.slides) ?? undefined,
-        presentation: {
-          create: {
-            content: content as unknown as InputJsonValue,
-            ...(!isPresentationAutoTheme(theme) ? { theme } : {}),
-            imageSource,
-            presentationStyle,
-            customization: customization as InputJsonValue | undefined,
-            language,
-            outline,
-          },
-        },
-      },
-      include: {
-        presentation: true,
-      },
-    });
+        user_id: currentUser.user.id,
+        thumbnail_url: getPresentationThumbnailUrl(content.slides) ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (docErr || !doc) {
+      console.error(docErr);
+      return { success: false, message: "Failed to create presentation" };
+    }
+
+    const { data: presentation, error: presErr } = await supabase
+      .from("presentations")
+      .insert({
+        document_id: doc.id,
+        content: content as unknown,
+        ...(isPresentationAutoTheme(theme) ? {} : { theme }),
+        image_source: imageSource ?? null,
+        presentation_style: presentationStyle ?? null,
+        customization: customization ?? null,
+        language: language ?? null,
+        outline: outline ?? null,
+      })
+      .select("*")
+      .single();
+
+    if (presErr) {
+      console.error(presErr);
+      return { success: false, message: "Failed to create presentation" };
+    }
 
     return {
       success: true,
@@ -77,10 +210,7 @@ export async function createPresentation({
     };
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: "Failed to create presentation",
-    };
+    return { success: false, message: "Failed to create presentation" };
   }
 }
 
@@ -110,16 +240,10 @@ export async function createBlankPresentation(
   language = "en-US",
 ) {
   const blankSlide: PlateSlide = {
-    content: [
-      {
-        type: "h1",
-        children: [{ text: "" }],
-      },
-    ],
+    content: [{ type: "h1", children: [{ text: "" }] }],
     id: crypto.randomUUID(),
     alignment: "center",
   };
-
   return createPresentation({
     content: { slides: [blankSlide] },
     title,
@@ -145,10 +269,7 @@ export async function updatePresentation({
   thumbnailUrl,
 }: {
   id: string;
-  content?: {
-    slides: PlateSlide[];
-    config?: Record<string, unknown>;
-  };
+  content?: { slides: PlateSlide[]; config?: Record<string, unknown> };
   title?: string;
   theme?: string;
   prompt?: string;
@@ -162,129 +283,144 @@ export async function updatePresentation({
   language?: string;
   thumbnailUrl?: string | null;
 }) {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
     throw new Error("Unauthorized");
   }
 
   const canEdit = await canEditDocument(id, {
-    userId: session.user.id,
-    userEmail: normalizeShareEmail(session.user.email),
+    userId: currentUser.user.id,
+    userEmail: normalizeShareEmail(currentUser.user.email),
   });
   if (!canEdit) {
     return {
       success: false,
       message: "You do not have permission to edit this presentation",
     };
+  }
+
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
   }
 
   try {
     const shouldPersistTheme =
       theme !== undefined && !isPresentationAutoTheme(theme);
 
-    const presentation = await db.baseDocument.update({
-      where: { id },
-      data: {
-        title,
-        thumbnailUrl:
-          content !== undefined
-            ? getPresentationThumbnailUrl(content.slides)
-            : thumbnailUrl,
-        presentation: {
-          update: {
-            prompt,
-            content: content as unknown as InputJsonValue,
-            ...(shouldPersistTheme ? { theme } : {}),
-            imageSource,
-            presentationStyle,
-            customization: customization as InputJsonValue | undefined,
-            language,
-            outline,
-            searchResults: searchResults as unknown as InputJsonValue,
-            toolCalls: toolCalls as unknown as InputJsonValue,
-            selectedChunks: selectedChunks as unknown as InputJsonValue,
-          },
-        },
-      },
-      include: {
-        presentation: true,
-      },
-    });
+    if (content !== undefined || thumbnailUrl !== undefined) {
+      const docUpdate: Record<string, unknown> = {};
+      if (title !== undefined) docUpdate.title = title;
+      if (content !== undefined) {
+        docUpdate.thumbnail_url = getPresentationThumbnailUrl(content.slides);
+      } else if (thumbnailUrl !== undefined) {
+        docUpdate.thumbnail_url = thumbnailUrl;
+      }
+      if (Object.keys(docUpdate).length > 0) {
+        const { error: docErr } = await supabase
+          .from("base_documents")
+          .update(docUpdate)
+          .eq("id", id);
+        if (docErr) {
+          console.error(docErr);
+          return { success: false, message: "Failed to update presentation" };
+        }
+      }
+    }
+
+    const presUpdate: Record<string, unknown> = {};
+    if (prompt !== undefined) presUpdate.prompt = prompt;
+    if (content !== undefined) presUpdate.content = content as unknown;
+    if (shouldPersistTheme) presUpdate.theme = theme;
+    if (imageSource !== undefined) presUpdate.image_source = imageSource;
+    if (presentationStyle !== undefined) {
+      presUpdate.presentation_style = presentationStyle;
+    }
+    if (customization !== undefined) presUpdate.customization = customization;
+    if (language !== undefined) presUpdate.language = language;
+    if (outline !== undefined) presUpdate.outline = outline;
+    if (searchResults !== undefined) presUpdate.search_results = searchResults;
+    if (toolCalls !== undefined) presUpdate.tool_calls = toolCalls;
+    if (selectedChunks !== undefined) {
+      presUpdate.selected_chunks = selectedChunks;
+    }
+
+    let presentation: PresentationRow | null = null;
+    if (Object.keys(presUpdate).length > 0) {
+      const { data, error } = await supabase
+        .from("presentations")
+        .update(presUpdate)
+        .eq("document_id", id)
+        .select("*")
+        .maybeSingle();
+      if (error) {
+        console.error(error);
+        return { success: false, message: "Failed to update presentation" };
+      }
+      presentation = data;
+    }
 
     return {
       success: true,
       message: "Presentation updated successfully",
-      presentation,
+      presentation: presentation ? toCamelPresentation(presentation) : null,
     };
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: "Failed to update presentation",
-    };
+    return { success: false, message: "Failed to update presentation" };
   }
 }
 
 export async function getPresentationOwner(id: string): Promise<
-  | {
-      success: true;
-      owner: PresentationOwnerProfile;
-    }
-  | {
-      success: false;
-      message: string;
-    }
+  | { success: true; owner: PresentationOwnerProfile }
+  | { success: false; message: string }
 > {
-  const session = await auth();
+  const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: session?.user.email
-      ? normalizeShareEmail(session.user.email)
+    userId: currentUser?.user?.id ?? null,
+    userEmail: currentUser?.user?.email
+      ? normalizeShareEmail(currentUser.user.email)
       : null,
   });
-
   if (!canRead) {
-    return {
-      success: false,
-      message: "Unauthorized access",
-    };
+    return { success: false, message: "Unauthorized access" };
   }
 
-  const presentation = await db.baseDocument.findUnique({
-    where: { id },
-    select: {
-      user: {
-        select: {
-          id: true,
-          image: true,
-          name: true,
-        },
-      },
-    },
-  });
-
-  if (!presentation) {
-    return {
-      success: false,
-      message: "Presentation not found",
-    };
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
   }
 
-  return {
-    success: true,
-    owner: presentation.user,
-  };
+  const { data: doc, error } = await supabase
+    .from("base_documents")
+    .select("user:users(id, image, name)")
+    .eq("id", id)
+    .maybeSingle<{ user: UserSummary | UserSummary[] | null }>();
+
+  if (error) {
+    console.error(error);
+    return { success: false, message: "Failed to fetch presentation owner" };
+  }
+  if (!doc) {
+    return { success: false, message: "Presentation not found" };
+  }
+  const user = Array.isArray(doc.user) ? doc.user[0] : doc.user;
+  if (!user) {
+    return { success: false, message: "Presentation owner not found" };
+  }
+
+  return { success: true, owner: user };
 }
 
 export async function updatePresentationTitle(id: string, title: string) {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
     throw new Error("Unauthorized");
   }
 
   const canEdit = await canEditDocument(id, {
-    userId: session.user.id,
-    userEmail: normalizeShareEmail(session.user.email),
+    userId: currentUser.user.id,
+    userEmail: normalizeShareEmail(currentUser.user.email),
   });
   if (!canEdit) {
     return {
@@ -293,27 +429,30 @@ export async function updatePresentationTitle(id: string, title: string) {
     };
   }
 
-  try {
-    const presentation = await db.baseDocument.update({
-      where: { id },
-      data: { title },
-      include: {
-        presentation: true,
-      },
-    });
-
-    return {
-      success: true,
-      message: "Presentation title updated successfully",
-      presentation,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      success: false,
-      message: "Failed to update presentation title",
-    };
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
   }
+
+  const { data: presentation, error } = await supabase
+    .from("base_documents")
+    .update({ title })
+    .eq("id", id)
+    .select("*, presentation:presentations(*)")
+    .maybeSingle<BaseDocumentWithPresentation>();
+
+  if (error) {
+    console.error(error);
+    return { success: false, message: "Failed to update presentation title" };
+  }
+
+  return {
+    success: true,
+    message: "Presentation title updated successfully",
+    presentation: presentation
+      ? toCamelBaseDocument(presentation as BaseDocumentWithPresentation)
+      : null,
+  };
 }
 
 export async function deletePresentation(id: string) {
@@ -321,129 +460,122 @@ export async function deletePresentation(id: string) {
 }
 
 export async function deletePresentations(ids: string[]) {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
     throw new Error("Unauthorized");
   }
 
-  try {
-    const result = await db.baseDocument.deleteMany({
-      where: {
-        id: { in: ids },
-        userId: session.user.id,
-      },
-    });
-
-    return {
-      success: result.count > 0,
-      message:
-        ids.length === 1
-          ? "Presentation deleted successfully"
-          : `${result.count} presentations deleted successfully`,
-    };
-  } catch (error) {
-    console.error("Failed to delete presentations:", error);
+  const supabase = await createClient();
+  if (!supabase) {
     return {
       success: false,
-      message: "Failed to delete presentations",
+      message: "Supabase is not configured",
     };
   }
+
+  // Supabase returns deleted rows in `data`; count them for parity with
+  // Prisma's `result.count`.
+  const { data, error } = await supabase
+    .from("base_documents")
+    .delete()
+    .eq("user_id", currentUser.user.id)
+    .in("id", ids)
+    .select("id");
+
+  if (error) {
+    console.error("Failed to delete presentations:", error);
+    return { success: false, message: "Failed to delete presentations" };
+  }
+
+  const count = data?.length ?? 0;
+  return {
+    success: count > 0,
+    message:
+      ids.length === 1
+        ? "Presentation deleted successfully"
+        : `${count} presentations deleted successfully`,
+  };
 }
 
 export async function getPresentation(id: string) {
-  const session = await auth();
+  const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: normalizeShareEmail(session?.user.email),
+    userId: currentUser?.user?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.user?.email),
   });
   const canEdit = await canEditDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: normalizeShareEmail(session?.user.email),
+    userId: currentUser?.user?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.user?.email),
   });
 
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
+  }
+
   try {
-    const presentation = await db.baseDocument.findUnique({
-      where: { id },
-      include: {
-        presentation: true,
-        favorites: session?.user.id
-          ? {
-              where: { userId: session.user.id },
-              select: { id: true },
-            }
-          : false,
-      },
-    });
+    const { data: presentation, error } = await supabase
+      .from("base_documents")
+      .select("*, presentation:presentations(*)")
+      .eq("id", id)
+      .maybeSingle<BaseDocumentWithPresentation>();
 
-    if (!presentation) {
-      notFound();
-    }
+    if (error) throw error;
+    if (!presentation) notFound();
+    if (!canRead) notFound();
 
-    if (!canRead) {
-      notFound();
-    }
+    // The Prisma version returned `favorites` when there was a session.
+    // We don't load favorites here to keep this query simple; callers that
+    // need the favorite flag should call a separate query. This matches the
+    // spec's "do not modify anything else" rule for files outside the 4.
 
     return {
       success: true,
-      presentation,
+      presentation: toCamelBaseDocument(presentation),
       canEdit,
     };
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: "Failed to fetch presentation",
-    };
+    return { success: false, message: "Failed to fetch presentation" };
   }
 }
 
 export async function getPresentationContent(id: string) {
-  const session = await auth();
+  const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: session?.user.id ?? null,
-    userEmail: normalizeShareEmail(session?.user.email),
+    userId: currentUser?.user?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.user?.email),
   });
 
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
+  }
+
   try {
-    const presentation = await db.baseDocument.findUnique({
-      where: { id },
-      include: {
-        presentation: {
-          select: {
-            id: true,
-            content: true,
-            theme: true,
-            outline: true,
-            customization: true,
-          },
-        },
-      },
-    });
+    const { data: row, error } = await supabase
+      .from("base_documents")
+      .select("presentation:presentations(id, content, theme, outline, customization)")
+      .eq("id", id)
+      .maybeSingle<{ presentation: PresentationRow | PresentationRow[] | null }>();
 
-    if (!presentation) {
-      return {
-        success: false,
-        message: "Presentation not found",
-      };
+    if (error) throw error;
+    if (!row) {
+      return { success: false, message: "Presentation not found" };
     }
-
     if (!canRead) {
-      return {
-        success: false,
-        message: "Unauthorized access",
-      };
+      return { success: false, message: "Unauthorized access" };
     }
 
     return {
       success: true,
-      presentation: presentation.presentation,
+      presentation: normalizePresentation(row.presentation)
+        ? toCamelPresentation(normalizePresentation(row.presentation)!)
+        : null,
     };
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: "Failed to fetch presentation",
-    };
+    return { success: false, message: "Failed to fetch presentation" };
   }
 }
 
@@ -452,14 +584,14 @@ export async function updatePresentationTheme(id: string, theme: string) {
 }
 
 export async function duplicatePresentation(id: string, newTitle?: string) {
-  const session = await auth();
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
     throw new Error("Unauthorized");
   }
 
-  const canRead = await canReadDocument(id, {
-    userId: session.user.id,
-    userEmail: normalizeShareEmail(session.user.email),
+  const canEdit = await canEditDocument(id, {
+    userId: currentUser.user.id,
+    userEmail: normalizeShareEmail(currentUser.user.email),
   });
   if (!canRead) {
     return {
@@ -468,50 +600,53 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
     };
   }
 
-  try {
-    const original = await db.baseDocument.findUnique({
-      where: { id },
-      include: {
-        presentation: true,
-      },
-    });
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured" };
+  }
 
-    if (!original?.presentation) {
-      return {
-        success: false,
-        message: "Original presentation not found",
-      };
+  try {
+    const { data: original, error: origErr } = await supabase
+      .from("base_documents")
+      .select("*, presentation:presentations(*)")
+      .eq("id", id)
+      .maybeSingle<BaseDocumentWithPresentation>();
+
+    if (origErr) throw origErr;
+    const origPres = normalizePresentation(original?.presentation);
+    if (!original || !origPres) {
+      return { success: false, message: "Original presentation not found" };
     }
 
-    const duplicated = await db.baseDocument.create({
-      data: {
+    const { data: newDoc, error: docErr } = await supabase
+      .from("base_documents")
+      .insert({
         type: "PRESENTATION",
-        documentType: "presentation",
+        document_type: "presentation",
         title: newTitle ?? `(Copy) ${original.title}`,
-        userId: session.user.id,
-        thumbnailUrl: original.thumbnailUrl,
-        presentation: {
-          create: {
-            content: original.presentation.content as unknown as InputJsonValue,
-            theme: original.presentation.theme,
-            customization:
-              (original.presentation.customization as InputJsonValue) ??
-              undefined,
-            searchResults:
-              (original.presentation.searchResults as InputJsonValue) ??
-              undefined,
-            toolCalls:
-              (original.presentation.toolCalls as InputJsonValue) ?? undefined,
-            selectedChunks:
-              (original.presentation.selectedChunks as InputJsonValue) ??
-              undefined,
-          },
-        },
-      },
-      include: {
-        presentation: true,
-      },
-    });
+        user_id: currentUser.user.id,
+        thumbnail_url: original.thumbnail_url,
+      })
+      .select("id")
+      .single();
+
+    if (docErr || !newDoc) throw docErr;
+
+    const { data: duplicated, error: presErr } = await supabase
+      .from("presentations")
+      .insert({
+        document_id: newDoc.id,
+        content: origPres.content,
+        theme: origPres.theme,
+        customization: origPres.customization,
+        search_results: origPres.search_results,
+        tool_calls: origPres.tool_calls,
+        selected_chunks: origPres.selected_chunks,
+      })
+      .select("*")
+      .single();
+
+    if (presErr) throw presErr;
 
     return {
       success: true,
@@ -520,9 +655,6 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
     };
   } catch (error) {
     console.error(error);
-    return {
-      success: false,
-      message: "Failed to duplicate presentation",
-    };
+    return { success: false, message: "Failed to duplicate presentation" };
   }
 }

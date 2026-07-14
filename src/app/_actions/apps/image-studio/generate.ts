@@ -1,16 +1,16 @@
 "use server";
 
 import { utapi } from "@/app/api/uploadthing/core";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { env } from "@/env";
+import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
 import {
   DEFAULT_IMAGE_MODEL,
   getFalImageGenerationInput,
   type ImageAspectRatio,
   type ImageModelList,
 } from "@/constants/image-models";
-import { env } from "@/env";
-import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
 import { fal } from "@fal-ai/client";
 import { UTFile } from "uploadthing/server";
 
@@ -31,17 +31,28 @@ async function persistGeneratedImage(
   const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
   const uploadResult = await utapi.uploadFiles([utFile]);
 
-  if (!uploadResult[0]?.data?.ufsUrl) {
+  const permanentUrl = uploadResult[0]?.data?.ufsUrl;
+  if (!permanentUrl) {
     throw new Error("Failed to upload generated image");
   }
 
-  return db.generatedImage.create({
-    data: {
-      url: uploadResult[0].data.ufsUrl,
+  const supabase = await createClient();
+  if (!supabase) {
+    throw new Error("Supabase is not configured");
+  }
+
+  const { data, error } = await supabase
+    .from("generated_images")
+    .insert({
+      url: permanentUrl,
       prompt,
-      userId,
-    },
-  });
+      user_id: userId,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 async function generateFalImage(
@@ -58,15 +69,10 @@ async function generateFalImage(
   });
 
   if (!falConfig.ok) {
-    return {
-      success: false,
-      error: falConfig.error,
-    };
+    return { success: false, error: falConfig.error };
   }
 
-  fal.config({
-    credentials: falConfig.value,
-  });
+  fal.config({ credentials: falConfig.value });
 
   const result = await fal.subscribe(model, {
     input: getFalImageGenerationInput({ model, prompt, aspectRatio }),
@@ -79,10 +85,7 @@ async function generateFalImage(
 
   const image = await persistGeneratedImage(imageUrl, prompt, userId, "image");
 
-  return {
-    success: true,
-    image,
-  };
+  return { success: true, image };
 }
 
 export async function generateImageAction(
@@ -90,21 +93,17 @@ export async function generateImageAction(
   model: ImageModelList = DEFAULT_IMAGE_MODEL,
   aspectRatio: ImageAspectRatio = "16:9",
 ) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return {
-      success: false,
-      error: "You must be logged in to generate images",
-    };
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user?.id) {
+    return { success: false, error: "You must be logged in to generate images" };
   }
 
   try {
-    const actualModel = session.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    const actualModel = currentUser.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
     return await generateFalImage(
       prompt,
       actualModel,
-      session.user.id,
+      currentUser.user.id,
       aspectRatio,
     );
   } catch (error) {

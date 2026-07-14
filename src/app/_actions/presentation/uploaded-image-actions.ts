@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 const uploadedImagesInputSchema = z.object({
   limit: z.number().int().min(1).max(60).default(30),
@@ -21,8 +21,8 @@ export async function getUploadedImages(input?: {
   limit?: number;
   page?: number;
 }): Promise<UploadedPresentationImage[]> {
-  const session = await auth();
-  const userId = session?.user?.id;
+  const currentUser = await getCurrentUser();
+  const userId = currentUser?.id;
   if (!userId) {
     throw new Error("Unauthorized");
   }

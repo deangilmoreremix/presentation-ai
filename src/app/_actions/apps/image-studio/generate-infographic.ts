@@ -11,8 +11,8 @@ import {
 } from "@/constants/image-models";
 import { env } from "@/env";
 import { logger } from "@/lib/observability/server/logger";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 fal.config({
   credentials: env.FAL_API_KEY,
@@ -73,9 +73,9 @@ export async function generateInfographicImageAction({
     },
   });
 
-  const session = await auth();
+  const currentUser = await getCurrentUser();
 
-  if (!session?.user?.id) {
+  if (!currentUser?.user?.id) {
     span.annotate({
       "allweone.server.image_generation.authorized": false,
     });
@@ -88,10 +88,7 @@ export async function generateInfographicImageAction({
 
   if (!trimmedPrompt) {
     span.end();
-    return {
-      success: false,
-      error: "Prompt is required",
-    };
+    return { success: false, error: "Prompt is required" };
   }
 
   const fullPrompt = buildInfographicPrompt({
@@ -101,13 +98,13 @@ export async function generateInfographicImageAction({
   });
 
   try {
-    const actualModel = session.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    const actualModel = currentUser.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
 
     span.annotate({
       "allweone.server.image_generation.authorized": true,
-      "allweone.server.image_generation.admin": session.user.isAdmin,
+      "allweone.server.image_generation.admin": currentUser.user.isAdmin,
       "allweone.server.image_generation.model": actualModel,
-      "allweone.server.image_generation.user_id": session.user.id,
+      "allweone.server.image_generation.user_id": currentUser.user.id,
     });
     span.event("allweone.server.image_generation.started", {
       "allweone.server.image_generation.model": actualModel,
@@ -151,27 +148,28 @@ export async function generateInfographicImageAction({
       "allweone.server.image_generation.uploaded": true,
     });
 
-    const generatedImage = await db.generatedImage.create({
-      data: {
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase is not configured");
+    }
+
+    const { data: generatedImage, error: insErr } = await supabase
+      .from("generated_images")
+      .insert({
         url: permanentUrl,
         prompt: fullPrompt,
-        userId: session.user.id,
-      },
-      select: {
-        id: true,
-        prompt: true,
-        url: true,
-      },
-    });
+        user_id: currentUser.user.id,
+      })
+      .select("id, prompt, url")
+      .single();
+
+    if (insErr) throw insErr;
 
     span.event("allweone.server.image_generation.completed", {
-      "allweone.server.image_generation.generated_image.id": generatedImage.id,
+      "allweone.server.image_generation.generated_image.id": generatedImage?.id,
     });
 
-    return {
-      success: true,
-      image: generatedImage,
-    };
+    return { success: true, image: generatedImage };
   } catch (error) {
     span.error(error);
     return {

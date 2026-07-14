@@ -2,7 +2,7 @@
 
 import { createPresentationGraph } from "@/ai/agents/presentation/createAgent";
 import { ensureCheckpointerSetup } from "@/ai/lib/postgres";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { toHydratedUiMessages } from "@/server/ai/chatMessages";
 import { type UIMessage } from "ai";
 import { type BaseMessage } from "@langchain/core/messages";
@@ -21,9 +21,8 @@ interface PresentationGraphState {
 export async function getPresentationMessages(
   presentationId: string,
 ): Promise<UIMessage[]> {
-  const session = await auth();
-
-  if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 

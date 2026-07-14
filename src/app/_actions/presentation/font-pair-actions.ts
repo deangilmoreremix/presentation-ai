@@ -1,11 +1,10 @@
 "use server";
 
 import { utapi } from "@/app/api/uploadthing/core";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/supabase/server";
 import * as z from "zod";
 
-// Schema for creating a font pair
 const fontPairSchema = z.object({
   heading: z.string().min(1),
   headingUrl: z.string().optional(),
@@ -17,30 +16,50 @@ const fontPairSchema = z.object({
 
 export type FontPairFormData = z.infer<typeof fontPairSchema>;
 
+type FontPairRow = {
+  id: string;
+  heading: string;
+  heading_url: string | null;
+  heading_weight: number | null;
+  body: string;
+  body_url: string | null;
+  body_weight: number | null;
+  user_id: string;
+  created_at: string;
+};
+
 // Create a new font pair
 export async function createFontPair(formData: FontPairFormData) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to save a font pair",
-      };
-    }
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
+    return {
+      success: false,
+      message: "You must be signed in to save a font pair",
+    };
+  }
 
     const validatedData = fontPairSchema.parse(formData);
+    const supabase = await createClient();
+    if (!supabase) {
+      return { success: false, message: "Supabase is not configured" };
+    }
 
-    const newFontPair = await db.fontPair.create({
-      data: {
+    const { data: newFontPair, error } = await supabase
+      .from("font_pairs")
+      .insert({
         heading: validatedData.heading,
-        headingUrl: validatedData.headingUrl,
-        headingWeight: validatedData.headingWeight,
+        heading_url: validatedData.headingUrl ?? null,
+        heading_weight: validatedData.headingWeight ?? null,
         body: validatedData.body,
-        bodyUrl: validatedData.bodyUrl,
-        bodyWeight: validatedData.bodyWeight,
-        userId: session.user.id,
-      },
-    });
+        body_url: validatedData.bodyUrl ?? null,
+        body_weight: validatedData.bodyWeight ?? null,
+        user_id: currentUser.user.id,
+      })
+      .select("id")
+      .single<{ id: string }>();
+
+    if (error || !newFontPair) throw error;
 
     return {
       success: true,
@@ -49,52 +68,50 @@ export async function createFontPair(formData: FontPairFormData) {
     };
   } catch (error) {
     console.error("Failed to create font pair:", error);
-
     if (error instanceof z.ZodError) {
       return {
         success: false,
         message:
           "Invalid font pair data. Please check your inputs and try again.",
       };
-    } else if (error instanceof Error && error.message.includes("Prisma")) {
-      return {
-        success: false,
-        message: "Database error. Please try again later.",
-      };
-    } else {
-      return {
-        success: false,
-        message: "Something went wrong. Please try again later.",
-      };
     }
+    return {
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    };
   }
 }
 
 // Get all font pairs for the current user
 export async function getUserFontPairs() {
   try {
-    const session = await auth();
-    if (!session?.user) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
+    return {
+      success: false,
+      message: "You must be signed in to view your font pairs",
+      fontPairs: [],
+    };
+  }
+
+    const supabase = await createClient();
+    if (!supabase) {
       return {
         success: false,
-        message: "You must be signed in to view your font pairs",
+        message: "Supabase is not configured",
         fontPairs: [],
       };
     }
 
-    const fontPairs = await db.fontPair.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const { data: fontPairs, error } = await supabase
+      .from("font_pairs")
+      .select("*")
+      .eq("user_id", currentUser.user.id)
+      .order("created_at", { ascending: false });
 
-    return {
-      success: true,
-      fontPairs,
-    };
+    if (error) throw error;
+
+    return { success: true, fontPairs: fontPairs ?? [] };
   } catch (error) {
     console.error("Failed to fetch font pairs:", error);
     return {
@@ -109,24 +126,31 @@ export async function getUserFontPairs() {
 // Delete a font pair
 export async function deleteFontPair(fontPairId: string) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        message: "You must be signed in to delete a font pair",
-      };
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.user) {
+    return {
+      success: false,
+      message: "You must be signed in to delete a font pair",
+    };
+  }
+
+    const supabase = await createClient();
+    if (!supabase) {
+      return { success: false, message: "Supabase is not configured" };
     }
 
     // Verify ownership
-    const existingFontPair = await db.fontPair.findUnique({
-      where: { id: fontPairId },
-    });
+    const { data: existingFontPair, error: fetchErr } = await supabase
+      .from("font_pairs")
+      .select("user_id, heading_url, body_url")
+      .eq("id", fontPairId)
+      .maybeSingle<Pick<FontPairRow, "user_id" | "heading_url" | "body_url">>();
 
+    if (fetchErr) throw fetchErr;
     if (!existingFontPair) {
       return { success: false, message: "Font pair not found" };
     }
-
-    if (existingFontPair.userId !== session.user.id) {
+    if (existingFontPair.user_id !== currentUser.user.id) {
       return {
         success: false,
         message: "Not authorized to delete this font pair",
@@ -135,34 +159,29 @@ export async function deleteFontPair(fontPairId: string) {
 
     // Delete files from UploadThing if they exist
     const filesToDelete: string[] = [];
-
-    if (existingFontPair.headingUrl) {
-      const headingKey = existingFontPair.headingUrl.split("/").pop();
+    if (existingFontPair.heading_url) {
+      const headingKey = existingFontPair.heading_url.split("/").pop();
       if (headingKey) filesToDelete.push(headingKey);
     }
-
-    if (existingFontPair.bodyUrl) {
-      const bodyKey = existingFontPair.bodyUrl.split("/").pop();
+    if (existingFontPair.body_url) {
+      const bodyKey = existingFontPair.body_url.split("/").pop();
       if (bodyKey) filesToDelete.push(bodyKey);
     }
-
     if (filesToDelete.length > 0) {
       try {
         await utapi.deleteFiles(filesToDelete);
       } catch (error) {
         console.error("Failed to delete font files from UploadThing:", error);
-        // Continue with database deletion even if file deletion fails
       }
     }
 
-    await db.fontPair.delete({
-      where: { id: fontPairId },
-    });
+    const { error: delErr } = await supabase
+      .from("font_pairs")
+      .delete()
+      .eq("id", fontPairId);
+    if (delErr) throw delErr;
 
-    return {
-      success: true,
-      message: "Font pair deleted successfully",
-    };
+    return { success: true, message: "Font pair deleted successfully" };
   } catch (error) {
     console.error("Failed to delete font pair:", error);
     return {

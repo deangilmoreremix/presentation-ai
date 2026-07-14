@@ -3,7 +3,7 @@
 import { type LayoutType } from "@/components/presentation/utils/parser";
 import { env } from "@/env";
 import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export interface UnsplashImage {
   id: string;
@@ -35,11 +35,10 @@ export async function getImageFromUnsplash(
   query: string,
   layoutType?: LayoutType,
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
-  // Get the current session
-  const session = await auth();
+  const currentUser = await getCurrentUser();
 
   // Check if user is authenticated
-  if (!session?.user?.id) {
+  if (!currentUser?.user?.id) {
     return { success: false, error: "You must be logged in to get images" };
   }
 

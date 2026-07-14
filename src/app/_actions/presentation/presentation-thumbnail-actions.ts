@@ -1,8 +1,7 @@
 "use server";
 
 import { logger } from "@/lib/observability/server/logger";
-import { auth } from "@/server/auth";
-import { db } from "@/server/db";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { canEditDocument } from "@/server/share/authorization";
 import { normalizeShareEmail } from "@/server/share/utils";
 
@@ -28,19 +27,17 @@ export async function updatePresentationThumbnailUrl({
   });
 
   try {
-    const session = await auth();
-
-    if (!session?.user) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       throw new Error("Unauthorized");
     }
 
     const canEdit = await canEditDocument(id, {
-      userId: session.user.id,
-      userEmail: session.user.email
-        ? normalizeShareEmail(session.user.email)
+      userId: currentUser.id,
+      userEmail: currentUser.email
+        ? normalizeShareEmail(currentUser.email)
         : null,
     });
-
     if (!canEdit) {
       return {
         success: false,
@@ -48,29 +45,44 @@ export async function updatePresentationThumbnailUrl({
       };
     }
 
+    const supabase = await createClient();
+    if (!supabase) {
+      return {
+        success: false,
+        message: "Supabase is not configured",
+      };
+    }
+
     try {
-      const updateResult = onlyIfMissing
-        ? await db.baseDocument.updateMany({
-            where: {
-              id,
-              thumbnailUrl: null,
-            },
-            data: {
-              thumbnailUrl,
-            },
-          })
-        : await db.baseDocument.update({
-            where: { id },
-            data: {
-              thumbnailUrl,
-            },
-          });
+      if (onlyIfMissing) {
+        const { data, error } = await supabase
+          .from("base_documents")
+          .update({ thumbnail_url: thumbnailUrl })
+          .eq("id", id)
+          .is("thumbnail_url", null)
+          .select("id");
+
+        if (error) throw error;
+        return {
+          success: true,
+          message: "Presentation thumbnail updated successfully",
+          thumbnailUrl,
+          updated: (data?.length ?? 0) > 0,
+        };
+      }
+
+      const { error } = await supabase
+        .from("base_documents")
+        .update({ thumbnail_url: thumbnailUrl })
+        .eq("id", id);
+
+      if (error) throw error;
 
       return {
         success: true,
         message: "Presentation thumbnail updated successfully",
         thumbnailUrl,
-        updated: "count" in updateResult ? updateResult.count > 0 : true,
+        updated: true,
       };
     } catch (error) {
       console.error(error);

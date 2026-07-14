@@ -1,7 +1,7 @@
 "use server";
 
 import { logger } from "@/lib/observability/server/logger";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export async function clearPresentationChat(presentationId: string) {
   const actionName = "presentation.clearPresentationChat.clearPresentationChat";
@@ -14,8 +14,8 @@ export async function clearPresentationChat(presentationId: string) {
   });
 
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.user) {
       throw new Error("Unauthorized");
     }
 
