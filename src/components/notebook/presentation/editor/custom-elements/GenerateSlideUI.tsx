@@ -2,7 +2,7 @@
 
 import { Loader2, Sparkles, X } from "lucide-react";
 import { m as motion } from "motion/react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useCallback, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ const IMAGE_STYLES: ImageStyle[] = ["3D", "Sketch", "Flat"];
 const TEXT_DENSITIES: TextDensity[] = ["Minimal", "Balanced", "Detailed"];
 
 export function GenerateSlideUI({ slideId, onClose }: GenerateSlideUIProps) {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const imageModels = useMemo(
     () => getAvailableImageModels(session?.user?.isAdmin === true),
     [session?.user?.isAdmin],

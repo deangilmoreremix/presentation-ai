@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, Loader2, Sparkles } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useEffect, useMemo, useState } from "react";
 
 import { type Image as GeneratedImage } from "@/app/_actions/apps/image-studio/fetch";
@@ -92,7 +92,7 @@ export function SharedGenerateControls({
   className,
   onImagesGenerated,
 }: SharedGenerateControlsProps) {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const imageModels = useMemo(
     () => getAvailableImageModels(session?.user?.isAdmin === true),
     [session?.user?.isAdmin],

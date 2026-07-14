@@ -2,7 +2,7 @@
  * Image Actions - Central export for all image generation operations
  */
 
-export { generateImageAction, editImageAction, createVariationAction, generateWithResponsesAPI } from "./generate";
+export { generateImageAction } from "./generate";
 export type {
   ImageModel,
   ImageSize,

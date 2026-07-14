@@ -7,7 +7,7 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -52,7 +52,7 @@ type InfographicGenerationResponse = {
 };
 
 export function InfographicGenerationPanel() {
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const isAdmin = session?.user?.isAdmin === true;
   const availableImageModels = useMemo(
     () => getAvailableImageModels(isAdmin),

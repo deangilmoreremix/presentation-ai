@@ -8,6 +8,7 @@ import { getCustomThemeById } from "@/app/_actions/presentation/theme-actions";
 import { Header } from "@/components/notebook/presentation/components/outline/Header";
 import { OutlineList } from "@/components/notebook/presentation/components/outline/OutlineList";
 import { ToolCallDisplay } from "@/components/notebook/presentation/components/outline/ToolCallDisplay";
+import { GenerateImageSlidesButton } from "@/components/notebook/presentation/components/outline/GenerateImageSlidesButton";
 import { PresentationCustomizer } from "@/components/notebook/presentation/components/theme/PresentationCustomizer";
 import { ThemeBackground } from "@/components/notebook/presentation/components/theme/ThemeBackground";
 import { ThemeSettings } from "@/components/notebook/presentation/components/theme/ThemeSettings";
@@ -31,6 +32,8 @@ import {
 import { usePresentationState } from "@/states/presentation-state";
 import { useQuery } from "@tanstack/react-query";
 import { Wand2 } from "lucide-react";
+import { useAuth } from "@/components/supabase-provider";
+import { type ImageModelList } from "@/constants/image-models";
 import { useParams, useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -56,14 +59,17 @@ export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
+  const { session } = useAuth();
   const { resolvedTheme } = usePresentationTheme();
   const {
     setCurrentPresentation,
     setPresentationInput,
     startOutlineGeneration,
     startPresentationGeneration,
+    startImageSlideGeneration,
     isGeneratingPresentation,
     isGeneratingOutline,
+    setImageModel,
     setOutline,
     setSearchResults,
     setOutlineToolCalls,
@@ -96,6 +102,9 @@ export default function PresentationGenerateWithIdPage() {
       : hasOutline
         ? "Generate Presentation"
         : "Generate Outline";
+
+  const canGenerateImageSlides = session?.user?.isAdmin === true;
+  const isOutlineUnavailable = isGeneratingOutline || !hasOutline;
 
   // Use React Query to fetch presentation data
   const { data: presentationData, isLoading: isLoadingPresentation } = useQuery(
@@ -357,6 +366,21 @@ export default function PresentationGenerateWithIdPage() {
     startOutlineGeneration();
   };
 
+  const handleGenerateImageSlides = (model: ImageModelList) => {
+    if (isGeneratingOutline || isGeneratingPresentation) {
+      return;
+    }
+
+    if (!hasOutline) {
+      toast.error("Generate an outline before generating image slides.");
+      return;
+    }
+
+    router.push(`/presentation/${id}`);
+    setImageModel(model);
+    startImageSlideGeneration();
+  };
+
   if (isLoadingPresentation) {
     return (
       <ThemeBackground
@@ -398,6 +422,15 @@ export default function PresentationGenerateWithIdPage() {
 
       <div className="fixed right-0 bottom-0 left-0 border-t bg-background/80 p-4 backdrop-blur-xs">
         <div className="mx-auto flex w-full max-w-4xl flex-col justify-center gap-3 sm:w-fit sm:max-w-none sm:flex-row sm:gap-4">
+          {canGenerateImageSlides ? (
+            <div className="w-full sm:w-fit sm:flex-none">
+              <GenerateImageSlidesButton
+                isGenerating={isGeneratingPresentation}
+                disabled={isOutlineUnavailable}
+                onGenerateImageSlides={handleGenerateImageSlides}
+              />
+            </div>
+          ) : null}
           <div className="w-full sm:w-fit sm:flex-none">
             <Button
               size="lg"

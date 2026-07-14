@@ -69,6 +69,7 @@ export default function Page() {
       }
     } catch (error) {
       setIsGeneratingOutline(false);
+      handledRequestRef.current = null;
       console.error("Error creating presentation:", error);
       toast.error("Failed to create presentation");
       router.push("/presentation");

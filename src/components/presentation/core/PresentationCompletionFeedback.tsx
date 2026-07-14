@@ -1,7 +1,7 @@
 "use client";
 
 import { Frown, Meh, Plus, RotateCcw, Smile } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -57,7 +57,7 @@ export function PresentationCompletionFeedback({
 }: PresentationCompletionFeedbackProps) {
   const router = useRouter();
   const { push } = router;
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const [isPending, setIsPending] = useState(false);
   const [reaction, setReaction] = useState<Reaction>(null);
   const [dislikeDialogOpen, setDislikeDialogOpen] = useState(false);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/components/supabase-provider";
 import { useMemo } from "react";
 
 import {
@@ -23,7 +23,7 @@ import { ThemeTabs } from "./theme/ThemeTabs";
 export function ThemePanel() {
   const { generatedThemeData, theme: activeTheme } = usePresentationState();
   const { tab, showFavorites, showFont } = useThemePanelState();
-  const { data: session } = useSession();
+  const { session } = useAuth();
   const canEditSystemThemes = session?.user?.isAdmin === true;
 
   const systemThemesQuery = useQuery({

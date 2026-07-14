@@ -1,7 +1,7 @@
 "use client";
 
 import { Clapperboard, Image, Wand2 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/provider/SupabaseAuthProvider";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -43,8 +43,8 @@ export function ImageSourceSelector({
   className,
   showLabel = true,
 }: ImageSourceSelectorProps) {
-  const { data: session } = useSession();
-  const imageModels = getAvailableImageModels(session?.user?.isAdmin === true);
+  const { user } = useAuth();
+  const imageModels = getAvailableImageModels(user?.isAdmin === true);
 
   return (
     <div className={className}>
@@ -108,7 +108,6 @@ export function ImageSourceSelector({
             </SelectLabel>
             <SelectItem value="stock-unsplash">Unsplash</SelectItem>
             <SelectItem value="stock-pixabay">Pixabay</SelectItem>
-            <SelectItem value="stock-google">Web Search</SelectItem>
           </SelectGroup>
           <SelectGroup>
             <SelectLabel className="flex items-center gap-1 text-primary/80">

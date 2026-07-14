@@ -5,7 +5,6 @@ import { Search, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect } from "react";
 
-import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
 import {
   getTrendingPixabayImages,
   searchPixabayImages,
@@ -51,7 +50,6 @@ type SearchResultImage = {
 const PROVIDER_LABELS: Record<PresentationStockImageProvider, string> = {
   unsplash: "Unsplash",
   pixabay: "Pixabay",
-  google: "Web Search",
 };
 
 export function SharedImageSearchControls({
@@ -70,12 +68,10 @@ export function SharedImageSearchControls({
     mode = "unsplash",
     unsplashQuery = "",
     pixabayQuery = "",
-    googleQuery = "",
   } = imageSearchState;
 
   const [selectedUrl, setSelectedUrl] = React.useState<string>("");
 
-  // Seed all image providers with the page-specific query when the panel opens.
   useEffect(() => {
     const trimmedInitialQuery = initialQuery.trim();
     if (!trimmedInitialQuery) return;
@@ -83,7 +79,6 @@ export function SharedImageSearchControls({
     setImageSearchState({
       unsplashQuery: trimmedInitialQuery,
       pixabayQuery: trimmedInitialQuery,
-      googleQuery: trimmedInitialQuery,
     });
   }, [initialQuery, initialQueryKey, setImageSearchState]);
 
@@ -159,46 +154,21 @@ export function SharedImageSearchControls({
     refetchOnWindowFocus: false,
   });
 
-  const googleQ = useQuery({
-    queryKey: ["presentation-image", "google", googleQuery],
-    queryFn: async () => {
-      if (!googleQuery.trim()) return [] as SearchResultImage[];
-      const res = await searchGoogleImages(googleQuery);
-      return res.success && res.images
-        ? res.images.map((i) => ({
-            url: i.url,
-            thumb: i.thumb,
-            title: i.title,
-            source: i.source,
-          }))
-        : [];
-    },
-    enabled: !!googleQuery && mode === "google",
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
-
   const activeQuery =
     mode === "unsplash"
       ? unsplashQuery
-      : mode === "pixabay"
-        ? pixabayQuery
-        : googleQuery;
+      : pixabayQuery;
 
   const activeResults =
     mode === "unsplash"
       ? unsplashQ.data
-      : mode === "pixabay"
-        ? pixabayQ.data
-        : googleQ.data;
+      : pixabayQ.data;
 
-  const isFetching =
-    unsplashQ.isFetching || pixabayQ.isFetching || googleQ.isFetching;
+  const isFetching = unsplashQ.isFetching || pixabayQ.isFetching;
 
   const handleSearch = () => {
     if (mode === "unsplash") void unsplashQ.refetch();
     else if (mode === "pixabay") void pixabayQ.refetch();
-    else void googleQ.refetch();
   };
 
   const handleShowTrending = () => {
@@ -226,15 +196,12 @@ export function SharedImageSearchControls({
         }
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="unsplash">
             Unsplash
           </TabsTrigger>
           <TabsTrigger value="pixabay">
             Pixabay
-          </TabsTrigger>
-          <TabsTrigger value="google">
-            Web
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -246,17 +213,13 @@ export function SharedImageSearchControls({
             placeholder={
               mode === "unsplash"
                 ? "Search high-res photos..."
-                : mode === "pixabay"
-                  ? "Search Pixabay Images..."
-                  : "Search live web images..."
+                : "Search Pixabay Images..."
             }
             value={activeQuery}
             onChange={(e) =>
               mode === "unsplash"
                 ? setImageSearchState({ unsplashQuery: e.target.value })
-                : mode === "pixabay"
-                  ? setImageSearchState({ pixabayQuery: e.target.value })
-                  : setImageSearchState({ googleQuery: e.target.value })
+                : setImageSearchState({ pixabayQuery: e.target.value })
             }
             onKeyDown={handleKeyDown}
             className="pl-9"
@@ -353,7 +316,6 @@ export function SharedImageSearchControls({
                               <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
                             )}
                           </button>
-                          {/* Attribution Overlay */}
                           <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
                             <span className="pointer-events-auto">
                               Photo by{" "}
@@ -424,7 +386,6 @@ export function SharedImageSearchControls({
                               <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
                             )}
                           </button>
-                          {/* Attribution Overlay */}
                           {r.author && (
                             <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
                               <span className="pointer-events-auto">
@@ -444,52 +405,6 @@ export function SharedImageSearchControls({
                         </div>
                       ),
                     )}
-                  </div>
-                )}
-
-              {mode === "google" &&
-                Array.isArray(googleQ.data) &&
-                googleQ.data.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {googleQ.data.map((r) => (
-                      <div key={r.url} className="group relative">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedUrl(r.url);
-                            onImageSelect(r.url, "google");
-                          }}
-                          className={cn(
-                            "aspect-square w-full overflow-hidden rounded-md border transition-all hover:scale-[1.02] focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:outline-none",
-                            selectedUrl === r.url
-                              ? "border-primary ring-2 ring-primary ring-offset-1"
-                              : "border-transparent hover:border-primary/50",
-                          )}
-                          title={r.title}
-                        >
-                          <Image
-                            unoptimized
-                            width={400}
-                            height={300}
-                            src={r.thumb || r.url}
-                            alt={r.title || "web search image"}
-                            className="size-full object-cover transition-opacity group-hover:opacity-90"
-                            loading="lazy"
-                          />
-                          {selectedUrl === r.url && (
-                            <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
-                          )}
-                        </button>
-                        {(r.title || r.source) && (
-                          <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                            <span className="line-clamp-2">
-                              {r.title || "Web image"}
-                              {r.source ? ` - ${r.source}` : ""}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
                   </div>
                 )}
 

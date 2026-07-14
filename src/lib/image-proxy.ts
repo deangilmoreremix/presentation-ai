@@ -81,7 +81,7 @@ function shouldProxyPresentationImage(
     return false;
   }
 
-  if (input.imageSource === "search" || input.stockImageProvider === "google") {
+  if (input.imageSource === "search") {
     return true;
   }
 

@@ -1,6 +1,10 @@
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { uploadFiles } from "@/hooks/globals/useUploadthing";
-import { type JsonValue } from "@prisma/client/runtime/client";
+
+// Local replacement for the Prisma `JsonValue` type. The Supabase client
+// returns `jsonb` columns as `unknown`, so we use `unknown` everywhere we
+// previously used `JsonValue` from `@prisma/client/runtime/client`.
+type JsonValue = unknown;
 import {
   type BackgroundRectExportElement,
   type DecorExportElement,
