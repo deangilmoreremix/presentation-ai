@@ -46,14 +46,14 @@ export function SupabaseAuthProvider({ children }: Props) {
 
     async function loadSession() {
       const {
-        data: { session },
-      } = await supabase.auth.getSession();
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!mounted) return;
 
-      if (session?.user) {
+      if (user) {
         setUser({
-          id: session.user.id,
-          email: session.user.email ?? null,
+          id: user.id,
+          email: user.email ?? null,
           role: "USER",
           hasAccess: false,
           isAdmin: false,

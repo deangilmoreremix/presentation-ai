@@ -5,8 +5,8 @@ import { SupabaseAuthProvider, useAuth } from "@/provider/SupabaseAuthProvider";
 vi.mock("@supabase/ssr", () => ({
   createBrowserClient: vi.fn(() => ({
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { user: { id: "u1", email: "t@t.com" } } },
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: "u1", email: "t@t.com" } },
       }),
       onAuthStateChange: vi.fn((callback) => {
         callback("SIGNED_IN", { user: { id: "u1", email: "t@t.com" } });
