@@ -15,10 +15,11 @@ export default function SignOut() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const supabase = createClient();
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase?.auth.signOut();
+    if (!supabase) return;
+    await supabase.auth.signOut();
     router.push(callbackUrl);
   };
 
