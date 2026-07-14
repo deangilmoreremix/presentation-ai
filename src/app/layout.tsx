@@ -30,7 +30,7 @@ export default async function RootLayout({
             </ThemeProvider>
           </body>
         </html>
-      </NextAuthProvider>
+      </SupabaseAuthProvider>
     </TanStackQueryProvider>
   );
 }
