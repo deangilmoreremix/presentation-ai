@@ -94,16 +94,16 @@ export async function generateImageAction(
   aspectRatio: ImageAspectRatio = "16:9",
 ) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user?.id) {
+  if (!currentUser?.id) {
     return { success: false, error: "You must be logged in to generate images" };
   }
 
   try {
-    const actualModel = currentUser.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    const actualModel = currentUser.isAdmin ? model : DEFAULT_IMAGE_MODEL;
     return await generateFalImage(
       prompt,
       actualModel,
-      currentUser.user.id,
+      currentUser.id,
       aspectRatio,
     );
   } catch (error) {

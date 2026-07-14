@@ -38,7 +38,7 @@ export async function getImageFromUnsplash(
   const currentUser = await getCurrentUser();
 
   // Check if user is authenticated
-  if (!currentUser?.user?.id) {
+  if (!currentUser?.id) {
     return { success: false, error: "You must be logged in to get images" };
   }
 

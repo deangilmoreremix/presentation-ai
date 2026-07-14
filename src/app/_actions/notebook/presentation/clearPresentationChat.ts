@@ -15,7 +15,7 @@ export async function clearPresentationChat(presentationId: string) {
 
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser?.user) {
+    if (!currentUser) {
       throw new Error("Unauthorized");
     }
 

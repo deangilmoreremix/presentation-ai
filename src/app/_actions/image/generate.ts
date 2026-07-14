@@ -16,7 +16,7 @@ export async function generateImageAction(
   model: ImageModelList = "black-forest-labs/FLUX.1-schnell-Free",
 ) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user?.id) {
+  if (!currentUser?.id) {
     throw new Error("You must be logged in to generate images");
   }
 

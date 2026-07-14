@@ -29,7 +29,7 @@ export async function getUserImages({
   limit?: number;
 } = {}) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user?.id) {
+  if (!currentUser?.id) {
     return [];
   }
 
@@ -39,7 +39,7 @@ export async function getUserImages({
   const { data, error } = await supabase
     .from("generated_images")
     .select("*")
-    .eq("user_id", currentUser.user.id)
+    .eq("user_id", currentUser.id)
     .order("created_at", { ascending: false })
     .range(Math.max(page - 1, 0) * limit, Math.max(page - 1, 0) * limit + limit - 1);
 

@@ -75,7 +75,7 @@ export async function generateInfographicImageAction({
 
   const currentUser = await getCurrentUser();
 
-  if (!currentUser?.user?.id) {
+  if (!currentUser?.id) {
     span.annotate({
       "allweone.server.image_generation.authorized": false,
     });
@@ -98,13 +98,13 @@ export async function generateInfographicImageAction({
   });
 
   try {
-    const actualModel = currentUser.user.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    const actualModel = currentUser.isAdmin ? model : DEFAULT_IMAGE_MODEL;
 
     span.annotate({
       "allweone.server.image_generation.authorized": true,
-      "allweone.server.image_generation.admin": currentUser.user.isAdmin,
+      "allweone.server.image_generation.admin": currentUser.isAdmin,
       "allweone.server.image_generation.model": actualModel,
-      "allweone.server.image_generation.user_id": currentUser.user.id,
+      "allweone.server.image_generation.user_id": currentUser.id,
     });
     span.event("allweone.server.image_generation.started", {
       "allweone.server.image_generation.model": actualModel,
@@ -158,7 +158,7 @@ export async function generateInfographicImageAction({
       .insert({
         url: permanentUrl,
         prompt: fullPrompt,
-        user_id: currentUser.user.id,
+        user_id: currentUser.id,
       })
       .select("id, prompt, url")
       .single();

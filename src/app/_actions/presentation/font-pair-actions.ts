@@ -32,7 +32,7 @@ type FontPairRow = {
 export async function createFontPair(formData: FontPairFormData) {
   try {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     return {
       success: false,
       message: "You must be signed in to save a font pair",
@@ -54,7 +54,7 @@ export async function createFontPair(formData: FontPairFormData) {
         body: validatedData.body,
         body_url: validatedData.bodyUrl ?? null,
         body_weight: validatedData.bodyWeight ?? null,
-        user_id: currentUser.user.id,
+        user_id: currentUser.id,
       })
       .select("id")
       .single<{ id: string }>();
@@ -86,7 +86,7 @@ export async function createFontPair(formData: FontPairFormData) {
 export async function getUserFontPairs() {
   try {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     return {
       success: false,
       message: "You must be signed in to view your font pairs",
@@ -106,7 +106,7 @@ export async function getUserFontPairs() {
     const { data: fontPairs, error } = await supabase
       .from("font_pairs")
       .select("*")
-      .eq("user_id", currentUser.user.id)
+      .eq("user_id", currentUser.id)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -127,7 +127,7 @@ export async function getUserFontPairs() {
 export async function deleteFontPair(fontPairId: string) {
   try {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     return {
       success: false,
       message: "You must be signed in to delete a font pair",
@@ -150,7 +150,7 @@ export async function deleteFontPair(fontPairId: string) {
     if (!existingFontPair) {
       return { success: false, message: "Font pair not found" };
     }
-    if (existingFontPair.user_id !== currentUser.user.id) {
+    if (existingFontPair.user_id !== currentUser.id) {
       return {
         success: false,
         message: "Not authorized to delete this font pair",

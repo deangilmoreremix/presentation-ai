@@ -155,7 +155,7 @@ export async function createPresentation({
   language?: string;
 }) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 
@@ -172,7 +172,7 @@ export async function createPresentation({
         type: "PRESENTATION",
         document_type: "presentation",
         title: title || "Untitled Presentation",
-        user_id: currentUser.user.id,
+        user_id: currentUser.id,
         thumbnail_url: getPresentationThumbnailUrl(content.slides) ?? null,
       })
       .select("id")
@@ -284,13 +284,13 @@ export async function updatePresentation({
   thumbnailUrl?: string | null;
 }) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 
   const canEdit = await canEditDocument(id, {
-    userId: currentUser.user.id,
-    userEmail: normalizeShareEmail(currentUser.user.email),
+    userId: currentUser.id,
+    userEmail: normalizeShareEmail(currentUser.email),
   });
   if (!canEdit) {
     return {
@@ -377,9 +377,9 @@ export async function getPresentationOwner(id: string): Promise<
 > {
   const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: currentUser?.user?.id ?? null,
-    userEmail: currentUser?.user?.email
-      ? normalizeShareEmail(currentUser.user.email)
+    userId: currentUser?.id ?? null,
+    userEmail: currentUser?.email
+      ? normalizeShareEmail(currentUser.email)
       : null,
   });
   if (!canRead) {
@@ -414,13 +414,13 @@ export async function getPresentationOwner(id: string): Promise<
 
 export async function updatePresentationTitle(id: string, title: string) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 
   const canEdit = await canEditDocument(id, {
-    userId: currentUser.user.id,
-    userEmail: normalizeShareEmail(currentUser.user.email),
+    userId: currentUser.id,
+    userEmail: normalizeShareEmail(currentUser.email),
   });
   if (!canEdit) {
     return {
@@ -461,7 +461,7 @@ export async function deletePresentation(id: string) {
 
 export async function deletePresentations(ids: string[]) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 
@@ -478,7 +478,7 @@ export async function deletePresentations(ids: string[]) {
   const { data, error } = await supabase
     .from("base_documents")
     .delete()
-    .eq("user_id", currentUser.user.id)
+    .eq("user_id", currentUser.id)
     .in("id", ids)
     .select("id");
 
@@ -500,12 +500,12 @@ export async function deletePresentations(ids: string[]) {
 export async function getPresentation(id: string) {
   const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: currentUser?.user?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.user?.email),
+    userId: currentUser?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.email),
   });
   const canEdit = await canEditDocument(id, {
-    userId: currentUser?.user?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.user?.email),
+    userId: currentUser?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.email),
   });
 
   const supabase = await createClient();
@@ -522,7 +522,7 @@ export async function getPresentation(id: string) {
 
     if (error) throw error;
     if (!presentation) notFound();
-    if (!canRead) notFound();
+    if (!canEdit) notFound();
 
     // The Prisma version returned `favorites` when there was a session.
     // We don't load favorites here to keep this query simple; callers that
@@ -543,8 +543,8 @@ export async function getPresentation(id: string) {
 export async function getPresentationContent(id: string) {
   const currentUser = await getCurrentUser();
   const canRead = await canReadDocument(id, {
-    userId: currentUser?.user?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.user?.email),
+    userId: currentUser?.id ?? null,
+    userEmail: normalizeShareEmail(currentUser?.email),
   });
 
   const supabase = await createClient();
@@ -585,15 +585,15 @@ export async function updatePresentationTheme(id: string, theme: string) {
 
 export async function duplicatePresentation(id: string, newTitle?: string) {
   const currentUser = await getCurrentUser();
-  if (!currentUser?.user) {
+  if (!currentUser) {
     throw new Error("Unauthorized");
   }
 
   const canEdit = await canEditDocument(id, {
-    userId: currentUser.user.id,
-    userEmail: normalizeShareEmail(currentUser.user.email),
+    userId: currentUser.id,
+    userEmail: normalizeShareEmail(currentUser.email),
   });
-  if (!canRead) {
+  if (!canEdit) {
     return {
       success: false,
       message: "You do not have permission to view this presentation",
@@ -624,7 +624,7 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
         type: "PRESENTATION",
         document_type: "presentation",
         title: newTitle ?? `(Copy) ${original.title}`,
-        user_id: currentUser.user.id,
+        user_id: currentUser.id,
         thumbnail_url: original.thumbnail_url,
       })
       .select("id")
