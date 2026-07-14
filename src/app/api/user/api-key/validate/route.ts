@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/server/auth";
 import OpenAI from "openai";
 import { validateKeyFormat } from "@/lib/crypto/key-encryption";
 
