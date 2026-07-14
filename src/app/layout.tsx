@@ -1,4 +1,4 @@
-import NextAuthProvider from "@/provider/NextAuthProvider";
+import { SupabaseAuthProvider } from "@/provider/SupabaseAuthProvider";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
@@ -21,7 +21,7 @@ export default async function RootLayout({
 }>) {
   return (
     <TanStackQueryProvider>
-      <NextAuthProvider>
+      <SupabaseAuthProvider>
         <html lang="en">
           <body className={`${inter.className} antialiased`}>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
