@@ -2,7 +2,7 @@ import { createUIMessageStreamResponse } from "ai";
 import { assertModelIsConfigured, modelPicker } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { toUIMessageStream } from "@ai-sdk/langchain";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { NextResponse } from "next/server";
@@ -205,8 +205,8 @@ export async function POST(req: Request) {
 
   try {
     routeLogger.info("Single slide generation request received", { requestId });
-    const session = await auth();
-    if (!session) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       routeLogger.warn("Single slide generation request rejected: unauthorized", {
         requestId,
       });

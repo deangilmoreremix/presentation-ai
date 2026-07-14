@@ -3,29 +3,29 @@ import "server-only";
 import { createUploadthing } from "uploadthing/next";
 import { UploadThingError, UTApi } from "uploadthing/server";
 
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export const f = createUploadthing();
 export const utapi = new UTApi();
 
 export async function requireUploadThingUser(): Promise<{ userId: string }> {
-  const session = await auth();
-  if (!session) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     throw new UploadThingError("Unauthorized");
   }
 
-  return { userId: session.user.id };
+  return { userId: currentUser.id };
 }
 
 export async function requireAdminUploadThingUser(): Promise<{
   userId: string;
 }> {
-  const session = await auth();
-  if (!session?.user.isAdmin) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.isAdmin) {
     throw new UploadThingError("Unauthorized");
   }
 
-  return { userId: session.user.id };
+  return { userId: currentUser.id };
 }
 
 function getUploadThingFileKeyFromUrl(url: string): string | null {

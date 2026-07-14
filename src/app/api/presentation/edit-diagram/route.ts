@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";
 import { logger } from "@/lib/observability/server/logger";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 const INFOGRAPHIC_MODEL = "google/gemini-3-flash-preview";
 
@@ -196,8 +196,8 @@ export async function POST(req: Request) {
   });
 
   try {
-    const session = await auth();
-    if (!session) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       span.event("allweone.api.request_rejected", {
         "allweone.validation.error": "unauthorized",
       });

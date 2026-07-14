@@ -1,12 +1,12 @@
 import { search_tool } from "@/ai/tools/search";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
+    const currentUser = await getCurrentUser();
 
-    if (!session?.user) {
+    if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

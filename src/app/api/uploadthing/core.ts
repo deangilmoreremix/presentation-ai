@@ -1,4 +1,4 @@
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 import "server-only";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError, UTApi } from "uploadthing/server";
@@ -13,14 +13,14 @@ export const ourFileRouter = {
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
       // This code runs on your server before upload
-      const session = await auth();
+      const currentUser = await getCurrentUser();
 
-      console.log(session);
+      console.log(currentUser);
       // If you throw, the user will not be able to upload
-      if (!session) throw new UploadThingError("Unauthorized");
+      if (!currentUser) throw new UploadThingError("Unauthorized");
 
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: session.user.id };
+      return { userId: currentUser.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -38,9 +38,9 @@ export const ourFileRouter = {
     video: { maxFileSize: "64MB" },
   })
     .middleware(async () => {
-      const session = await auth();
-      if (!session) throw new UploadThingError("Unauthorized");
-      return { userId: session.user.id };
+      const currentUser = await getCurrentUser();
+      if (!currentUser) throw new UploadThingError("Unauthorized");
+      return { userId: currentUser.id };
     })
     .onUploadComplete(async ({ file }) => {
       // Simply return the file URL and name
@@ -57,9 +57,9 @@ export const ourFileRouter = {
     text: { maxFileSize: "2MB" },
   })
     .middleware(async () => {
-      const session = await auth();
-      if (!session) throw new UploadThingError("Unauthorized");
-      return { userId: session.user.id };
+      const currentUser = await getCurrentUser();
+      if (!currentUser) throw new UploadThingError("Unauthorized");
+      return { userId: currentUser.id };
     })
     .onUploadComplete(async ({ file }) => {
       const familyName = file.name.replace(/\.[^.]+$/, "");

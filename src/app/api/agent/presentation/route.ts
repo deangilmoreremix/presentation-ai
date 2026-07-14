@@ -10,7 +10,7 @@ import {
 import { createPresentationGraph } from "@/ai/agents/presentation/createAgent";
 import { getLatestUserMessage } from "@/lib/ai/uiMessageParts";
 import { logger } from "@/lib/observability/server/logger";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 type PresentationStreamOptions = Parameters<
   ReturnType<typeof createPresentationGraph>["stream"]
@@ -45,9 +45,9 @@ export async function POST(req: Request) {
       return new Response("Missing presentation id", { status: 400 });
     }
 
-    const session = await auth();
+    const currentUser = await getCurrentUser();
 
-    if (!session?.user) {
+    if (!currentUser) {
       span.event("allweone.api.request_rejected", {
         "allweone.validation.error": "unauthorized",
       });

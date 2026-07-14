@@ -1,5 +1,5 @@
 import { createLogger } from "@/lib/observability/logger";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 interface LocalModelInfo {
@@ -150,8 +150,8 @@ async function fetchLMStudioModels(): Promise<LocalModelInfo[]> {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

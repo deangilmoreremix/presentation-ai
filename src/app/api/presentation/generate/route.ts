@@ -14,7 +14,7 @@ import {
   presentationGenerationPromptTemplate,
   type PresentationGenerationPromptInput,
 } from "@/lib/presentation/generation-prompt";
-import { auth } from "@/server/auth";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 type SlidesRequest = Omit<PresentationGenerationPromptInput, "currentDate"> & {
   modelId?: string;
@@ -28,8 +28,8 @@ export async function POST(req: Request) {
 
   try {
     routeLogger.info("Presentation generation request received", { requestId });
-    const session = await auth();
-    if (!session) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       routeLogger.warn("Presentation generation request rejected: unauthorized", {
         requestId,
       });
