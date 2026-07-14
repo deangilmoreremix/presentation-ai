@@ -522,7 +522,7 @@ export async function getPresentation(id: string) {
 
     if (error) throw error;
     if (!presentation) notFound();
-    if (!canEdit) notFound();
+    if (!canRead) notFound();
 
     // The Prisma version returned `favorites` when there was a session.
     // We don't load favorites here to keep this query simple; callers that
