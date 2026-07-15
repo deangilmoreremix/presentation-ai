@@ -20,6 +20,10 @@ export const env = createEnv({
     FAL_API_KEY: z.string().optional(),
     PINECONE_API_KEY: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
+
+    // Google Custom Search
+    GOOGLE_CUSTOM_SEARCH_API_KEY: z.string().optional(),
+    SEARCH_ENGINE_CX: z.string().optional(),
   },
 
   client: {
@@ -40,6 +44,8 @@ export const env = createEnv({
     TOGETHER_AI_API_KEY: process.env.TOGETHER_AI_API_KEY,
     FAL_API_KEY: process.env.FAL_API_KEY,
     PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+    GOOGLE_CUSTOM_SEARCH_API_KEY: process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+    SEARCH_ENGINE_CX: process.env.SEARCH_ENGINE_CX,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

@@ -57,8 +57,7 @@ function parsePersistedArray<T>(value: unknown): T[] {
 
 export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
-  const params = useParams();
-  const id = params.id as string;
+  const { id } = useParams() as { id: string };
   const { session } = useAuth();
   const { resolvedTheme } = usePresentationTheme();
   const {

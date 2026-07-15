@@ -1,0 +1,43 @@
+packages:
+  - "."
+
+nodeLinker: hoisted
+minimumReleaseAgeExclude:
+  - react-doctor
+minimumReleaseAge: 720
+
+peerDependencyRules:
+  allowAny:
+    - react
+    - react-dom
+    - "@types/react"
+  ignoreMissing:
+    - scheduler
+
+allowBuilds:
+  "@openrouter/sdk": true
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@swc/core": true
+  "@tailwindcss/oxide": true
+  "@tsparticles/engine": true
+  canvas: true
+  "core-js": true
+  "core-js-pure": true
+  es5-ext: true
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true
+  protobufjs: true
+  sharp: true
+  "tree-sitter-python": true
+  unrs-resolver: true
+
+overrides:
+  "@types/react": "19.2.14"
+  "@types/react-dom": "19.2.3"
+  baseline-browser-mapping: "2.9.19"
+  canvas: "^3.2.1"
+
+patchedDependencies:
+  "@ai-sdk/langchain@2.0.122": patches/@ai-sdk__langchain@2.0.122.patch

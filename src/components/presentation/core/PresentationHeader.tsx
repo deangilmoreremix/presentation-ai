@@ -1,6 +1,6 @@
 "use client";
 
-import { Palette } from "lucide-react";
+import { Bot, Palette } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,8 @@ import { updatePresentationTitle } from "@/app/_actions/notebook/presentation/pr
 import AllweoneText from "@/components/globals/allweone-logo";
 import { ExportButton } from "@/components/presentation/buttons/ExportButton";
 import { PresentButton } from "@/components/presentation/buttons/PresentButton";
+import { ShareButton } from "@/components/presentation/buttons/ShareButton";
+import { SaveStatus } from "@/components/presentation/buttons/SaveStatus";
 import { PresentationMenu } from "@/components/presentation/controls/PresentationMenu";
 import { PresentationSavingIndicator } from "@/components/presentation/core/PresentationSavingIndicator";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
     (s) => s.currentPresentationId,
   );
   const isReadOnly = usePresentationState((s) => s.isReadOnly);
+  const activeRightPanel = usePresentationState((s) => s.activeRightPanel);
   const setActiveRightPanel = usePresentationState(
     (s) => s.setActiveRightPanel,
   );
@@ -161,6 +164,27 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
 
         {/* Export button - Only in presentation page, not outline or present mode */}
         {isPresentationPage && !isPresenting && !isReadOnly && <ExportButton />}
+
+        {/* Save status - Only in presentation page, not outline or present mode */}
+        {isPresentationPage && !isPresenting && !isReadOnly && <SaveStatus />}
+
+        {/* Share button - Only in presentation page, not outline */}
+        {isPresentationPage && !isPresenting && !isReadOnly && <ShareButton />}
+
+        {/* Agent button - Only in presentation page, not outline or present mode */}
+        {isPresentationPage && !isPresenting && !isReadOnly && (
+          <Button
+            variant={activeRightPanel === "agent" ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setActiveRightPanel(activeRightPanel === "agent" ? null : "agent");
+            }}
+            className="gap-2"
+          >
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">Agent</span>
+          </Button>
+        )}
 
         {/* Present button - Only in presentation page, not outline */}
         {isPresentationPage && <PresentButton />}
