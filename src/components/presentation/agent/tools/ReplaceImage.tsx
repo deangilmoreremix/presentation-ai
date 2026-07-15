@@ -28,7 +28,7 @@ export function PresentationReplaceImageCall({
   imageSource?: "ai" | "stock" | "gif";
   scope?: Scope;
   slideIds?: string[];
-  stockImageProvider?: "unsplash" | "pixabay";
+  stockImageProvider?: "unsplash" | "pixabay" | "google";
   loading?: boolean;
 }) {
   const [url, setUrl] = useState(imageUrl ?? "");

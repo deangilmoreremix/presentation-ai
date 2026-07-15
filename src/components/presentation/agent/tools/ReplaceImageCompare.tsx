@@ -148,7 +148,7 @@ export function PresentationReplaceImageCompare({
   imagePrompt?: string;
   imageSource?: "ai" | "stock" | "gif";
   message?: string;
-  stockImageProvider?: "unsplash" | "pixabay";
+  stockImageProvider?: "unsplash" | "pixabay" | "google";
 }) {
   const currentSlides = usePresentationState((state) => state.slides);
   const rootImageGeneration = usePresentationState(

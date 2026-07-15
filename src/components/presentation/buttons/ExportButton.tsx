@@ -52,8 +52,8 @@ export function ExportButton() {
   const handleExport = async () => {
     try {
       setIsExporting(true);
-      exportResultRef.current = null;
 
+      // Get all slide IDs
       const { slides, currentPresentationTitle } =
         usePresentationState.getState();
       const slideIds = slides.map((slide) => slide.id);
@@ -63,17 +63,18 @@ export function ExportButton() {
       }
 
       const formatLabel = exportFormat === "pdf" ? "PDF" : "PowerPoint";
-      const { update } = toast({
+      const { update, dismiss } = toast({
         title: `Exporting to ${formatLabel}`,
         description: (
           <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Scanning slides...</span>
+            <Loader2 className="size-4 animate-spin" />
+            <span>{"Scanning slides..."}</span>
           </div>
         ),
-        duration: Infinity,
+        duration: Infinity, // Keep open until we dismiss
       });
 
+      // Scan all slides in the DOM (now parallel)
       const scanResults = await scanAllSlides(slides);
 
       if (scanResults.length === 0) {
@@ -111,7 +112,11 @@ export function ExportButton() {
 
       exportResultRef.current = { blob, fileName };
 
-      update({
+      startDownload(blob, fileName);
+
+      dismiss();
+
+      toast({
         title: "Export Complete",
         description: (
           <p>

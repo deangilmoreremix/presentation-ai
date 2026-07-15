@@ -105,7 +105,7 @@ const replace_image = tool(
         )
         .optional(),
       stockImageProvider: z
-        .enum(["unsplash", "pixabay"])
+        .enum(["unsplash", "pixabay", "google"])
         .describe("Preferred stock provider when imageSource is 'stock'.")
         .optional(),
     }),

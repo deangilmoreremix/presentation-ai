@@ -28,6 +28,11 @@ yarn-error.log*
 # local env files
 .env.local
 .env
+
+# prisma generated clients
+/prisma/generated/
+/prisma/local/generated/
+
 # vercel
 .vercel
 

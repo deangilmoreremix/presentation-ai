@@ -18,6 +18,7 @@ import { PresentationSavingIndicator } from "@/components/presentation/core/Pres
 import { Button } from "@/components/ui/button";
 import { Brain } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/provider/SupabaseAuthProvider";
 import { usePresentationState } from "@/states/presentation-state";
 
 interface PresentationHeaderProps {
@@ -38,6 +39,8 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
     (s) => s.setActiveRightPanel,
   );
 
+  const { session, isLoading } = useAuth();
+
   const [presentationTitle, setPresentationTitle] = useState<string>(
     "Presentation",
   );
@@ -48,6 +51,9 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
       pathname.startsWith("/share/presentation/")) &&
     !pathname.includes("generate");
   const showPresentationTitle = pathname !== "/presentation";
+
+  const isLoggedOut = !isLoading && !session;
+  const showBrand = isLoggedOut;
 
   // Update title when it changes in the state
   useEffect(() => {
@@ -95,16 +101,26 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
     >
       {/* Left section with breadcrumb navigation */}
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        <Link
-          href="/presentation"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Brain className="h-5 w-5"></Brain>
-        </Link>
-        {isPresentationPage && (
+        {showBrand ? (
+          <Link href="/">
+            <AllweoneText className="h-8 w-28" />
+          </Link>
+        ) : (
+          <Link
+            href="/presentation"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Brain className="h-5 w-5"></Brain>
+          </Link>
+        )}
+        {isPresentationPage && !isLoggedOut && (
           <PresentationMenu readOnly={isReadOnly} />
         )}
-        {showPresentationTitle ? (
+        {isLoggedOut && showPresentationTitle ? (
+          <span className="truncate text-sm font-medium text-foreground sm:hidden">
+            {presentationTitle}
+          </span>
+        ) : !isLoggedOut && showPresentationTitle ? (
           <Input
             type="text"
             id="presentation-title-input"
@@ -137,6 +153,14 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
           />
         ) : null}
       </div>
+
+      {isLoggedOut && showPresentationTitle ? (
+        <div className="pointer-events-none absolute top-1/2 left-1/2 w-[min(60vw,40rem)] -translate-x-1/2 -translate-y-1/2 px-3 text-center">
+          <span className="line-clamp-1 text-lg font-medium text-foreground">
+            {presentationTitle}
+          </span>
+        </div>
+      ) : null}
 
       {/* Right section with actions */}
       <div className="scrollbar-hide flex max-w-[56vw] shrink-0 items-center gap-2 overflow-x-auto md:max-w-none md:overflow-visible">

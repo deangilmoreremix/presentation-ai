@@ -5,7 +5,7 @@ import {
 } from "@/components/notebook/presentation/utils/parser";
 import { type ImageModelList } from "@/constants/image-models";
 
-type PresentationImageStockProvider = "unsplash" | "pixabay";
+type PresentationImageStockProvider = "unsplash" | "pixabay" | "google";
 
 export type PresentationImageGenerationSource = "ai" | "stock" | "gif";
 
@@ -159,7 +159,8 @@ function findImageElementState(
               : undefined,
         stockImageProvider:
           node.stockImageProvider === "unsplash" ||
-          node.stockImageProvider === "pixabay"
+          node.stockImageProvider === "pixabay" ||
+          node.stockImageProvider === "google"
             ? node.stockImageProvider
             : undefined,
         url: typeof node.url === "string" ? node.url : undefined,
@@ -224,7 +225,8 @@ function collectImageElementStates(
           query: imageQuery,
           stockImageProvider:
             node.stockImageProvider === "unsplash" ||
-            node.stockImageProvider === "pixabay"
+            node.stockImageProvider === "pixabay" ||
+            node.stockImageProvider === "google"
               ? node.stockImageProvider
               : undefined,
           url: undefined,

@@ -34,7 +34,7 @@ export interface TIconListItemElement extends TElement {
   imageSource?: "generate" | "search" | "gif" | "upload";
   prompt?: string;
   query?: string;
-  stockImageProvider?: "unsplash" | "pixabay";
+  stockImageProvider?: "unsplash" | "pixabay" | "google";
   url?: string;
 }
 export interface TIconListElement extends TElement {

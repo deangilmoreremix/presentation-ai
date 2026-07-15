@@ -66,7 +66,7 @@ export type ImageEditorMode =
   | "gif"
   | "chart";
 
-export type PresentationStockImageProvider = "unsplash" | "pixabay";
+export type PresentationStockImageProvider = "unsplash" | "pixabay" | "google";
 
 export type RightPanelType =
   | "basicBlocks"
@@ -449,12 +449,14 @@ interface PresentationState {
     mode: PresentationStockImageProvider;
     unsplashQuery: string;
     pixabayQuery: string;
+    googleQuery: string;
   };
   setImageSearchState: (
     state: Partial<{
       mode: PresentationStockImageProvider;
       unsplashQuery: string;
       pixabayQuery: string;
+      googleQuery: string;
     }>,
   ) => void;
 
@@ -613,6 +615,7 @@ export const usePresentationState = create<PresentationState>()(
         mode: "unsplash",
         unsplashQuery: "",
         pixabayQuery: "",
+        googleQuery: "",
       },
       setImageSearchState: (newState) =>
         set((state) => ({

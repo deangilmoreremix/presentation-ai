@@ -108,6 +108,14 @@ export function ImageSourceSelector({
             </SelectLabel>
             <SelectItem value="stock-unsplash">Unsplash</SelectItem>
             <SelectItem value="stock-pixabay">Pixabay</SelectItem>
+            <SelectItem value="stock-google">Web Search</SelectItem>
+          </SelectGroup>
+          <SelectGroup>
+            <SelectLabel className="flex items-center gap-1 text-primary/80">
+              <Clapperboard size={10} />
+              Animated
+            </SelectLabel>
+            <SelectItem value="gif">GIFs from Giphy</SelectItem>
           </SelectGroup>
           <SelectGroup>
             <SelectLabel className="flex items-center gap-1 text-primary/80">
