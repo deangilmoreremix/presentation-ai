@@ -19,6 +19,7 @@ import { getCurrentUser } from "@/lib/supabase/server";
 type SlidesRequest = Omit<PresentationGenerationPromptInput, "currentDate"> & {
   modelId?: string;
   modelProvider?: "openai" | "ollama" | "lmstudio";
+  apiKey?: string;
   presentationId?: string;
 };
 
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     const request = (await req.json()) as SlidesRequest;
-    const { modelId, modelProvider = "openai" } = request;
+    const { modelId, modelProvider = "openai", apiKey } = request;
 
     if (
       !request.title ||
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const model = modelPicker(modelProvider, modelId);
+    const model = modelPicker(modelProvider, modelId, apiKey);
     const chain = RunnableSequence.from([
       presentationGenerationPromptTemplate,
       model,

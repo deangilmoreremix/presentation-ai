@@ -3,30 +3,23 @@
 import { utapi } from "@/app/api/uploadthing/core";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { env } from "@/env";
-import { requireOptionalIntegration } from "@/lib/env/optional-integrations";
+import { getOpenAIClient } from "@/lib/openai/client";
 import {
   DEFAULT_IMAGE_MODEL,
-  getFalImageGenerationInput,
+  getGptImageSize,
+  OPENAI_IMAGE_MODEL,
+  OPENAI_RESPONSES_MODEL,
   type ImageAspectRatio,
   type ImageModelList,
 } from "@/constants/image-models";
-import { fal } from "@fal-ai/client";
 import { UTFile } from "uploadthing/server";
 
 async function persistGeneratedImage(
-  imageUrl: string,
+  imageBuffer: Buffer,
   prompt: string,
   userId: string,
   filePrefix: string,
 ) {
-  const imageResponse = await fetch(imageUrl);
-  if (!imageResponse.ok) {
-    throw new Error("Failed to download generated image");
-  }
-
-  const imageBlob = await imageResponse.blob();
-  const imageBuffer = await imageBlob.arrayBuffer();
   const filename = `${filePrefix}_${Date.now()}.png`;
   const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
   const uploadResult = await utapi.uploadFiles([utFile]);
@@ -55,43 +48,52 @@ async function persistGeneratedImage(
   return data;
 }
 
-async function generateFalImage(
+async function generateOpenAIImage(
   prompt: string,
-  model: ImageModelList,
   userId: string,
   aspectRatio: ImageAspectRatio,
+  apiKey?: string,
 ) {
-  const falConfig = requireOptionalIntegration({
-    integration: "FAL",
-    envVar: "FAL_API_KEY",
-    value: env.FAL_API_KEY,
-    feature: "AI image generation",
+    const openai = await getOpenAIClient(apiKey);
+
+  const response = await openai.responses.create({
+    model: OPENAI_RESPONSES_MODEL,
+    input: `Draw the following image: ${prompt}`,
+    tools: [
+      {
+        type: "image_generation",
+        model: OPENAI_IMAGE_MODEL,
+        size: getGptImageSize(aspectRatio),
+        // gpt-image-2 doesn't support transparent backgrounds; default to opaque.
+        background: "opaque",
+      },
+    ],
   });
 
-  if (!falConfig.ok) {
-    return { success: false, error: falConfig.error };
+  const imageCalls = response.output.filter(
+    (item) => item.type === "image_generation_call",
+  ) as Array<{ result?: string }>;
+
+  const base64 = imageCalls[0]?.result;
+  if (!base64) {
+    throw new Error("Failed to generate image: no image returned");
   }
 
-  fal.config({ credentials: falConfig.value });
-
-  const result = await fal.subscribe(model, {
-    input: getFalImageGenerationInput({ model, prompt, aspectRatio }),
-  });
-
-  const imageUrl = result.data?.images?.[0]?.url;
-  if (!imageUrl) {
-    throw new Error("Failed to generate image");
-  }
-
-  const image = await persistGeneratedImage(imageUrl, prompt, userId, "image");
+  const image = await persistGeneratedImage(
+    Buffer.from(base64, "base64"),
+    prompt,
+    userId,
+    "image",
+  );
 
   return { success: true, image };
 }
 
 export async function generateImageAction(
   prompt: string,
-  model: ImageModelList = DEFAULT_IMAGE_MODEL,
+  _model: ImageModelList = DEFAULT_IMAGE_MODEL,
   aspectRatio: ImageAspectRatio = "16:9",
+  apiKey?: string,
 ) {
   const currentUser = await getCurrentUser();
   if (!currentUser?.id) {
@@ -99,13 +101,7 @@ export async function generateImageAction(
   }
 
   try {
-    const actualModel = currentUser.isAdmin ? model : DEFAULT_IMAGE_MODEL;
-    return await generateFalImage(
-      prompt,
-      actualModel,
-      currentUser.id,
-      aspectRatio,
-    );
+    return await generateOpenAIImage(prompt, currentUser.id, aspectRatio);
   } catch (error) {
     console.error("Error generating image:", error);
     return {

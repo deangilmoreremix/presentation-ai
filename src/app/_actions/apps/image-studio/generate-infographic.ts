@@ -1,28 +1,25 @@
 "use server";
 
-import { fal } from "@fal-ai/client";
 import { UTFile } from "uploadthing/server";
 
 import { utapi } from "@/app/api/uploadthing/lib";
 import {
   DEFAULT_IMAGE_MODEL,
-  getFalImageGenerationInput,
+  OPENAI_IMAGE_MODEL,
+  OPENAI_RESPONSES_MODEL,
   type ImageModelList,
 } from "@/constants/image-models";
-import { env } from "@/env";
+import { getOpenAIClient } from "@/lib/openai/client";
 import { logger } from "@/lib/observability/server/logger";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/server";
-
-fal.config({
-  credentials: env.FAL_API_KEY,
-});
 
 type GenerateInfographicImageActionInput = {
   illustrationStyle?: string;
   layout?: string;
   model?: ImageModelList;
   prompt: string;
+  apiKey?: string;
 };
 
 function buildInfographicPrompt({
@@ -60,6 +57,7 @@ export async function generateInfographicImageAction({
   layout = "Timeline",
   model = DEFAULT_IMAGE_MODEL,
   prompt,
+  apiKey,
 }: GenerateInfographicImageActionInput) {
   const trimmedPrompt = prompt.trim();
   const actionName = "apps.image-studio.generateInfographicImageAction";
@@ -110,17 +108,27 @@ export async function generateInfographicImageAction({
       "allweone.server.image_generation.model": actualModel,
     });
 
-    const result = await fal.subscribe(actualModel, {
-      input: getFalImageGenerationInput({
-        model: actualModel,
-        prompt: fullPrompt,
-        aspectRatio: "16:9",
-      }),
+    const openai = await getOpenAIClient(apiKey);
+
+    const response = await openai.responses.create({
+      model: OPENAI_RESPONSES_MODEL,
+      input: `Draw the following infographic image:\n${fullPrompt}`,
+      tools: [
+        {
+          type: "image_generation",
+          model: OPENAI_IMAGE_MODEL,
+          size: "1536x1024",
+          background: "opaque",
+        },
+      ],
     });
 
-    const imageUrl = result.data?.images?.[0]?.url;
+    const imageCalls = response.output.filter(
+      (item: any) => item.type === "image_generation_call",
+    ) as any[];
 
-    if (!imageUrl) {
+    const base64 = imageCalls[0]?.result;
+    if (!base64) {
       throw new Error("Failed to generate infographic");
     }
 
@@ -128,13 +136,7 @@ export async function generateInfographicImageAction({
       "allweone.server.image_generation.source_url_available": true,
     });
 
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error("Failed to download generated infographic");
-    }
-
-    const imageBlob = await imageResponse.blob();
-    const imageBuffer = await imageBlob.arrayBuffer();
+    const imageBuffer = Buffer.from(base64, "base64");
     const filename = `infographic_${Date.now()}.png`;
     const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
     const uploadResult = await utapi.uploadFiles([utFile]);

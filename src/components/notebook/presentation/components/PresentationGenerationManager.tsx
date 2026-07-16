@@ -27,6 +27,7 @@ import { type ThemeProperties } from "@/lib/presentation/themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { useChat, useCompletion } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import { getApiKey } from "@/lib/key-storage";
 import { usePresentationTheme } from "@/components/presentation/providers/PresentationThemeProvider";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -345,6 +346,7 @@ export function PresentationGenerationManager() {
   if (outlineTransportRef.current === null) {
     outlineTransportRef.current = new DefaultChatTransport({
       api: "/api/presentation/outline",
+      body: { apiKey: getApiKey() ?? undefined },
     });
   }
 
@@ -539,6 +541,7 @@ export function PresentationGenerationManager() {
   const { completion: presentationCompletion, complete: generatePresentation } =
     useCompletion({
       api: "/api/presentation/generate",
+      body: { apiKey: getApiKey() ?? undefined },
       onFinish: (_prompt, _completion) => {
         generationLogger.info("Presentation generation completed", {
           presentationId: currentPresentationId,
@@ -594,6 +597,7 @@ export function PresentationGenerationManager() {
   const { completion: imageSlidesCompletion, complete: generateImageSlides } =
     useCompletion({
       api: "/api/presentation/generate-image-slides",
+      body: { apiKey: getApiKey() ?? undefined },
       onFinish: (_prompt, _completion) => {
         generationLogger.info("Image slide generation completed", {
           presentationId: currentPresentationId,
@@ -897,11 +901,14 @@ export function PresentationGenerationManager() {
                   result = await generateSlideImageAction(
                     slide.rootImage!.query,
                     imageModel,
+                    getApiKey() ?? undefined,
                   );
                 } else {
                   result = await generateImageAction(
                     slide.rootImage!.query,
                     imageModel,
+                    "16:9",
+                    getApiKey() ?? undefined,
                   );
                 }
               }

@@ -28,6 +28,7 @@ interface OutlineMessageMetadata {
   language?: string;
   modelId?: string;
   modelProvider?: "openai" | "ollama" | "lmstudio";
+  apiKey?: string;
   webSearch?: boolean;
   autoTheme?: boolean;
   textContent?: "minimal" | "concise" | "detailed" | "extensive";
@@ -208,6 +209,7 @@ export async function POST(req: Request) {
     const language = metadata.language ?? "";
     const modelProvider = metadata.modelProvider ?? "openai";
     const modelId = metadata.modelId;
+    const apiKey = metadata.apiKey;
     const webSearch = Boolean(metadata.webSearch);
     const autoTheme = metadata.autoTheme ?? false;
 
@@ -309,7 +311,7 @@ export async function POST(req: Request) {
     }
 
     const agent = createAgent({
-      model: modelPicker(modelProvider, modelId),
+      model: modelPicker(modelProvider, modelId, apiKey),
       tools: webSearch ? [search_tool] : [],
       systemPrompt:
         buildOutlineSystemPrompt({

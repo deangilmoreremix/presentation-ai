@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
+import { getApiKey } from "@/lib/key-storage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,16 +30,8 @@ import { useNotesState } from "@/states/notes-state";
 
 const MODEL_OPTIONS = [
   {
-    label: "Flux 2 Flash",
-    value: "fal-ai/flux-2/flash",
-  },
-  {
-    label: "Flux Dev",
-    value: "fal-ai/flux/dev",
-  },
-  {
-    label: "Flux 2 Pro",
-    value: "fal-ai/flux-2-pro",
+    label: "GPT Image 2",
+    value: "openai/gpt-image-2",
   },
 ];
 
@@ -54,7 +47,7 @@ function GenerateImageDialogContent({
   const editor = useEditorRef();
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<ImageModelList>(
-    "fal-ai/flux-2/flash",
+    "openai/gpt-image-2",
   );
 
   const generateImage = async () => {
@@ -66,16 +59,16 @@ function GenerateImageDialogContent({
     setIsGenerating(true);
 
     try {
-      const result = await generateImageAction(prompt, selectedModel);
+      const result = await generateImageAction(prompt, selectedModel, "16:9", getApiKey() ?? undefined);
 
       if (!result.success || !("image" in result) || !result.image?.url) {
-        raiseError(new Error(result.error ?? "Failed to generate image"));
+        raiseError(new Error(("error" in result ? result.error : undefined) ?? "Failed to generate image"));
       }
 
       editor.tf.insertNodes({
         children: [{ text: "" }],
         type: ImagePlugin.key,
-        url: result.image.url,
+        url: (result as { image: { url: string } }).image.url,
         query: prompt,
       });
 

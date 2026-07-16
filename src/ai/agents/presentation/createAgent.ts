@@ -11,7 +11,7 @@ import { presentationTools } from "@/ai/tools/presentation/tools";
 import { modelPicker } from "@/lib/modelPicker";
 
 // Create the graph
-export function createPresentationGraph() {
+export function createPresentationGraph(apiKey?: string | null) {
   const trimMessageHistory = createMiddleware({
     name: "TrimMessages",
     wrapModelCall: async (request, handler) => {
@@ -35,7 +35,7 @@ export function createPresentationGraph() {
     trimMessageHistory,
   ];
 
-  const llm = modelPicker("gpt-4o-mini");
+  const llm = modelPicker("gpt-4o-mini", undefined, apiKey);
   const agent = createAgent({
     model: llm.withConfig({
       parallel_tool_calls: false,

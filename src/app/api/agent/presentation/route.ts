@@ -32,10 +32,11 @@ export async function POST(req: Request) {
   });
 
   try {
-    const { id, messages, resumeData } = (await req.json()) as {
+    const { id, messages, resumeData, apiKey } = (await req.json()) as {
       id?: string;
       messages?: UIMessage[];
       resumeData?: Record<string, unknown>;
+      apiKey?: string;
     };
 
     if (!id) {
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
       "allweone.presentation.resume.present": Boolean(resumeData),
     });
 
-    const graph = createPresentationGraph();
+    const graph = createPresentationGraph(apiKey);
     const streamOptions: PresentationStreamOptions = {
       streamMode: ["values", "messages"],
       interruptBefore: ["tools"],

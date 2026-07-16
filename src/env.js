@@ -17,7 +17,6 @@ export const env = createEnv({
 
     OPENAI_API_KEY: z.string().optional(),
     TOGETHER_AI_API_KEY: z.string().optional(),
-    FAL_API_KEY: z.string().optional(),
     PINECONE_API_KEY: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
 
@@ -42,7 +41,6 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TOGETHER_AI_API_KEY: process.env.TOGETHER_AI_API_KEY,
-    FAL_API_KEY: process.env.FAL_API_KEY,
     PINECONE_API_KEY: process.env.PINECONE_API_KEY,
     GOOGLE_CUSTOM_SEARCH_API_KEY: process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
     SEARCH_ENGINE_CX: process.env.SEARCH_ENGINE_CX,

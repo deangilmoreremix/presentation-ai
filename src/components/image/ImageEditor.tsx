@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Upload, Scissors, RefreshCw } from "lucide-react";
+import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/supabase-provider";
 import type {
   ImageModel,
@@ -80,6 +81,7 @@ export function ImageEditor({ onImageEdited }: ImageEditorProps) {
       formData.append("size", size);
       formData.append("quality", quality);
       formData.append("outputFormat", format);
+      formData.append("apiKey", getApiKey() ?? "");
 
       const response = await fetch("/api/image/edit", {
         method: "POST",
@@ -112,6 +114,7 @@ export function ImageEditor({ onImageEdited }: ImageEditorProps) {
       formData.append("image", image);
       formData.append("model", "dall-e-2");
       formData.append("size", size);
+      formData.append("apiKey", getApiKey() ?? "");
 
       const response = await fetch("/api/image/variations", {
         method: "POST",

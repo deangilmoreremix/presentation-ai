@@ -18,6 +18,7 @@ interface ImageSlidesRequest {
   language: string;
   modelId?: string;
   modelProvider?: "openai" | "ollama" | "lmstudio";
+  apiKey?: string;
   presentationId?: string;
 }
 
@@ -120,6 +121,7 @@ export async function POST(req: Request) {
       language,
       modelId,
       modelProvider = "openai",
+      apiKey,
       presentationId,
     } = (await req.json()) as ImageSlidesRequest;
 
@@ -195,7 +197,7 @@ export async function POST(req: Request) {
         { status: 503 },
       );
     }
-    const model = modelPicker(modelProvider, modelId);
+    const model = modelPicker(modelProvider, modelId, apiKey);
     const chain = RunnableSequence.from([prompt, model]);
 
     routeLogger.info("Image slide generation started", {

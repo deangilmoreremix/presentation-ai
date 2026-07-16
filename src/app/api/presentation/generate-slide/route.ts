@@ -16,6 +16,7 @@ interface GenerateSlideRequest {
   slideType?: "standard" | "image";
   imageStyle?: "3D" | "Sketch" | "Flat";
   textDensity?: "Minimal" | "Balanced" | "Detailed";
+  apiKey?: string;
 }
 
 const singleSlideTemplate = `You are an expert presentation designer. Create an engaging presentation in XML format.
@@ -173,7 +174,7 @@ Create a detailed, artistic prompt that:
 Now generate the single image slide.
 `;
 
-const model = modelPicker("gpt-4o-mini");
+const model = (apiKey?: string) => modelPicker("gpt-4o-mini", undefined, apiKey);
 
 function getImageStyleGuidance(style?: string): string {
   switch (style) {
@@ -220,6 +221,7 @@ export async function POST(req: Request) {
       slideType,
       imageStyle,
       textDensity,
+      apiKey,
     } = (await req.json()) as GenerateSlideRequest;
 
     if (!prompt) {
@@ -268,7 +270,7 @@ export async function POST(req: Request) {
     const promptTemplate = PromptTemplate.fromTemplate(
       isImageSlide ? singleImageSlideTemplate : singleSlideTemplate,
     );
-    const chain = RunnableSequence.from([promptTemplate, model]);
+    const chain = RunnableSequence.from([promptTemplate, model(apiKey)]);
 
     const input = isImageSlide
       ? {

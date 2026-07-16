@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { type Image as GeneratedImage } from "@/app/_actions/apps/image-studio/fetch";
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
+import { getApiKey } from "@/lib/key-storage";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -161,6 +162,7 @@ export function SharedGenerateControls({
               ? imageModel
               : DEFAULT_IMAGE_MODEL,
             aspectRatio,
+            getApiKey() ?? undefined,
           ),
         );
 

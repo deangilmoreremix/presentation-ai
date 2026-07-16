@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, ImageIcon, Download, RefreshCw } from "lucide-react";
+import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/supabase-provider";
 import type {
   ImageModel,
@@ -41,7 +42,7 @@ const CATEGORIES: { id: ImageCategory; label: string; icon: string }[] = [
 ];
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
 
 // Sizes
 const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
@@ -64,7 +65,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
   const { user } = useAuth();
   const [prompt, setPrompt] = useState("");
   const [category, setCategory] = useState<ImageCategory>(initialCategory);
-  const [model, setModel] = useState<ImageModel>("gpt-image-1");
+  const [model, setModel] = useState<ImageModel>("gpt-image-2");
   const [size, setSize] = useState<GptImageSize>("1024x1024");
   const [quality, setQuality] = useState<ImageQuality>("high");
   const [format, setFormat] = useState<OutputFormat>("png");
@@ -95,6 +96,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           outputCompression: compression,
           background,
           n,
+          apiKey: getApiKey() ?? undefined,
         }),
       });
 

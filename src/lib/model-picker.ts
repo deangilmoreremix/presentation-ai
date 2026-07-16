@@ -332,7 +332,11 @@ export async function ensureModelIsReady(
  * Centralized model picker for LangChain-based presentation routes.
  * Supports OpenAI and OpenAI-compatible local endpoints.
  */
-export function modelPicker(modelProviderOrModel: string, modelId?: string) {
+export function modelPicker(
+  modelProviderOrModel: string,
+  modelId?: string,
+  apiKey?: string | null,
+) {
   const selection = resolveModelSelection(modelProviderOrModel, modelId);
 
   if (selection.provider === "lmstudio") {
@@ -376,7 +380,7 @@ export function modelPicker(modelProviderOrModel: string, modelId?: string) {
   }
 
   const selectedOpenAIModel = selection.modelId || "gpt-4o-mini";
-  const openAIApiKey = env.OPENAI_API_KEY?.trim();
+  const openAIApiKey = apiKey?.trim() || env.OPENAI_API_KEY?.trim();
 
   modelLogger.info("Creating OpenAI model client", {
     provider: selection.provider,

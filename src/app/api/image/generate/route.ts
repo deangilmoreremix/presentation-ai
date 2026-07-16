@@ -12,6 +12,7 @@ import type {
 } from "@/lib/image/types";
 
 const ALLOWED_MODELS: ImageModel[] = [
+  "gpt-image-2",
   "gpt-image-1",
   "gpt-image-1-mini",
   "gpt-image-1.5",
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       prompt,
-      model = "gpt-image-1",
+      model = "gpt-image-2",
       size = "1024x1024",
       quality,
       outputFormat,
@@ -62,13 +63,14 @@ export async function POST(req: NextRequest) {
 
     const openai = await getOpenAIClient(undefined, apiKey);
 
-    const requestParams: OpenAI.ImageGenerateParams = {
+    // The SDK types may not yet include gpt-image-2; the runtime API accepts it.
+    const requestParams = {
       model,
       prompt,
       n,
       size,
       response_format: "url",
-    };
+    } as any;
 
     if (model.startsWith("gpt-image")) {
       if (quality) requestParams.quality = quality;

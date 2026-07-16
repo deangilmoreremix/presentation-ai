@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
+import {
+  OPENAI_IMAGE_MODEL,
+  OPENAI_RESPONSES_MODEL,
+} from "@/constants/image-models";
 import type {
-  ImageModel,
   GptImageSize,
   ImageQuality,
   OutputFormat,
+  ImageBackground,
+  ImageAction,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
@@ -14,23 +19,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       input,
-      model = "gpt-4o-mini",
-      imageModel = "gpt-image-1",
+      model = OPENAI_RESPONSES_MODEL,
+      imageModel = OPENAI_IMAGE_MODEL,
       size = "1024x1024",
-      quality,
-      outputFormat,
+      quality = "auto",
+      outputFormat = "png",
       outputCompression,
+      background = "opaque",
+      action = "auto",
       previousResponseId,
       n = 1,
       apiKey,
     }: {
       input: string;
       model?: string;
-      imageModel?: ImageModel;
+      imageModel?: string;
       size?: GptImageSize;
       quality?: ImageQuality;
       outputFormat?: OutputFormat;
       outputCompression?: number;
+      background?: ImageBackground;
+      action?: ImageAction;
       previousResponseId?: string;
       n?: number;
       apiKey?: string;
@@ -42,42 +51,46 @@ export async function POST(req: NextRequest) {
 
     const openai = await getOpenAIClient(undefined, apiKey);
 
-    console.log(`Generating with Responses API using model: ${model}`);
-
+    // The SDK types predate gpt-image-2; the runtime API accepts these fields.
     const response = await openai.responses.create({
       model,
       input,
+      previous_response_id: previousResponseId,
       tools: [
         {
           type: "image_generation",
-          ...(previousResponseId ? { previous_response_id: previousResponseId } : {}),
-        },
+          model: imageModel,
+          size,
+          quality,
+          output_format: outputFormat,
+          background,
+          action,
+          ...(outputCompression !== undefined
+            ? { output_compression: outputCompression }
+            : {}),
+        } as any,
       ],
-    });
+    } as any);
 
-    // Extract images from response
-    const images = response.output
-      ?.filter((item: any) => item.type === "image_generation_call")
-      .map((item: any) => item.results?.map((r: any) => r.url))
-      .flat()
-      .filter(Boolean) ?? [];
+    // The image_generation_call output returns base64 in `result`.
+    const imageCalls: any[] = (response.output ?? []).filter(
+      (item: any) => item.type === "image_generation_call",
+    );
 
-    if (images.length === 0) {
+    if (imageCalls.length === 0) {
       throw new Error("No images generated from Responses API");
     }
 
     const uploadedUrls: string[] = [];
 
-    for (let i = 0; i < Math.min(images.length, n); i++) {
-      const imageUrl = images[i];
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download response image ${i}: ${imageResponse.statusText}`);
+    for (let i = 0; i < Math.min(imageCalls.length, n); i++) {
+      const base64 = imageCalls[i]?.result;
+      if (!base64) {
+        throw new Error(`Failed to extract response image ${i}`);
       }
 
-      const imageBlob = await imageResponse.blob();
-      const imageBuffer = await imageBlob.arrayBuffer();
-      const filename = `response_${input.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}_${i}.${outputFormat || "png"}`;
+      const imageBuffer = Buffer.from(base64, "base64");
+      const filename = `response_${input.substring(0, 20).replace(/[^a-z0-9]/gi, "_")}_${Date.now()}_${i}.${outputFormat}`;
       const utFile = new UTFile([new Uint8Array(imageBuffer)], filename);
 
       const uploadResult = await utapi.uploadFiles([utFile]);

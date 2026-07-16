@@ -560,7 +560,7 @@ export const usePresentationState = create<PresentationState>()(
       customThemeData: null,
       themeDataByTheme: {},
       generatedThemeData: null,
-      imageModel: "fal-ai/flux-2/flash",
+      imageModel: "openai/gpt-image-2",
       imageSource: "automatic",
       stockImageProvider: "unsplash",
       presentationStyle: "professional",
