@@ -24,24 +24,22 @@ export function SupabaseProvider({
 }
 
 export function useAuth() {
-  // Always return anonymous session to match server auth
+  // Always return a full-access anonymous session to match server auth.
+  // Authentication is not required; every visitor has full access.
+  const anonymousUser = {
+    id: "00000000-0000-0000-0000-000000000000",
+    email: "anonymous@local",
+    name: "Anonymous User",
+    isAdmin: true,
+  };
+
   return {
     session: {
-      user: {
-        id: "anonymous-user",
-        email: null,
-        name: "Anonymous User",
-        isAdmin: false,
-      },
+      user: anonymousUser,
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
     },
     isLoading: false,
-    isAuthenticated: true, // Consider anonymous as authenticated for the app
-    user: {
-      id: "anonymous-user",
-      email: null,
-      name: "Anonymous User",
-      isAdmin: false,
-    },
+    isAuthenticated: true,
+    user: anonymousUser,
   };
 }

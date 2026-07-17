@@ -18,10 +18,21 @@ interface AuthContextValue {
   isLoading: boolean;
 }
 
+// Authentication is not required. When there is no signed-in session, the app
+// acts as this shared anonymous user with full access. Keep the id in sync with
+// ANONYMOUS_USER_ID in src/lib/supabase/server.ts and the seeded DB row.
+const ANONYMOUS_USER: SessionUser = {
+  id: "00000000-0000-0000-0000-000000000000",
+  email: "anonymous@local",
+  role: "ADMIN",
+  hasAccess: true,
+  isAdmin: true,
+};
+
 const AuthContext = createContext<AuthContextValue>({
-  user: null,
-  session: null,
-  isLoading: true,
+  user: ANONYMOUS_USER,
+  session: { user: ANONYMOUS_USER },
+  isLoading: false,
 });
 
 interface Props {
@@ -38,8 +49,8 @@ export function SupabaseAuthProvider({ children }: Props) {
     [],
   );
 
-  const [user, setUser] = useState<SessionUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<SessionUser>(ANONYMOUS_USER);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -54,9 +65,9 @@ export function SupabaseAuthProvider({ children }: Props) {
         setUser({
           id: user.id,
           email: user.email ?? null,
-          role: "USER",
-          hasAccess: false,
-          isAdmin: false,
+          role: "ADMIN",
+          hasAccess: true,
+          isAdmin: true,
         });
       }
       setIsLoading(false);
@@ -72,12 +83,12 @@ export function SupabaseAuthProvider({ children }: Props) {
         setUser({
           id: session.user.id,
           email: session.user.email ?? null,
-          role: "USER",
-          hasAccess: false,
-          isAdmin: false,
+          role: "ADMIN",
+          hasAccess: true,
+          isAdmin: true,
         });
       } else {
-        setUser(null);
+        setUser(ANONYMOUS_USER);
       }
       setIsLoading(false);
     });
@@ -91,7 +102,7 @@ export function SupabaseAuthProvider({ children }: Props) {
   const value = useMemo(
     () => ({
       user,
-      session: user ? { user } : null,
+      session: { user },
       isLoading,
     }),
     [user, isLoading],

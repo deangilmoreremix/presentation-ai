@@ -8,11 +8,19 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
-import { getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser, ANONYMOUS_USER_ID } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 const ORIGINAL_ENV = process.env;
+
+const ANONYMOUS_USER = {
+  id: ANONYMOUS_USER_ID,
+  email: "anonymous@local",
+  role: "ADMIN",
+  hasAccess: true,
+  isAdmin: true,
+};
 
 type MockSupabaseClient = {
   auth: {
@@ -52,7 +60,7 @@ describe("getCurrentUser", () => {
     process.env = { ...ORIGINAL_ENV };
   });
 
-  it("returns null when supabase client is unavailable", async () => {
+  it("returns the anonymous user when supabase client is unavailable", async () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -64,10 +72,10 @@ describe("getCurrentUser", () => {
     } as any);
 
     const result = await getCurrentUser();
-    expect(result).toBeNull();
+    expect(result).toEqual(ANONYMOUS_USER);
   });
 
-  it("returns null when no authenticated user", async () => {
+  it("returns the anonymous user when no authenticated session", async () => {
     setupEnv();
     const mockSupabase = createMockSupabaseClient(null, null);
     vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
@@ -77,7 +85,7 @@ describe("getCurrentUser", () => {
     } as any);
 
     const result = await getCurrentUser();
-    expect(result).toBeNull();
+    expect(result).toEqual(ANONYMOUS_USER);
   });
 
   it("enriches user with role and hasAccess from users table", async () => {
