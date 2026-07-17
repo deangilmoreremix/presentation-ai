@@ -6,7 +6,6 @@ import {
   type UIMessageStreamWriter,
 } from "ai";
 import { getOpenAIClient } from "@/lib/openai/client";
-import { getCurrentUser } from "@/lib/supabase/server";
 import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 import { env } from "@/env";
 
@@ -352,14 +351,8 @@ export async function POST(req: Request) {
       return new Response("Missing presentation id", { status: 400 });
     }
 
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
     const messages: UIMessage[] = Array.isArray(body.messages) ? body.messages : [];
-    const openai = await getOpenAIClient(currentUser.id, body.apiKey);
+    const openai = await getOpenAIClient(undefined, body.apiKey);
     const input = buildInput(messages);
 
     const stream = createUIMessageStream({
