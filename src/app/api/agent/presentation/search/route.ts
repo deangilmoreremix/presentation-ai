@@ -1,15 +1,8 @@
 import { search_tool } from "@/ai/tools/search";
-import { getCurrentUser } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { query } = (await req.json()) as {
       query?: string;
     };

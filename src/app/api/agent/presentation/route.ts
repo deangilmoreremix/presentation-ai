@@ -5,9 +5,8 @@ import {
   type UIMessage,
   type UIMessageStreamWriter,
 } from "ai";
-import { getOpenAIClient } from "@/lib/openai/client";
-import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 import { env } from "@/env";
+import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 
 const CLIENT_TOOLS = new Set([
   "edit_slide_properties",
@@ -347,17 +346,28 @@ export async function POST(req: Request) {
       apiKey?: string;
     };
 
-    if (!body.id) {
-      return new Response("Missing presentation id", { status: 400 });
-    }
+    const presentationId = body.id ?? "default";
 
     const messages: UIMessage[] = Array.isArray(body.messages) ? body.messages : [];
-    const openai = await getOpenAIClient(undefined, body.apiKey);
+    const apiKey = body.apiKey || env.OPENAI_API_KEY;
+    const openai = apiKey ? new OpenAI({ apiKey }) : null;
     const input = buildInput(messages);
 
     const stream = createUIMessageStream({
       execute: async ({ writer }: { writer: UIMessageStreamWriter }) => {
         try {
+          if (!openai) {
+            writer.write({ type: "text-start", id: "no-key" });
+            writer.write({
+              type: "text-delta",
+              id: "no-key",
+              delta:
+                "No OpenAI API key is configured. Set OPENAI_API_KEY (or pass apiKey) to enable the agent.",
+            });
+            writer.write({ type: "text-end", id: "no-key" });
+            return;
+          }
+
           const responseStream = openai.responses.stream({
             model: OPENAI_RESPONSES_MODEL,
             input: input as any,
