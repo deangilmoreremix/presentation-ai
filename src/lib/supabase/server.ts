@@ -82,15 +82,31 @@ export type CurrentUser = {
   isAdmin: boolean;
 };
 
+/**
+ * Fixed anonymous user used when there is no authenticated session.
+ * Seeded by supabase migration 009 into auth.users + public.users so that
+ * foreign keys on user_id are satisfied. Authentication is not required to
+ * use any feature; unauthenticated requests act as this shared user.
+ */
+export const ANONYMOUS_USER_ID = "00000000-0000-0000-0000-000000000000";
+
+const ANONYMOUS_USER: CurrentUser = {
+  id: ANONYMOUS_USER_ID,
+  email: "anonymous@local",
+  role: "ADMIN",
+  hasAccess: true,
+  isAdmin: true,
+};
+
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
-  if (!supabase) return null;
+  if (!supabase) return ANONYMOUS_USER;
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) return ANONYMOUS_USER;
 
   type UsersRow = {
     id: string;
