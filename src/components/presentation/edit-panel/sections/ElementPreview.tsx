@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import { type ReactNode } from "react";
 
-import * as TemplatePreviews from "@/components/notebook/presentation/utils/template-previews";
 import { cn } from "@/lib/utils";
+import LazyPreview from "@/components/notebook/presentation/utils/LazyPreview";
 
 const HEADING_WIDTH_BY_LEVEL = {
   1: "w-11/12",
@@ -598,23 +598,23 @@ const ELEMENT_PREVIEWS: Record<string, ReactNode> = {
   paragraph: <ParagraphPreview />,
   blockquote: <SideQuotePreview />,
   label: <IconOnlyPreview icon={<Tag />} />,
-  bullets: <TemplatePreviews.LargeBulletsPreview />,
+  bullets: <LazyPreview name="LargeBulletsPreview" />,
   "bulleted-list": <IconOnlyPreview icon={<List />} />,
   "numbered-list": <IconOnlyPreview icon={<ListOrdered />} />,
   "todo-list": <IconOnlyPreview icon={<ListChecks />} />,
-  timeline: <TemplatePreviews.TimelineSequencePreview />,
+  timeline: <LazyPreview name="TimelineSequencePreview" />,
   steps: <StepsArrowPreview />,
   "steps-default": <StepsArrowPreview />,
   "steps-arrow": <StepsArrowPreview />,
   "steps-box": <StepsArrowPreview />,
   arrows: <ProcessArrowsPreview />,
-  "arrow-vertical": <TemplatePreviews.SequenceArrowPreview />,
-  slope: <TemplatePreviews.SlopeDiagramPreview />,
-  snake: <TemplatePreviews.SnakeDiagramPreview />,
-  pyramid: <TemplatePreviews.PyramidOutsideTextPreview />,
-  cycle: <TemplatePreviews.CyclePreview />,
-  "connected-circles": <TemplatePreviews.ConnectedCirclesDiagramPreview />,
-  "circular-grid": <TemplatePreviews.CircularGridDiagramPreview />,
+  "arrow-vertical": <LazyPreview name="SequenceArrowPreview" />,
+  slope: <LazyPreview name="SlopeDiagramPreview" />,
+  snake: <LazyPreview name="SnakeDiagramPreview" />,
+  pyramid: <LazyPreview name="PyramidOutsideTextPreview" />,
+  cycle: <LazyPreview name="CyclePreview" />,
+  "connected-circles": <LazyPreview name="ConnectedCirclesDiagramPreview" />,
+  "circular-grid": <LazyPreview name="CircularGridDiagramPreview" />,
   staircase: <StaircaseShapePreview />,
   boxes: <FeatureBoxesPreview />,
   compare: <ComparePointsPreview />,
@@ -640,10 +640,10 @@ const ELEMENT_PREVIEWS: Record<string, ReactNode> = {
   math: <IconOnlyPreview icon={<Sigma />} />,
   contributors: <IconOnlyPreview icon={<CircleUserRound />} />,
   hr: <DividerPreview />,
-  table: <TemplatePreviews.ThreeRowTablePreview />,
-  "table-2x2": <TemplatePreviews.ThreeRowTablePreview />,
-  "table-3x3": <TemplatePreviews.ThreeRowTablePreview />,
-  "table-4x4": <TemplatePreviews.ThreeRowTablePreview />,
+  table: <LazyPreview name="ThreeRowTablePreview" />,
+  "table-2x2": <LazyPreview name="ThreeRowTablePreview" />,
+  "table-3x3": <LazyPreview name="ThreeRowTablePreview" />,
+  "table-4x4": <LazyPreview name="ThreeRowTablePreview" />,
   "stats-plain": <StatsPreview />,
   "stats-circle": <StatsPreview variant="circle" />,
   "stats-star": <StatsPreview variant="star" />,
@@ -661,7 +661,7 @@ interface ElementPreviewProps {
 
 export function ElementPreview({ elementKey, className }: ElementPreviewProps) {
   const preview = ELEMENT_PREVIEWS[elementKey] ?? (
-    <TemplatePreviews.LargeBulletsPreview />
+    <LazyPreview name="LargeBulletsPreview" />
   );
 
   return (

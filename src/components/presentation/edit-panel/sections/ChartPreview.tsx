@@ -33,39 +33,39 @@ import {
   TREEMAP_CHART_ELEMENT,
   WATERFALL_CHART_ELEMENT,
 } from "@/components/notebook/presentation/editor/lib";
-import * as TemplatePreviews from "@/components/notebook/presentation/utils/template-previews";
+import LazyPreview from "@/components/notebook/presentation/utils/LazyPreview";
 import { cn } from "@/lib/utils";
 
 const CHART_PREVIEWS: Record<string, ReactNode> = {
-  [AREA_CHART_ELEMENT]: <TemplatePreviews.AreaChartPreview />,
-  [BAR_CHART_ELEMENT]: <TemplatePreviews.BarChartPreview />,
-  [BOX_PLOT_CHART_ELEMENT]: <TemplatePreviews.BoxPlotChartPreview />,
-  [BUBBLE_CHART_ELEMENT]: <TemplatePreviews.BubbleChartPreview />,
-  [CANDLESTICK_CHART_ELEMENT]: <TemplatePreviews.CandlestickChartPreview />,
-  [CHORD_CHART_ELEMENT]: <TemplatePreviews.ChordChartPreview />,
-  [COMPOSED_CHART_ELEMENT]: <TemplatePreviews.CombinationChartPreview />,
-  [CONE_FUNNEL_CHART_ELEMENT]: <TemplatePreviews.ConeFunnelChartPreview />,
-  [DONUT_CHART_ELEMENT]: <TemplatePreviews.DonutChartPreview />,
-  [FUNNEL_CHART_ELEMENT]: <TemplatePreviews.FunnelChartPreview />,
-  [HEATMAP_CHART_ELEMENT]: <TemplatePreviews.HeatmapChartPreview />,
-  [HISTOGRAM_CHART_ELEMENT]: <TemplatePreviews.HistogramChartPreview />,
-  [LINE_CHART_ELEMENT]: <TemplatePreviews.LineChartPreview />,
-  [LINEAR_GAUGE_ELEMENT]: <TemplatePreviews.LinearGaugeChartPreview />,
-  [NIGHTINGALE_CHART_ELEMENT]: <TemplatePreviews.NightingaleChartPreview />,
-  [OHLC_CHART_ELEMENT]: <TemplatePreviews.OHLCChartPreview />,
-  [PIE_CHART_ELEMENT]: <TemplatePreviews.PieChartPreview />,
-  [PYRAMID_CHART_ELEMENT]: <TemplatePreviews.PyramidChartPreview2 />,
-  [RADAR_CHART_ELEMENT]: <TemplatePreviews.RadarLineChartPreview />,
-  [RADIAL_BAR_CHART_ELEMENT]: <TemplatePreviews.RadialBarChartPreview />,
-  [RADIAL_COLUMN_CHART_ELEMENT]: <TemplatePreviews.RadialColumnChartPreview />,
-  [RADIAL_GAUGE_ELEMENT]: <TemplatePreviews.RadialGaugeChartPreview />,
-  [RANGE_AREA_CHART_ELEMENT]: <TemplatePreviews.RangeAreaChartPreview />,
-  [RANGE_BAR_CHART_ELEMENT]: <TemplatePreviews.RangeBarChartPreview />,
-  [SANKEY_CHART_ELEMENT]: <TemplatePreviews.SankeyChartPreview />,
-  [SCATTER_CHART_ELEMENT]: <TemplatePreviews.ScatterChartPreview />,
-  [SUNBURST_CHART_ELEMENT]: <TemplatePreviews.SunburstChartPreview />,
-  [TREEMAP_CHART_ELEMENT]: <TemplatePreviews.TreemapChartPreview />,
-  [WATERFALL_CHART_ELEMENT]: <TemplatePreviews.WaterfallChartPreview />,
+  [AREA_CHART_ELEMENT]: <LazyPreview name="AreaChartPreview" />,
+  [BAR_CHART_ELEMENT]: <LazyPreview name="BarChartPreview" />,
+  [BOX_PLOT_CHART_ELEMENT]: <LazyPreview name="BoxPlotChartPreview" />,
+  [BUBBLE_CHART_ELEMENT]: <LazyPreview name="BubbleChartPreview" />,
+  [CANDLESTICK_CHART_ELEMENT]: <LazyPreview name="CandlestickChartPreview" />,
+  [CHORD_CHART_ELEMENT]: <LazyPreview name="ChordChartPreview" />,
+  [COMPOSED_CHART_ELEMENT]: <LazyPreview name="CombinationChartPreview" />,
+  [CONE_FUNNEL_CHART_ELEMENT]: <LazyPreview name="ConeFunnelChartPreview" />,
+  [DONUT_CHART_ELEMENT]: <LazyPreview name="DonutChartPreview" />,
+  [FUNNEL_CHART_ELEMENT]: <LazyPreview name="FunnelChartPreview" />,
+  [HEATMAP_CHART_ELEMENT]: <LazyPreview name="HeatmapChartPreview" />,
+  [HISTOGRAM_CHART_ELEMENT]: <LazyPreview name="HistogramChartPreview" />,
+  [LINE_CHART_ELEMENT]: <LazyPreview name="LineChartPreview" />,
+  [LINEAR_GAUGE_ELEMENT]: <LazyPreview name="LinearGaugeChartPreview" />,
+  [NIGHTINGALE_CHART_ELEMENT]: <LazyPreview name="NightingaleChartPreview" />,
+  [OHLC_CHART_ELEMENT]: <LazyPreview name="OHLCChartPreview" />,
+  [PIE_CHART_ELEMENT]: <LazyPreview name="PieChartPreview" />,
+  [PYRAMID_CHART_ELEMENT]: <LazyPreview name="PyramidChartPreview2" />,
+  [RADAR_CHART_ELEMENT]: <LazyPreview name="RadarLineChartPreview" />,
+  [RADIAL_BAR_CHART_ELEMENT]: <LazyPreview name="RadialBarChartPreview" />,
+  [RADIAL_COLUMN_CHART_ELEMENT]: <LazyPreview name="RadialColumnChartPreview" />,
+  [RADIAL_GAUGE_ELEMENT]: <LazyPreview name="RadialGaugeChartPreview" />,
+  [RANGE_AREA_CHART_ELEMENT]: <LazyPreview name="RangeAreaChartPreview" />,
+  [RANGE_BAR_CHART_ELEMENT]: <LazyPreview name="RangeBarChartPreview" />,
+  [SANKEY_CHART_ELEMENT]: <LazyPreview name="SankeyChartPreview" />,
+  [SCATTER_CHART_ELEMENT]: <LazyPreview name="ScatterChartPreview" />,
+  [SUNBURST_CHART_ELEMENT]: <LazyPreview name="SunburstChartPreview" />,
+  [TREEMAP_CHART_ELEMENT]: <LazyPreview name="TreemapChartPreview" />,
+  [WATERFALL_CHART_ELEMENT]: <LazyPreview name="WaterfallChartPreview" />,
 };
 
 interface ChartPreviewProps {
@@ -75,7 +75,7 @@ interface ChartPreviewProps {
 
 export function ChartPreview({ chartType, className }: ChartPreviewProps) {
   const preview = CHART_PREVIEWS[chartType] ?? (
-    <TemplatePreviews.BarChartPreview />
+    <LazyPreview name="BarChartPreview" />
   );
 
   return (

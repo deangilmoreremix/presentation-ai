@@ -89,7 +89,6 @@ import {
   WATERFALL_CHART_ELEMENT,
 } from "../editor/lib";
 import { type PlateSlide } from "./parser";
-import * as Previews from "./template-previews";
 
 export interface TemplateCategory {
   id: string;
@@ -102,7 +101,7 @@ export interface TemplateDefinition {
   legacyIds?: string[];
   name: string;
   categoryId: string;
-  preview: React.ReactNode;
+  preview: string;
   template: Omit<PlateSlide, "id">;
 }
 
@@ -692,7 +691,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     legacyIds: ["text-boxes"],
     name: "Text and Heading",
     categoryId: "basic",
-    preview: <Previews.TextAndHeadingPreview />,
+    preview: "TextAndHeadingPreview",
     template: {
       layoutType: "vertical",
       content: createTitleDescriptionContent(
@@ -705,7 +704,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "text-and-image",
     name: "Text and image",
     categoryId: "basic",
-    preview: <Previews.TextAndImagePreview />,
+    preview: "TextAndImagePreview",
     template: {
       content: createTextImageColumnContent({ imageFirst: false }),
     },
@@ -714,7 +713,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "image-and-text",
     name: "Image and text",
     categoryId: "basic",
-    preview: <Previews.ImageAndTextPreview />,
+    preview: "ImageAndTextPreview",
     template: {
       content: createTextImageColumnContent({ imageFirst: true }),
     },
@@ -723,7 +722,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "two-columns",
     name: "Two columns",
     categoryId: "comparison",
-    preview: <Previews.TwoColumnsPreview />,
+    preview: "TwoColumnsPreview",
     template: {
       content: [
         {
@@ -772,7 +771,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "two-columns-with-heading",
     name: "Two columns with heading",
     categoryId: "comparison",
-    preview: <Previews.TwoColumnsWithHeadingPreview />,
+    preview: "TwoColumnsWithHeadingPreview",
     template: {
       content: [
         {
@@ -824,77 +823,77 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "solid-boxes",
     name: "Solid boxes",
     categoryId: "boxes",
-    preview: <Previews.SolidBoxesPreview />,
+    preview: "SolidBoxesPreview",
     template: { content: createBoxContent("solid") },
   },
   {
     id: "outline-boxes",
     name: "Outline boxes",
     categoryId: "boxes",
-    preview: <Previews.OutlineBoxesPreview />,
+    preview: "OutlineBoxesPreview",
     template: { content: createBoxContent("outline") },
   },
   {
     id: "side-line-boxes",
     name: "Side line boxes",
     categoryId: "boxes",
-    preview: <Previews.SideLineBoxesPreview />,
+    preview: "SideLineBoxesPreview",
     template: { content: createBoxContent("sideline") },
   },
   {
     id: "side-line-text",
     name: "Side line text",
     categoryId: "boxes",
-    preview: <Previews.SideLineTextPreview />,
+    preview: "SideLineTextPreview",
     template: { content: createBoxContent("side-label", 3) },
   },
   {
     id: "top-line-text",
     name: "Top line text",
     categoryId: "boxes",
-    preview: <Previews.TopLineTextPreview />,
+    preview: "TopLineTextPreview",
     template: { content: createBoxContent("top-label", 3) },
   },
   {
     id: "top-circle-boxes",
     name: "Top circle boxes",
     categoryId: "boxes",
-    preview: <Previews.TopCircleBoxesPreview />,
+    preview: "TopCircleBoxesPreview",
     template: { content: createBoxContent("top-circle", 3) },
   },
   {
     id: "joined-boxes",
     name: "Joined boxes",
     categoryId: "boxes",
-    preview: <Previews.JoinedBoxesPreview />,
+    preview: "JoinedBoxesPreview",
     template: { content: createBoxContent("joined") },
   },
   {
     id: "boxes-with-icons",
     name: "Joined boxes with icons",
     categoryId: "boxes",
-    preview: <Previews.BoxesWithIconsPreview />,
+    preview: "BoxesWithIconsPreview",
     template: { content: createBoxContent("joined-icon", 3) },
   },
   {
     id: "leaf-boxes",
     name: "Leaf boxes",
     categoryId: "boxes",
-    preview: <Previews.LeafBoxesPreview />,
+    preview: "LeafBoxesPreview",
     template: { content: createBoxContent("leaf") },
   },
   {
     id: "labeled-boxes",
     name: "Labeled boxes",
     categoryId: "boxes",
-    preview: <Previews.LabeledBoxesPreview />,
+    preview: "LabeledBoxesPreview",
     template: { content: createBoxContent("labeled", 3) },
   },
   {
     id: "alternating-boxes",
     name: "Alternating boxes",
     categoryId: "boxes",
-    preview: <Previews.AlternatingBoxesPreview />,
+    preview: "AlternatingBoxesPreview",
     template: { content: createBoxContent("alternating", 3) },
   },
 
@@ -903,21 +902,21 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "numbered-bullets",
     name: "Numbered bullets",
     categoryId: "bullets",
-    preview: <Previews.LargeBulletsPreview />,
+    preview: "LargeBulletsPreview",
     template: { content: createListContent({ type: "numbered" }) },
   },
   {
     id: "small-bullets",
     name: "Small bullets",
     categoryId: "bullets",
-    preview: <Previews.SmallBulletsPreview />,
+    preview: "SmallBulletsPreview",
     template: { content: createListContent({ type: "basic" }) },
   },
   {
     id: "arrow-bullets",
     name: "Arrow bullets",
     categoryId: "bullets",
-    preview: <Previews.ArrowBulletsPreview />,
+    preview: "ArrowBulletsPreview",
     template: { content: createListContent({ type: "arrow" }) },
   },
 
@@ -926,7 +925,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-left-layout",
     name: "Accent left",
     categoryId: "card-layouts",
-    preview: <Previews.AccentLeftPreview />,
+    preview: "AccentLeftPreview",
     template: {
       layoutType: "left",
       content: createBaseContent(),
@@ -940,7 +939,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-right-layout",
     name: "Accent right",
     categoryId: "card-layouts",
-    preview: <Previews.AccentRightPreview />,
+    preview: "AccentRightPreview",
     template: {
       content: createBaseContent(),
       layoutType: "right",
@@ -954,7 +953,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-top-layout",
     name: "Accent top",
     categoryId: "card-layouts",
-    preview: <Previews.AccentTopPreview />,
+    preview: "AccentTopPreview",
     template: {
       content: createBaseContent(),
       layoutType: "vertical",
@@ -968,7 +967,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-right-fit",
     name: "Accent right (fit)",
     categoryId: "card-layouts",
-    preview: <Previews.AccentRightFitPreview />,
+    preview: "AccentRightFitPreview",
     template: {
       content: createBaseContent(),
       layoutType: "right",
@@ -989,7 +988,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-left-fit",
     name: "Accent left (fit)",
     categoryId: "card-layouts",
-    preview: <Previews.AccentLeftFitPreview />,
+    preview: "AccentLeftFitPreview",
     template: {
       content: createBaseContent(),
       layoutType: "left",
@@ -1010,7 +1009,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "accent-background",
     name: "Accent background",
     categoryId: "card-layouts",
-    preview: <Previews.AccentBackgroundPreview />,
+    preview: "AccentBackgroundPreview",
     template: {
       content: createBaseContent(),
       layoutType: "background",
@@ -1025,7 +1024,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "bar-chart",
     name: "Bar chart",
     categoryId: "charts",
-    preview: <Previews.BarChartPreview />,
+    preview: "BarChartPreview",
     template: {
       content: createChartContent(BAR_CHART_ELEMENT, "Bar Chart", "horizontal"),
     },
@@ -1034,7 +1033,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "line-chart",
     name: "Line chart",
     categoryId: "charts",
-    preview: <Previews.LineChartPreview />,
+    preview: "LineChartPreview",
     template: {
       content: createChartContent(LINE_CHART_ELEMENT, "Line Chart"),
     },
@@ -1043,14 +1042,14 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "pie-chart",
     name: "Pie chart",
     categoryId: "charts",
-    preview: <Previews.PieChartPreview />,
+    preview: "PieChartPreview",
     template: { content: createChartContent(PIE_CHART_ELEMENT, "Pie Chart") },
   },
   {
     id: "donut-chart",
     name: "Donut chart",
     categoryId: "charts",
-    preview: <Previews.DonutChartPreview />,
+    preview: "DonutChartPreview",
     template: {
       content: createChartContent(PIE_CHART_ELEMENT, "Donut Chart", "donut"),
     },
@@ -1060,14 +1059,14 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "area-chart",
     name: "Area chart",
     categoryId: "charts",
-    preview: <Previews.AreaChartPreview />,
+    preview: "AreaChartPreview",
     template: { content: createChartContent(AREA_CHART_ELEMENT, "Area Chart") },
   },
   {
     id: "scatter-chart",
     name: "Scatter chart",
     categoryId: "charts",
-    preview: <Previews.ScatterChartPreview />,
+    preview: "ScatterChartPreview",
     template: {
       content: createChartContent(SCATTER_CHART_ELEMENT, "Scatter Chart"),
     },
@@ -1076,7 +1075,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "bubble-chart",
     name: "Bubble chart",
     categoryId: "charts",
-    preview: <Previews.BubbleChartPreview />,
+    preview: "BubbleChartPreview",
     template: {
       content: createChartContent(BUBBLE_CHART_ELEMENT, "Bubble Chart"),
     },
@@ -1085,7 +1084,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "histogram-chart",
     name: "Histogram",
     categoryId: "charts",
-    preview: <Previews.HistogramChartPreview />,
+    preview: "HistogramChartPreview",
     template: {
       content: createChartContent(HISTOGRAM_CHART_ELEMENT, "Histogram Chart"),
     },
@@ -1094,7 +1093,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "range-bar-chart",
     name: "Range Bar",
     categoryId: "charts",
-    preview: <Previews.RangeBarChartPreview />,
+    preview: "RangeBarChartPreview",
     template: {
       content: createChartContent(RANGE_BAR_CHART_ELEMENT, "Range Bar Chart"),
     },
@@ -1103,7 +1102,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "range-area-chart",
     name: "Range Area",
     categoryId: "charts",
-    preview: <Previews.RangeAreaChartPreview />,
+    preview: "RangeAreaChartPreview",
     template: {
       content: createChartContent(RANGE_AREA_CHART_ELEMENT, "Range Area Chart"),
     },
@@ -1112,7 +1111,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "waterfall-chart",
     name: "Waterfall",
     categoryId: "charts",
-    preview: <Previews.WaterfallChartPreview />,
+    preview: "WaterfallChartPreview",
     template: {
       content: createChartContent(WATERFALL_CHART_ELEMENT, "Waterfall Chart"),
     },
@@ -1121,7 +1120,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "box-plot-chart",
     name: "Box Plot",
     categoryId: "charts",
-    preview: <Previews.BoxPlotChartPreview />,
+    preview: "BoxPlotChartPreview",
     template: {
       content: createChartContent(BOX_PLOT_CHART_ELEMENT, "Box Plot Chart"),
     },
@@ -1130,7 +1129,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "candlestick-chart",
     name: "Candlestick",
     categoryId: "charts",
-    preview: <Previews.CandlestickChartPreview />,
+    preview: "CandlestickChartPreview",
     template: {
       content: createChartContent(
         CANDLESTICK_CHART_ELEMENT,
@@ -1142,7 +1141,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "ohlc-chart",
     name: "OHLC",
     categoryId: "charts",
-    preview: <Previews.OHLCChartPreview />,
+    preview: "OHLCChartPreview",
     template: {
       content: createChartContent(OHLC_CHART_ELEMENT, "OHLC Chart"),
     },
@@ -1151,7 +1150,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "radar-line-chart",
     name: "Radar Line",
     categoryId: "charts",
-    preview: <Previews.RadarLineChartPreview />,
+    preview: "RadarLineChartPreview",
     template: {
       content: createChartContent(RADAR_CHART_ELEMENT, "Radar Chart"),
     },
@@ -1160,7 +1159,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "radar-area-chart",
     name: "Radar Area",
     categoryId: "charts",
-    preview: <Previews.RadarAreaChartPreview />,
+    preview: "RadarAreaChartPreview",
     template: {
       content: createChartContent(
         RADAR_CHART_ELEMENT,
@@ -1173,7 +1172,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "nightingale-chart",
     name: "Nightingale",
     categoryId: "charts",
-    preview: <Previews.NightingaleChartPreview />,
+    preview: "NightingaleChartPreview",
     template: {
       content: createChartContent(
         NIGHTINGALE_CHART_ELEMENT,
@@ -1185,7 +1184,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "radial-column-chart",
     name: "Radial Column",
     categoryId: "charts",
-    preview: <Previews.RadialColumnChartPreview />,
+    preview: "RadialColumnChartPreview",
     template: {
       content: createChartContent(
         RADIAL_COLUMN_CHART_ELEMENT,
@@ -1197,7 +1196,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "radial-bar-chart",
     name: "Radial Bar",
     categoryId: "charts",
-    preview: <Previews.RadialBarChartPreview />,
+    preview: "RadialBarChartPreview",
     template: {
       content: createChartContent(RADIAL_BAR_CHART_ELEMENT, "Radial Bar Chart"),
     },
@@ -1206,7 +1205,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "sunburst-chart",
     name: "Sunburst",
     categoryId: "charts",
-    preview: <Previews.SunburstChartPreview />,
+    preview: "SunburstChartPreview",
     template: {
       content: createChartContent(SUNBURST_CHART_ELEMENT, "Sunburst Chart"),
     },
@@ -1215,7 +1214,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "treemap-chart",
     name: "Treemap",
     categoryId: "charts",
-    preview: <Previews.TreemapChartPreview />,
+    preview: "TreemapChartPreview",
     template: {
       content: createChartContent(TREEMAP_CHART_ELEMENT, "Treemap Chart"),
     },
@@ -1224,7 +1223,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "heatmap-chart",
     name: "Heatmap",
     categoryId: "charts",
-    preview: <Previews.HeatmapChartPreview />,
+    preview: "HeatmapChartPreview",
     template: {
       content: createChartContent(HEATMAP_CHART_ELEMENT, "Heatmap Chart"),
     },
@@ -1233,7 +1232,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "sankey-chart",
     name: "Sankey",
     categoryId: "charts",
-    preview: <Previews.SankeyChartPreview />,
+    preview: "SankeyChartPreview",
     template: {
       content: createChartContent(SANKEY_CHART_ELEMENT, "Sankey Chart"),
     },
@@ -1242,7 +1241,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "chord-chart",
     name: "Chord",
     categoryId: "charts",
-    preview: <Previews.ChordChartPreview />,
+    preview: "ChordChartPreview",
     template: {
       content: createChartContent(CHORD_CHART_ELEMENT, "Chord Chart"),
     },
@@ -1251,7 +1250,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "funnel-chart",
     name: "Funnel",
     categoryId: "charts",
-    preview: <Previews.FunnelChartPreview />,
+    preview: "FunnelChartPreview",
     template: {
       content: createChartContent(FUNNEL_CHART_ELEMENT, "Funnel Chart"),
     },
@@ -1260,7 +1259,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "cone-funnel-chart",
     name: "Cone Funnel",
     categoryId: "charts",
-    preview: <Previews.ConeFunnelChartPreview />,
+    preview: "ConeFunnelChartPreview",
     template: {
       content: createChartContent(
         CONE_FUNNEL_CHART_ELEMENT,
@@ -1272,7 +1271,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "pyramid-chart",
     name: "Pyramid Chart",
     categoryId: "charts",
-    preview: <Previews.PyramidChartPreview2 />,
+    preview: "PyramidChartPreview2",
     template: {
       content: createChartContent(PYRAMID_CHART_ELEMENT, "Pyramid Chart"),
     },
@@ -1281,7 +1280,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "radial-gauge-chart",
     name: "Radial Gauge",
     categoryId: "charts",
-    preview: <Previews.RadialGaugeChartPreview />,
+    preview: "RadialGaugeChartPreview",
     template: {
       content: createChartContent(RADIAL_GAUGE_ELEMENT, "Radial Gauge"),
     },
@@ -1290,7 +1289,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "linear-gauge-chart",
     name: "Linear Gauge",
     categoryId: "charts",
-    preview: <Previews.LinearGaugeChartPreview />,
+    preview: "LinearGaugeChartPreview",
     template: {
       content: createChartContent(LINEAR_GAUGE_ELEMENT, "Linear Gauge"),
     },
@@ -1299,7 +1298,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "combination-chart",
     name: "Combination",
     categoryId: "charts",
-    preview: <Previews.CombinationChartPreview />,
+    preview: "CombinationChartPreview",
     template: {
       content: createChartContent(COMPOSED_CHART_ELEMENT, "Combination Chart"),
     },
@@ -1309,21 +1308,21 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "comparison",
     name: "Comparison",
     categoryId: "comparison",
-    preview: <Previews.TwoColumnsPreview />,
+    preview: "TwoColumnsPreview",
     template: { content: createCompareContent("compare") },
   },
   {
     id: "before-after",
     name: "Before and after",
     categoryId: "comparison",
-    preview: <Previews.TwoColumnsWithHeadingPreview />,
+    preview: "TwoColumnsWithHeadingPreview",
     template: { content: createCompareContent("before-after") },
   },
   {
     id: "pros-cons",
     name: "Pros and cons",
     categoryId: "comparison",
-    preview: <Previews.SideLineBoxesPreview />,
+    preview: "SideLineBoxesPreview",
     template: { content: createProsConsContent() },
   },
 
@@ -1331,21 +1330,21 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "cycle",
     name: "Cycle",
     categoryId: "circles",
-    preview: <Previews.CyclePreview />,
+    preview: "CyclePreview",
     template: { content: createCycleContent(4) },
   },
   {
     id: "connected-circles",
     name: "Connected circles",
     categoryId: "circles",
-    preview: <Previews.ConnectedCirclesDiagramPreview />,
+    preview: "ConnectedCirclesDiagramPreview",
     template: { content: createConnectedCirclesContent() },
   },
   {
     id: "circular-grid",
     name: "Circular grid",
     categoryId: "circles",
-    preview: <Previews.CircularGridDiagramPreview />,
+    preview: "CircularGridDiagramPreview",
     template: { content: createCircularGridContent() },
   },
 
@@ -1353,7 +1352,7 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "icon-list",
     name: "Icon list",
     categoryId: "icons",
-    preview: <Previews.BoxesWithIconsPreview />,
+    preview: "BoxesWithIconsPreview",
     template: { content: createIconListContent() },
   },
 
@@ -1361,42 +1360,42 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "two-image-columns",
     name: "2 Image columns",
     categoryId: "images",
-    preview: <Previews.TwoImageColumnsPreview />,
+    preview: "TwoImageColumnsPreview",
     template: { content: createColumnContent(2, { includeImages: true }) },
   },
   {
     id: "three-image-columns",
     name: "3 Image columns",
     categoryId: "images",
-    preview: <Previews.ThreeImageColumnsCardPreview />,
+    preview: "ThreeImageColumnsCardPreview",
     template: { content: createColumnContent(3, { includeImages: true }) },
   },
   {
     id: "four-image-columns",
     name: "4 image columns",
     categoryId: "images",
-    preview: <Previews.FourImageColumnsPreview />,
+    preview: "FourImageColumnsPreview",
     template: { content: createColumnContent(4, { includeImages: true }) },
   },
   {
     id: "images-with-text",
     name: "Images with text",
     categoryId: "images",
-    preview: <Previews.ImagesWithTextPreview />,
+    preview: "ImagesWithTextPreview",
     template: { content: createColumnContent(3, { includeImages: true }) },
   },
   {
     id: "image-gallery",
     name: "Image gallery",
     categoryId: "images",
-    preview: <Previews.ImageGalleryPreview />,
+    preview: "ImageGalleryPreview",
     template: { content: createColumnContent(3, { includeImages: true }) },
   },
   {
     id: "team-photos",
     name: "Team photos",
     categoryId: "images",
-    preview: <Previews.TeamPhotosPreview />,
+    preview: "TeamPhotosPreview",
     template: { content: createColumnContent(4, { includeImages: true }) },
   },
 
@@ -1404,49 +1403,49 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "stats",
     name: "Stats",
     categoryId: "numbers",
-    preview: <Previews.StatsPreview />,
+    preview: "StatsPreview",
     template: { content: createStatsContent("plain") },
   },
   {
     id: "circle-stats",
     name: "Circle stats",
     categoryId: "numbers",
-    preview: <Previews.CircleStatsPreview />,
+    preview: "CircleStatsPreview",
     template: { content: createStatsContent("circle") },
   },
   {
     id: "bar-stats",
     name: "Bar stats",
     categoryId: "numbers",
-    preview: <Previews.BarStatsPreview />,
+    preview: "BarStatsPreview",
     template: { content: createStatsContent("bar") },
   },
   {
     id: "star-rating",
     name: "Star rating",
     categoryId: "numbers",
-    preview: <Previews.StarRatingPreview />,
+    preview: "StarRatingPreview",
     template: { content: createStatsContent("star") },
   },
   {
     id: "dot-grid-stats",
     name: "Dot grid stats",
     categoryId: "numbers",
-    preview: <Previews.DotGridStatsPreview />,
+    preview: "DotGridStatsPreview",
     template: { content: createStatsContent("dot-grid") },
   },
   {
     id: "dot-line-stats",
     name: "Dot line stats",
     categoryId: "numbers",
-    preview: <Previews.DotLineStatsPreview />,
+    preview: "DotLineStatsPreview",
     template: { content: createStatsContent("dot-line") },
   },
   {
     id: "circle-stats-bold",
     name: "Circle stats (bold)",
     categoryId: "numbers",
-    preview: <Previews.CircleStatsMiddleBoldPreview />,
+    preview: "CircleStatsMiddleBoldPreview",
     template: { content: createStatsContent("circle-bold") },
   },
 
@@ -1456,14 +1455,14 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "pyramid",
     name: "Pyramid",
     categoryId: "pyramids",
-    preview: <Previews.PyramidPreview />,
+    preview: "PyramidPreview",
     template: { content: createPyramidContent("pyramid") },
   },
   {
     id: "vertical-funnel",
     name: "Vertical funnel",
     categoryId: "pyramids",
-    preview: <Previews.VerticalFunnelPreview />,
+    preview: "VerticalFunnelPreview",
     template: { content: createPyramidContent("funnel") },
   },
 
@@ -1472,49 +1471,49 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "timeline-sequence",
     name: "Timeline",
     categoryId: "sequence",
-    preview: <Previews.TimelineSequencePreview />,
+    preview: "TimelineSequencePreview",
     template: { content: createTimelineContent("timeline") },
   },
   {
     id: "minimal-timeline",
     name: "Minimal timeline",
     categoryId: "sequence",
-    preview: <Previews.MinimalTimelinePreview />,
+    preview: "MinimalTimelinePreview",
     template: { content: createTimelineContent("timeline") },
   },
   {
     id: "minimal-timeline-boxes",
     name: "Minimal timeline boxes",
     categoryId: "sequence",
-    preview: <Previews.MinimalTimelineWithBoxesPreview />,
+    preview: "MinimalTimelineWithBoxesPreview",
     template: { content: createTimelineContent("timeline") },
   },
   {
     id: "arrows-sequence",
     name: "Arrows",
     categoryId: "sequence",
-    preview: <Previews.ArrowListPreview />,
+    preview: "ArrowListPreview",
     template: { content: createTimelineContent("arrow") },
   },
   {
     id: "pills-sequence",
     name: "Pills",
     categoryId: "sequence",
-    preview: <Previews.PillsSequencePreview />,
+    preview: "PillsSequencePreview",
     template: { content: createTimelineContent("pill") },
   },
   {
     id: "slanted-labels",
     name: "Slanted labels",
     categoryId: "sequence",
-    preview: <Previews.SlantedLabelsPreview />,
+    preview: "SlantedLabelsPreview",
     template: { content: createTimelineContent("parallelogram") },
   },
   {
     id: "snake-flow",
     name: "Snake flow",
     categoryId: "sequence",
-    preview: <Previews.SnakeDiagramPreview />,
+    preview: "SnakeDiagramPreview",
     template: { content: createSnakeContent() },
   },
 
@@ -1523,28 +1522,28 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "staircase",
     name: "Staircase",
     categoryId: "steps",
-    preview: <Previews.StaircasePreview />,
+    preview: "StaircasePreview",
     template: { content: createStaircaseContent() },
   },
   {
     id: "steps",
     name: "Steps",
     categoryId: "steps",
-    preview: <Previews.LargeBulletsPreview />,
+    preview: "LargeBulletsPreview",
     template: { content: createStepsContent() },
   },
   {
     id: "sequence-arrow",
     name: "Sequence Arrow",
     categoryId: "steps",
-    preview: <Previews.SequenceArrowPreview />,
+    preview: "SequenceArrowPreview",
     template: { content: createTimelineContent("arrow-vertical") },
   },
   {
     id: "slope",
     name: "Slope",
     categoryId: "steps",
-    preview: <Previews.SlopeDiagramPreview />,
+    preview: "SlopeDiagramPreview",
     template: { content: createSlopeContent() },
   },
 
@@ -1553,21 +1552,21 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     id: "large-quote",
     name: "Large quote",
     categoryId: "quotes",
-    preview: <Previews.LargeQuotePreview />,
+    preview: "LargeQuotePreview",
     template: { content: createQuoteContent("large") },
   },
   {
     id: "side-quote-icon",
     name: "Side quote with icon",
     categoryId: "quotes",
-    preview: <Previews.SideQuoteWithIconPreview />,
+    preview: "SideQuoteWithIconPreview",
     template: { content: createQuoteContent("sidequote-icon") },
   },
   {
     id: "simple-side-quote",
     name: "Simple side quote",
     categoryId: "quotes",
-    preview: <Previews.SimpleSideQuotePreview />,
+    preview: "SimpleSideQuotePreview",
     template: { content: createQuoteContent("sidequote") },
   },
 ];

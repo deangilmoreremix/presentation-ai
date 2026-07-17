@@ -11,7 +11,6 @@ import {
   duplicatePresentation,
   updatePresentationTitle,
 } from "@/app/_actions/notebook/presentation/presentationActions";
-import { ModelPicker } from "@/components/notebook/presentation/components/ModelPicker";
 import { useBlankPresentationCreator } from "@/hooks/presentation/useBlankPresentationCreator";
 import {
   getPresentationGenerationAspectRatioLabel,
@@ -55,9 +54,10 @@ import {
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +90,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const ModelPicker = dynamic(
+  () =>
+    import("@/components/notebook/presentation/components/ModelPicker").then(
+      (module) => ({
+        default: module.ModelPicker,
+      }),
+    ),
+  { ssr: false },
+);
 
 const PRESENTATIONS_QUERY_KEY = ["presentations"] as const;
 const ALL_PRESENTATION_DOCUMENT_TYPES = "ALL";

@@ -1,14 +1,124 @@
 "use client";
 
-import { Bot, X } from "lucide-react";
-
+import { useEffect, useRef, useState } from "react";
+import { Bot, Send, Square, X } from "lucide-react";
+import { useChat, type UIMessage } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { usePresentationState } from "@/states/presentation-state";
+import { executeToolCall } from "@/hooks/presentation/agentTools";
+import {
+  getToolInputArgs,
+  getToolName,
+  isToolPart,
+} from "@/lib/ai/uiMessageParts";
+import AIMessageComponent from "./AIMessage";
+import HumanMessageComponent from "./HumanMessage";
+
+const PRESENTATION_TOOLS = new Set([
+  "edit_slide_properties",
+  "replace_image",
+  "change_theme",
+  "create_custom_theme",
+  "update_custom_theme",
+  "regenerate_slide",
+  "create_slide",
+  "delete_slide",
+]);
 
 export function PresentationAgentPanel() {
   const setActiveRightPanel = usePresentationState(
     (state) => state.setActiveRightPanel,
   );
+  const currentPresentationId = usePresentationState(
+    (state) => state.currentPresentationId,
+  );
+
+  const {
+    messages,
+    sendMessage,
+    stop,
+    status,
+    addToolResult,
+  } = useChat<UIMessage>({
+    transport: new DefaultChatTransport({
+      api: "/api/agent/presentation",
+      prepareSendMessagesRequest: async ({
+        api,
+        body,
+        headers,
+        messages,
+      }) => {
+        return {
+          api,
+          body: { ...body, id: currentPresentationId, messages },
+          headers,
+        };
+      },
+    }),
+  });
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const processedToolCalls = useRef<Set<string>>(new Set());
+  const [inputValue, setInputValue] = useState("");
+
+  const isStreaming = status === "streaming";
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  useEffect(() => {
+    if (isStreaming) return;
+
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+
+      for (const part of message.parts) {
+        if (!isToolPart(part)) continue;
+
+        const toolName = getToolName(part);
+        if (!PRESENTATION_TOOLS.has(toolName)) continue;
+        if (part.state !== "input-streaming") continue;
+
+        const toolCallId = part.toolCallId;
+        if (!toolCallId || processedToolCalls.current.has(toolCallId)) continue;
+
+        processedToolCalls.current.add(toolCallId);
+
+        const args = getToolInputArgs(part);
+        executeToolCall({ name: toolName, args })
+          .then((result) => {
+            addToolResult({
+              state: "output-available",
+              tool: toolName,
+              toolCallId,
+              output: result,
+            });
+          })
+          .catch((error) => {
+            console.error("Tool execution failed:", toolName, error);
+            processedToolCalls.current.delete(toolCallId);
+          });
+      }
+    }
+  }, [messages, isStreaming, addToolResult]);
+
+  const handleSend = () => {
+    const text = inputValue.trim();
+    if (!text || isStreaming) return;
+    setInputValue("");
+    sendMessage({ text });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <div className="flex h-full w-104 flex-col border-l bg-background">
@@ -26,8 +136,69 @@ export function PresentationAgentPanel() {
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
-        Presentation agent chat is not part of this extracted build.
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {messages.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">
+            Ask the agent to edit, restyle, or create slides.
+          </div>
+        ) : (
+          <>
+            {messages.map((m, index) => {
+              if (m.role === "assistant") {
+                return (
+                  <AIMessageComponent
+                    key={m.id}
+                    message={m}
+                    isStreaming={isStreaming}
+                    isLastMessage={index === messages.length - 1}
+                  />
+                );
+              }
+              if (m.role === "user") {
+                return (
+                  <HumanMessageComponent key={m.id} message={m} />
+                );
+              }
+              return null;
+            })}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+
+      <div className="border-t p-3">
+        {isStreaming ? (
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={stop}
+            className="h-9 w-9"
+          >
+            <Square className="h-4 w-4" />
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Textarea
+              ref={textareaRef}
+              id="agent-prompt-textarea"
+              placeholder="Ask the agent..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="max-h-32 min-h-[40px] resize-none"
+              onKeyDown={handleKeyDown}
+              rows={1}
+            />
+            <Button
+              size="icon"
+              onClick={handleSend}
+              disabled={isStreaming || !inputValue.trim()}
+              className="h-9 w-9 shrink-0"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

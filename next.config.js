@@ -26,6 +26,9 @@ const config = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Allow HMR / dev assets to load when accessing the dev server over the
+  // local network IP (e.g. 192.168.x.x) instead of localhost.
+  allowedDevOrigins: ["192.168.1.111", ".local"],
 };
 
 export default config;

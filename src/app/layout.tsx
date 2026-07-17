@@ -22,14 +22,14 @@ export default async function RootLayout({
   return (
     <TanStackQueryProvider>
       <SupabaseAuthProvider>
-        <html lang="en">
-          <body className={`${inter.className} antialiased`}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <html lang="en" suppressHydrationWarning>
+            <body className={`${inter.className} antialiased`}>
               {children}
               <GlobalGenerationManagers />
-            </ThemeProvider>
-          </body>
-        </html>
+            </body>
+          </html>
+        </ThemeProvider>
       </SupabaseAuthProvider>
     </TanStackQueryProvider>
   );

@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { LayoutGrid, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,15 @@ import {
   TEMPLATE_DEFINITIONS,
 } from "../../utils/templates";
 import { OutlineItem } from "./OutlineItem";
-import { OutlineTemplateModal } from "./OutlineTemplateModal";
 import { persistOutlineLayoutSelection } from "./persistOutlineLayoutSelection";
+
+const OutlineTemplateModal = dynamic(
+  () =>
+    import("./OutlineTemplateModal").then((module) => ({
+      default: module.OutlineTemplateModal,
+    })),
+  { ssr: false },
+);
 
 interface OutlineItemType {
   id: string;

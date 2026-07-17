@@ -14,6 +14,7 @@ import {
   getTemplateSelectionIds,
   TEMPLATE_DEFINITIONS,
 } from "../../utils/templates";
+import LazyPreview from "../../utils/LazyPreview";
 
 interface OutlineItemProps {
   id: string;
@@ -173,8 +174,10 @@ export const OutlineItem = memo(function OutlineItem({
                     )}
                   >
                     <div className="h-24 w-28 shrink-0 overflow-hidden rounded border border-border bg-card">
-                      {templateDef?.preview}
-                    </div>
+                    {templateDef ? (
+                      <LazyPreview name={templateDef.preview} />
+                    ) : null}
+                  </div>
                     <span className="flex-1 truncate text-sm">
                       {template.name}
                     </span>

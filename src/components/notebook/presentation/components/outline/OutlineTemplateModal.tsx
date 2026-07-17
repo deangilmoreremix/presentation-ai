@@ -22,6 +22,7 @@ import {
   TEMPLATE_DEFINITIONS,
   type TemplateDefinition,
 } from "../../utils/templates";
+import LazyPreview from "../../utils/LazyPreview";
 import { persistOutlineLayoutSelection } from "./persistOutlineLayoutSelection";
 
 interface SelectableTemplateCardProps {
@@ -56,7 +57,7 @@ function SelectableTemplateCard({
             : "border-border group-hover:border-primary/50 group-hover:shadow-md",
         )}
       >
-        {template.preview}
+        <LazyPreview name={template.preview} />
         {/* Selection indicator */}
         {isSelected && (
           <div className="absolute top-2 right-2 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
