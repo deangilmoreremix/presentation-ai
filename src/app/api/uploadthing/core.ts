@@ -1,7 +1,6 @@
-import { getCurrentUser } from "@/lib/supabase/server";
 import "server-only";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { UploadThingError, UTApi } from "uploadthing/server";
+import { UTApi } from "uploadthing/server";
 
 const f = createUploadthing();
 
@@ -12,15 +11,9 @@ export const ourFileRouter = {
   imageUploader: f({ image: { maxFileSize: "4MB" } })
     // Set permissions and file types for this FileRoute
     .middleware(async () => {
-      // This code runs on your server before upload
-      const currentUser = await getCurrentUser();
-
-      console.log(currentUser);
-      // If you throw, the user will not be able to upload
-      if (!currentUser) throw new UploadThingError("Unauthorized");
-
+      // No authentication required — uploads are open.
       // Whatever is returned here is accessible in onUploadComplete as `metadata`
-      return { userId: currentUser.id };
+      return { userId: "anonymous" };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       // This code RUNS ON YOUR SERVER after upload
@@ -38,9 +31,7 @@ export const ourFileRouter = {
     video: { maxFileSize: "64MB" },
   })
     .middleware(async () => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) throw new UploadThingError("Unauthorized");
-      return { userId: currentUser.id };
+      return { userId: "anonymous" };
     })
     .onUploadComplete(async ({ file }) => {
       // Simply return the file URL and name
@@ -57,9 +48,7 @@ export const ourFileRouter = {
     text: { maxFileSize: "2MB" },
   })
     .middleware(async () => {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) throw new UploadThingError("Unauthorized");
-      return { userId: currentUser.id };
+      return { userId: "anonymous" };
     })
     .onUploadComplete(async ({ file }) => {
       const familyName = file.name.replace(/\.[^.]+$/, "");

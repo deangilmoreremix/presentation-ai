@@ -10,7 +10,6 @@ import {
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { logger } from "@/lib/observability/server/logger";
-import { getCurrentUser } from "@/lib/supabase/server";
 import { toBaseMessages, toUIMessageStream } from "@ai-sdk/langchain";
 import {
   createUIMessageStreamResponse,
@@ -190,14 +189,6 @@ export async function POST(req: Request) {
 
   try {
     routeLogger.info("Outline request received", { requestId });
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      routeLogger.warn("Outline request rejected: unauthorized", { requestId });
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "unauthorized",
-      });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const request = (await req.json()) as OutlineRequest;
     const { messages = [] } = request;

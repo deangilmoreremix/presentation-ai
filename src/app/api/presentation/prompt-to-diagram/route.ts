@@ -16,7 +16,6 @@ import {
   type InfographicOrientation,
   type InfographicSlideLayout,
 } from "@/lib/presentation/infographic-layout";
-import { getCurrentUser } from "@/lib/supabase/server";
 
 const INFOGRAPHIC_MODEL = "google/gemini-3-flash-preview";
 
@@ -219,14 +218,6 @@ export async function POST(req: Request) {
   });
 
   try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "unauthorized",
-      });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body: unknown = await req.json();
 
     if (!isPromptToDiagramRequest(body) || body.prompt.trim().length === 0) {

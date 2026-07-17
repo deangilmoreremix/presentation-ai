@@ -1,31 +1,21 @@
 import "server-only";
 
 import { createUploadthing } from "uploadthing/next";
-import { UploadThingError, UTApi } from "uploadthing/server";
-
-import { getCurrentUser } from "@/lib/supabase/server";
+import { UTApi } from "uploadthing/server";
 
 export const f = createUploadthing();
 export const utapi = new UTApi();
 
 export async function requireUploadThingUser(): Promise<{ userId: string }> {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new UploadThingError("Unauthorized");
-  }
-
-  return { userId: currentUser.id };
+  // No authentication required — uploads are open.
+  return { userId: "anonymous" };
 }
 
 export async function requireAdminUploadThingUser(): Promise<{
   userId: string;
 }> {
-  const currentUser = await getCurrentUser();
-  if (!currentUser?.isAdmin) {
-    throw new UploadThingError("Unauthorized");
-  }
-
-  return { userId: currentUser.id };
+  // No authentication required — uploads are open.
+  return { userId: "anonymous" };
 }
 
 function getUploadThingFileKeyFromUrl(url: string): string | null {

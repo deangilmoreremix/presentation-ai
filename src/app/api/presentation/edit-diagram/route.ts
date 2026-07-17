@@ -9,7 +9,6 @@ import { NextResponse } from "next/server";
 import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";
 import { logger } from "@/lib/observability/server/logger";
-import { getCurrentUser } from "@/lib/supabase/server";
 
 const INFOGRAPHIC_MODEL = "google/gemini-3-flash-preview";
 
@@ -196,14 +195,6 @@ export async function POST(req: Request) {
   });
 
   try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "unauthorized",
-      });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { currentSyntax, prompt } = (await req.json()) as {
       currentSyntax: string;
       prompt: string;
