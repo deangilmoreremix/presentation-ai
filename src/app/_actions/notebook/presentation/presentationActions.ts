@@ -317,10 +317,14 @@ export async function updatePresentation({
         docUpdate.thumbnail_url = thumbnailUrl;
       }
       if (Object.keys(docUpdate).length > 0) {
+        // Defense-in-depth: canEditDocument already confirmed ownership above,
+        // but scope the write to the owner so a logic/race error can never
+        // mutate another visitor's document.
         const { error: docErr } = await supabase
           .from("base_documents")
           .update(docUpdate)
-          .eq("id", id);
+          .eq("id", id)
+          .eq("user_id", currentUser.id);
         if (docErr) {
           console.error(docErr);
           return { success: false, message: "Failed to update presentation" };
@@ -438,6 +442,7 @@ export async function updatePresentationTitle(id: string, title: string) {
     .from("base_documents")
     .update({ title })
     .eq("id", id)
+    .eq("user_id", currentUser.id)
     .select("*, presentation:presentations(*)")
     .maybeSingle<BaseDocumentWithPresentation>();
 

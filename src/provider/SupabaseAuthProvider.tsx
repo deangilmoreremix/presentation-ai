@@ -50,7 +50,7 @@ export function SupabaseAuthProvider({ children }: Props) {
   );
 
   const [user, setUser] = useState<SessionUser>(ANONYMOUS_USER);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -96,6 +96,39 @@ export function SupabaseAuthProvider({ children }: Props) {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  // Ensure each visitor has a distinct, isolated identity. If there is no
+  // signed-in session (no real user and no existing anonymous session), sign
+  // in anonymously so their content is scoped to this visitor instead of the
+  // shared fallback user. Authentication is still not required — anyone can
+  // use the app, they just get their own sandboxed space.
+  useEffect(() => {
+    let mounted = true;
+
+    async function ensureIdentity() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      if (session?.user) return;
+
+      const { error } = await supabase.auth.signInAnonymously({
+        options: { data: { name: "Anonymous Visitor" } },
+      });
+      if (error) {
+        // Anonymous sign-ins disabled/unavailable — the onAuthStateChange
+        // handler keeps the shared anonymous user, so the app still works.
+        console.warn("Anonymous sign-in unavailable:", error.message);
+      }
+    }
+
+    ensureIdentity();
+
+    return () => {
+      mounted = false;
     };
   }, [supabase]);
 

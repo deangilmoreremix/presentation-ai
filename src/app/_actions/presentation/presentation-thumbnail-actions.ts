@@ -59,6 +59,7 @@ export async function updatePresentationThumbnailUrl({
           .from("base_documents")
           .update({ thumbnail_url: thumbnailUrl })
           .eq("id", id)
+          .eq("user_id", currentUser.id)
           .is("thumbnail_url", null)
           .select("id");
 
@@ -74,7 +75,8 @@ export async function updatePresentationThumbnailUrl({
       const { error } = await supabase
         .from("base_documents")
         .update({ thumbnail_url: thumbnailUrl })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("user_id", currentUser.id);
 
       if (error) throw error;
 
