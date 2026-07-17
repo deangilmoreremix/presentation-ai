@@ -384,23 +384,10 @@ export async function POST(req: Request) {
                 currentCallId = item.call_id;
                 currentToolName = item.name;
                 argsAccum = "";
-
-                writer.write({
-                  type: "tool-input-available",
-                  toolCallId: item.call_id,
-                  toolName: item.name,
-                  input: {},
-                  providerExecuted: false,
-                });
               }
             } else if (event.type === "response.function_call_arguments.delta") {
               if (currentCallId !== null) {
                 argsAccum += event.delta;
-                writer.write({
-                  type: "tool-input-delta",
-                  toolCallId: currentCallId,
-                  inputTextDelta: event.delta,
-                });
               }
             } else if (event.type === "response.function_call_arguments.done") {
               if (currentCallId === null || currentToolName === null) continue;
@@ -416,19 +403,18 @@ export async function POST(req: Request) {
                 const query = typeof parsedArgs.query === "string" ? parsedArgs.query : "";
                 const result = await executeWebSearch(query);
 
-                writer.write({
-                  type: "tool-input-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
-                  toolName: currentToolName,
+                  state: "input-streaming",
                   input: parsedArgs,
-                  providerExecuted: true,
                 });
 
-                writer.write({
-                  type: "tool-output-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
+                  state: "output-available",
                   output: result,
-                  providerExecuted: true,
                 });
 
                 const updatedInput = [
@@ -463,19 +449,18 @@ export async function POST(req: Request) {
                   // stream ended
                 }
               } else if (CLIENT_TOOLS.has(currentToolName)) {
-                writer.write({
-                  type: "tool-input-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
-                  toolName: currentToolName,
+                  state: "input-streaming",
                   input: parsedArgs,
-                  providerExecuted: false,
                 });
 
-                writer.write({
-                  type: "tool-output-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
+                  state: "output-available",
                   output: "",
-                  providerExecuted: false,
                 });
 
                 return;
@@ -491,19 +476,18 @@ export async function POST(req: Request) {
                 });
                 writer.write({ type: "text-end", id: currentCallId });
 
-                writer.write({
-                  type: "tool-input-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
-                  toolName: "respond_to_user",
+                  state: "input-streaming",
                   input: parsedArgs,
-                  providerExecuted: true,
                 });
 
-                writer.write({
-                  type: "tool-output-available",
+                (writer as any).write({
+                  type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
+                  state: "output-available",
                   output: message,
-                  providerExecuted: true,
                 });
 
                 return;
