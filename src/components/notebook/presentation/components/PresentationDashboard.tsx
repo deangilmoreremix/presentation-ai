@@ -49,6 +49,7 @@ import {
   Trash2,
   WandSparkles,
   X,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -90,6 +91,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { PresentationExamples } from "./PresentationExamples";
+import { PresentationTemplates } from "./PresentationTemplates";
 
 const ModelPicker = dynamic(
   () =>
@@ -1050,6 +1053,8 @@ export function PresentationDashboard() {
     outlineItemIds,
     outlineTemplateOverrides,
     resetPresentationState,
+    showTemplates,
+    setShowTemplates,
   } = usePresentationState();
 
   useEffect(() => {
@@ -1444,6 +1449,18 @@ export function PresentationDashboard() {
     <NotebookPageLayout>
       <GreetingSection />
 
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Create Presentation</h2>
+        <Button
+          variant="outline"
+          onClick={() => setShowTemplates(true)}
+          className="gap-2"
+        >
+          <Zap className="h-4 w-4" />
+          Templates
+        </Button>
+      </div>
+
       <NotebookInputBox
         placeholder="Describe your topic or paste your content here. Our AI will structure it into a compelling presentation."
         value={presentationInput}
@@ -1528,6 +1545,8 @@ export function PresentationDashboard() {
         </div>
       </NotebookInputBox>
 
+      <PresentationExamples />
+
       <PresentationProjectFilesSection
         files={fileItems}
         isLoading={isLoading}
@@ -1554,6 +1573,8 @@ export function PresentationDashboard() {
           ) : null}
         </div>
       ) : null}
+
+      <PresentationTemplates />
     </NotebookPageLayout>
   );
 }

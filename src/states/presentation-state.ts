@@ -168,6 +168,8 @@ interface PresentationState {
   presentingScaleLocks: Record<string, boolean>;
   currentSlideId: string | null;
   isThemeCreatorOpen: boolean;
+  showTemplates: boolean;
+  setShowTemplates: (show: boolean) => void;
 
   pageBackground: Record<string, unknown>;
   setPageBackground: (pageBackground: Record<string, unknown>) => void;
@@ -578,6 +580,7 @@ export const usePresentationState = create<PresentationState>()(
       presentingScaleLocks: {},
       currentSlideId: null,
       isThemeCreatorOpen: false,
+      showTemplates: false,
       pageBackground: {},
       // Typography defaults
       fontSize: "M",
@@ -1368,6 +1371,7 @@ export const usePresentationState = create<PresentationState>()(
         })),
 
       setIsThemeCreatorOpen: (update) => set({ isThemeCreatorOpen: update }),
+      setShowTemplates: (show) => set({ showTemplates: show }),
       // Selection state
       isSelecting: false,
       selectedPresentations: [],
