@@ -17,6 +17,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { CropModal } from "@/components/notebook/presentation/editor/custom-elements/image-editor/CropModal";
+import { EditControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/EditControls";
 import { GeneratedImagesGrid } from "@/components/notebook/presentation/editor/custom-elements/image-editor/GeneratedImagesGrid";
 import { UploadedImagesGrid } from "@/components/notebook/presentation/editor/custom-elements/image-editor/UploadedImagesGrid";
 import { getPresentationImageCropStyles } from "@/components/notebook/presentation/editor/custom-elements/presentation-image-layout";
@@ -65,6 +66,11 @@ const TAB_OPTIONS: {
   },
   { value: "search", label: "Search", icon: <Search className="size-4" /> },
   { value: "gif", label: "GIFs", icon: <Clapperboard className="size-4" /> },
+  {
+    value: "edit",
+    label: "Edit Image",
+    icon: <Scissors className="size-4" />,
+  },
 ];
 
 export function PresentationImageEditorPanel() {
@@ -183,7 +189,7 @@ export function PresentationImageEditorPanel() {
   const handleImageSelect = (
     url: string,
     prompt?: string,
-    imageSource?: "generate" | "search" | "gif" | "upload",
+    imageSource?: "generate" | "search" | "gif" | "upload" | "edit",
     stockImageProvider?: PresentationStockImageProvider,
   ) => {
     if (boundUpdateElement) {
@@ -393,6 +399,24 @@ export function PresentationImageEditorPanel() {
               <SharedGifSearchControls
                 onGifSelect={(url) => handleImageSelect(url, undefined, "gif")}
                 className="h-full"
+              />
+            </div>
+          </div>
+        );
+      case "edit":
+        return (
+          <div className="flex h-full flex-col">
+            <div className="flex-none space-y-1 px-6 py-4">
+              <h3 className="leading-none font-medium">Edit Image</h3>
+              <p className="text-sm text-muted-foreground">
+                Replace backgrounds, remove objects, or inpaint using AI.
+              </p>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+              <EditControls
+                onImageSelect={(url) =>
+                  handleImageSelect(url, undefined, "edit")
+                }
               />
             </div>
           </div>

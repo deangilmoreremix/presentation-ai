@@ -64,7 +64,8 @@ export type ImageEditorMode =
   | "embed"
   | "search"
   | "gif"
-  | "chart";
+  | "chart"
+  | "edit";
 
 export type PresentationStockImageProvider = "unsplash" | "pixabay" | "google";
 

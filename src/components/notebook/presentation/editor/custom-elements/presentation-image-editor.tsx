@@ -12,13 +12,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDebouncedSave } from "@/hooks/presentation/useDebouncedSave";
 import { usePresentationState } from "@/states/presentation-state";
-import { Globe, ImageIcon, Images, Search, X } from "lucide-react";
+import { Globe, ImageIcon, Images, Scissors, Search, X } from "lucide-react";
 import { type TElement } from "platejs";
 import { useEditorRef } from "platejs/react";
 import { useEffect, useState } from "react";
 import { type RootImage as RootImageType } from "../../utils/parser";
 import { type ImageCropSettings } from "../../utils/types";
-import { ErrorDisplay, GenerateControls } from "./image-editor";
+import { ErrorDisplay, EditControls, GenerateControls } from "./image-editor";
 import { CropModal } from "./image-editor/CropModal";
 import { EmbedControls } from "./image-editor/EmbedControls";
 import { ImageSearchControls } from "./image-editor/ImageSearchControls";
@@ -35,7 +35,7 @@ export interface PresentationImageEditorProps {
   initialMode?: EditorMode;
 }
 
-export type EditorMode = "generate" | "your-images" | "embed" | "search";
+export type EditorMode = "generate" | "your-images" | "embed" | "search" | "edit";
 
 export const PresentationImageEditor = ({
   open,
@@ -86,7 +86,7 @@ export const PresentationImageEditor = ({
                 },
               }
             : slide,
-        ),
+      ),
       );
       void saveImmediately();
     } else {
@@ -94,6 +94,35 @@ export const PresentationImageEditor = ({
         ...element,
         embedType,
         url,
+      });
+      void saveImmediately();
+    }
+  };
+
+  const handleEditSelect = (url: string) => {
+    if (isRootImage) {
+      setSlides(
+        slides.map((slide) =>
+          slide.id === slideId
+            ? {
+                ...slide,
+                rootImage: {
+                  ...slide.rootImage!,
+                  url,
+                  embedType: undefined,
+                  chartType: undefined,
+                  chartData: undefined,
+                },
+              }
+            : slide,
+      ),
+      );
+      void saveImmediately();
+    } else {
+      editor.tf.setNodes({
+        ...element,
+        url,
+        embedType: undefined,
       });
       void saveImmediately();
     }
@@ -192,7 +221,7 @@ export const PresentationImageEditor = ({
           className="grid min-h-0 grid-rows-[auto_auto_1fr] bg-background"
         >
           <div className="px-6 py-2">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="generate" className="text-xs">
                 <ImageIcon className="mr-2 h-3.5 w-3.5" />
                 Gen
@@ -204,6 +233,10 @@ export const PresentationImageEditor = ({
               <TabsTrigger value="search" className="text-xs">
                 <Search className="mr-2 h-3.5 w-3.5" />
                 Search
+              </TabsTrigger>
+              <TabsTrigger value="edit" className="text-xs">
+                <Scissors className="mr-2 h-3.5 w-3.5" />
+                Edit
               </TabsTrigger>
               <TabsTrigger value="embed" className="text-xs">
                 <Globe className="mr-2 h-3.5 w-3.5" />
@@ -273,6 +306,21 @@ export const PresentationImageEditor = ({
                   slideId={slideId}
                   isRootImage={isRootImage}
                 />
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="edit"
+              className="mt-0 flex h-full flex-col data-[state=inactive]:hidden"
+            >
+              <div className="flex-none space-y-1 px-6 py-4">
+                <h3 className="leading-none font-medium">Edit Image</h3>
+                <p className="text-sm text-muted-foreground">
+                  Replace backgrounds, remove objects, or inpaint using AI.
+                </p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+                <EditControls onImageSelect={handleEditSelect} />
               </div>
             </TabsContent>
 

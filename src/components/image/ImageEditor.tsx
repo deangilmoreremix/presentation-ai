@@ -31,12 +31,13 @@ const OUTPUT_FORMATS: OutputFormat[] = ["png", "jpeg", "webp"];
 
 interface ImageEditorProps {
   onImageEdited?: (images: any[]) => void;
+  onImageSelect?: (url: string) => void;
 }
 
 /**
  * AI Image Editor - Background replacement, object removal, inpainting
  */
-export function ImageEditor({ onImageEdited }: ImageEditorProps) {
+export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) {
   const { user } = useAuth();
   const [image, setImage] = useState<File | null>(null);
   const [mask, setMask] = useState<File | null>(null);
@@ -289,6 +290,14 @@ export function ImageEditor({ onImageEdited }: ImageEditorProps) {
                       >
                         Download
                       </Button>
+                      {onImageSelect && (
+                        <Button
+                          size="sm"
+                          onClick={() => onImageSelect(url)}
+                        >
+                          Use
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
