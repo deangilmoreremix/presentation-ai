@@ -129,11 +129,18 @@ export function ElementTypeSelector() {
   React.useEffect(() => {
     if (!open) return;
 
+    let searchFocusTimeout: number | null = null;
+
     const animationFrameId = window.requestAnimationFrame(() => {
-      window.setTimeout(() => searchInputRef.current?.focus(), 0);
+      searchFocusTimeout = window.setTimeout(() => searchInputRef.current?.focus(), 0);
     });
 
-    return () => window.cancelAnimationFrame(animationFrameId);
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      if (searchFocusTimeout) {
+        window.clearTimeout(searchFocusTimeout);
+      }
+    };
   }, [open]);
 
   const keepSearchFocusInsideMenu = React.useCallback(

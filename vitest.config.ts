@@ -7,6 +7,15 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
+    // Only run vitest-compatible unit tests. Playwright e2e specs (*.spec.ts)
+    // and the jest-based integration test are executed by their own runners.
+    include: ['tests/**/*.test.{ts,tsx}'],
+    exclude: [
+      '**/node_modules/**',
+      '**/.kilo/**',
+      'tests/integration/api/user/api-key.test.ts',
+      'tests/**/*.spec.{ts,tsx}',
+    ],
   },
   resolve: {
     alias: {

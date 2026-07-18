@@ -1,16 +1,14 @@
 "use client";
 
-import { createClient, type Session } from "@supabase/supabase-js";
-import { type ReactNode, useEffect, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
+import type { ReactNode } from "react";
 
-// Database access where authentication is not strictly required. Each visitor
-// gets a real (anonymous) Supabase session so their content is isolated,
-// without ever needing to log in.
+import { useAuth as useSupabaseAuth } from "@/provider/SupabaseAuthProvider";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Single shared browser client (env vars are static at runtime).
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 const ANONYMOUS_FALLBACK_USER = {
   id: "00000000-0000-0000-0000-000000000000",
@@ -18,44 +16,6 @@ const ANONYMOUS_FALLBACK_USER = {
   name: "Anonymous User",
   isAdmin: true,
 };
-
-export function SupabaseProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  // Give each visitor a distinct, isolated identity on first load.
-  useEffect(() => {
-    let mounted = true;
-
-    async function ensureIdentity() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!mounted) return;
-      if (session?.user) return;
-
-      const { error } = await supabase.auth.signInAnonymously({
-        options: { data: { name: "Anonymous Visitor" } },
-      });
-      if (error) {
-        console.warn("Anonymous sign-in unavailable:", error.message);
-      }
-    }
-
-    ensureIdentity();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  return (
-    <>
-      {children}
-    </>
-  );
-}
 
 const fallbackUser = {
   session: {
@@ -71,56 +31,35 @@ const fallbackUser = {
   isAdmin: ANONYMOUS_FALLBACK_USER.isAdmin,
 };
 
-export function useAuth() {
-  // Return a full-access session. Authentication is not required; every
-  // visitor has full feature access. The real Supabase session (if present)
-  // carries a distinct id so content is isolated per visitor.
-  const [state, setState] = useState(fallbackUser);
-
-  useEffect(() => {
-    let mounted = true;
-
-    function toState(session: Session | null) {
-      if (!session?.user) return fallbackUser;
-      const u = {
-        id: session.user.id,
-        email: session.user.email ?? "anonymous@local",
-        name: "Anonymous Visitor",
-        isAdmin: true,
-      };
-      return {
-        session: {
-          user: u,
-          expires:
-            session.expires_at != null
-              ? new Date(session.expires_at * 1000).toISOString()
-              : fallbackUser.session.expires,
-        },
-        isLoading: false,
-        isAuthenticated: true,
-        user: u,
-        id: u.id,
-        email: u.email,
-        name: u.name,
-        isAdmin: u.isAdmin,
-      };
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) setState(toState(session));
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) setState(toState(session));
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  return state;
+export function SupabaseProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return <>{children}</>;
 }
+
+export function useAuth() {
+  const { user, session, isLoading } = useSupabaseAuth();
+
+  const id = user?.id ?? fallbackUser.id;
+  const email = user?.email ?? fallbackUser.email;
+  const name = user?.email
+    ? user.email.split("@")[0]
+    : fallbackUser.name;
+  const isAdmin = user?.isAdmin ?? fallbackUser.isAdmin;
+  const isAuthenticated = !!user && user.id !== fallbackUser.id;
+
+  return {
+    session: session ?? fallbackUser.session,
+    user: user ?? fallbackUser.user,
+    id,
+    email,
+    name,
+    isAdmin,
+    isLoading,
+    isAuthenticated,
+  };
+}
+
+export { supabase };

@@ -100,7 +100,9 @@ describe("ApiKeyModal", () => {
 
     render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
     const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-badkey" } });
+    // Key must satisfy the format check (sk- prefix + length >= 10) for the
+    // Test button to be enabled; the server then rejects it as invalid.
+    fireEvent.change(input, { target: { value: "sk-badkey12345" } });
     fireEvent.click(screen.getByRole("button", { name: /test key/i }));
 
     await waitFor(() => {

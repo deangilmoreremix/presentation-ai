@@ -37,10 +37,9 @@ export default function SettingsPage() {
       const data = await response.json();
       if (response.ok && data.success && data.maskedKey) {
         setServerStatus("has-server-key");
-        // If user prefers server, show server masked key
-        if (preference === "server") {
-          setMaskedKey(data.maskedKey);
-        }
+        // Display the server-side masked key whenever one exists; the
+        // storage preference only controls where new keys are saved.
+        setMaskedKey(data.maskedKey);
       } else {
         setServerStatus("no-server-key");
       }

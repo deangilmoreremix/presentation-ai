@@ -40,46 +40,50 @@ export function Navigation() {
                   ? pathname === "/"
                   : pathname.startsWith(link.href);
               return (
-                <Link key={link.href} href={link.href}>
-                  <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    size="sm"
-                    className={cn(
-                      "gap-2",
-                      isActive && "bg-primary/10 text-primary"
-                    )}
-                  >
-                    <link.icon className="h-4 w-4" />
-                    {link.label}
-                  </Button>
+                <Button
+                key={link.href}
+                variant={isActive ? "secondary" : "ghost"}
+                size="sm"
+                asChild
+                className={cn(
+                  "gap-2",
+                  isActive && "bg-primary/10 text-primary"
+                )}
+              >
+                <Link href={link.href}>
+                  <link.icon className="h-4 w-4" />
+                  {link.label}
                 </Link>
+              </Button>
               );
             })}
 
-            <Link href="/settings">
               <Button
                 variant={pathname === "/settings" ? "secondary" : "ghost"}
                 size="sm"
+                asChild
                 className={cn(
                   "gap-2",
                   pathname === "/settings" && "bg-primary/10 text-primary"
                 )}
               >
-                <Settings className="h-4 w-4" />
-                Settings
+                <Link href="/settings">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Link>
               </Button>
-            </Link>
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/presentation/create">
-              <Button size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New Presentation</span>
+              <Button size="sm" className="gap-2" asChild>
+                <Link href="/presentation/create">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Presentation</span>
+                </Link>
               </Button>
-            </Link>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="User profile">
               <User className="h-4 w-4" />
+              <span className="sr-only">User profile</span>
             </Button>
           </div>
         </div>

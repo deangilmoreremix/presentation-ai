@@ -12,7 +12,11 @@ vi.mock("@/lib/key-storage", () => ({
 }));
 
 import SettingsPage from "@/app/settings/page";
-import { getMaskedKey, getKeyStoragePreference } from "@/lib/key-storage";
+import {
+  getApiKey,
+  getMaskedKey,
+  getKeyStoragePreference,
+} from "@/lib/key-storage";
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -20,6 +24,13 @@ global.fetch = vi.fn();
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Re-establish deterministic defaults: clearAllMocks wipes auto-mock
+    // implementations (reverting them to undefined), which leaks state
+    // between tests (e.g. a value set via dynamic import in another test).
+    vi.mocked(getMaskedKey).mockReturnValue(null);
+    vi.mocked(getKeyStoragePreference).mockReturnValue("client");
+    vi.mocked(getApiKey).mockReturnValue(null);
+    global.fetch = vi.fn();
   });
 
   it("renders heading and API key section", () => {

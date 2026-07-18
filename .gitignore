@@ -42,3 +42,12 @@ next-env.d.ts
 
 # Local Netlify folder
 .netlify
+
+# Playwright MCP debug artifacts
+.playwright-mcp/
+
+# Playwright / test reports
+playwright-report/
+test-results/
+/historia/
+
