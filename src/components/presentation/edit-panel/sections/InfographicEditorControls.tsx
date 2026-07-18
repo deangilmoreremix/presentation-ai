@@ -456,6 +456,9 @@ export function InfographicEditorControls() {
   );
 
   const [isConverting, setIsConverting] = useState(false);
+  const convertingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const [scrollRange, setScrollRange] = useState<ScrollListRange>({
     scrollTop: 0,
     viewportHeight: 0,
@@ -510,6 +513,15 @@ export function InfographicEditorControls() {
       hasCommitted.current = true;
     }
   }, [currentSlideId, slides]);
+
+  useEffect(() => {
+    return () => {
+      if (convertingTimeoutRef.current) {
+        clearTimeout(convertingTimeoutRef.current);
+        convertingTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const filteredCategories = useMemo(
     () =>
@@ -590,7 +602,10 @@ export function InfographicEditorControls() {
       });
       setAppliedTemplate(newTemplateId);
 
-      setTimeout(() => {
+      if (convertingTimeoutRef.current) {
+        clearTimeout(convertingTimeoutRef.current);
+      }
+      convertingTimeoutRef.current = setTimeout(() => {
         setIsConverting(false);
       }, 500);
     },

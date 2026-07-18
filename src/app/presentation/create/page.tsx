@@ -3,7 +3,7 @@ import { createEmptyPresentation } from "@/app/_actions/notebook/presentation/pr
 import { ThemeBackground } from "@/components/notebook/presentation/components/theme/ThemeBackground";
 import { Spinner } from "@/components/ui/spinner";
 import { usePresentationState } from "@/states/presentation-state";
-import { useTheme } from "next-themes";
+import { useAppTheme } from "@/provider/theme-provider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ function getSlideCount(value: string | null): number {
 
 export default function Page() {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = useAppTheme();
   const params = useSearchParams();
   const handledRequestRef = useRef<string | null>(null);
   const themeMode = resolvedTheme === "dark" ? "dark" : "light";

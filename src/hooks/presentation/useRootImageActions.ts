@@ -4,7 +4,7 @@ import { DndPlugin, type DragItemNode } from "@platejs/dnd";
 import { ImagePlugin } from "@platejs/media/react";
 import { useEditorRef } from "platejs/react";
 import { type ResizeCallback } from "re-resizable";
-import { useCallback, useId, useMemo } from "react";
+import { useCallback, useId, useMemo, useRef, useEffect } from "react";
 import { type DragSourceMonitor } from "react-dnd";
 
 import {
@@ -127,6 +127,19 @@ export function useRootImageActions(
     return matchingComputedGen?.url ?? image?.url;
   }, [matchingComputedGen?.url, image?.url, image?.embedType]);
 
+  const saveImmediatelyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (saveImmediatelyTimeoutRef.current) {
+        clearTimeout(saveImmediatelyTimeoutRef.current);
+        saveImmediatelyTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   // Get crop settings from image or use defaults
   const cropSettings: ImageCropSettings = useMemo(
     () =>
@@ -190,7 +203,10 @@ export function useRootImageActions(
         return slide;
       });
       setSlides(updatedSlides);
-      setTimeout(() => {
+      if (saveImmediatelyTimeoutRef.current) {
+        clearTimeout(saveImmediatelyTimeoutRef.current);
+      }
+      saveImmediatelyTimeoutRef.current = setTimeout(() => {
         void saveImmediately();
       }, 100);
     },

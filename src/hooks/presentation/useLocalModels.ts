@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 interface ModelInfo {
   id: string;
   name: string;
-  provider: "ollama" | "lmstudio";
+  provider: "lmstudio";
 }
 
 const localModelLogger = createLogger("client:local-models");
@@ -37,10 +37,7 @@ function getSavedLocalModel(): ModelInfo | null {
     return null;
   }
 
-  if (
-    selectedModel.modelProvider !== "ollama" &&
-    selectedModel.modelProvider !== "lmstudio"
-  ) {
+  if (selectedModel.modelProvider !== "lmstudio") {
     return null;
   }
 
@@ -54,6 +51,10 @@ function getSavedLocalModel(): ModelInfo | null {
 interface LocalModelsApiResponse {
   models?: ModelInfo[];
 }
+
+export const downloadableModels: ModelInfo[] = [];
+
+export const fallbackModels: ModelInfo[] = downloadableModels;
 
 async function fetchLocalModels(): Promise<ModelInfo[]> {
   try {
@@ -74,7 +75,7 @@ async function fetchLocalModels(): Promise<ModelInfo[]> {
 
     if (models.length === 0) {
       localModelLogger.warn(
-        "No live local models detected; falling back to downloadable Ollama suggestions",
+        "No live local models detected",
         {
           downloadableModels: downloadableModels.map((model) => model.name),
         },
@@ -90,65 +91,34 @@ async function fetchLocalModels(): Promise<ModelInfo[]> {
   }
 }
 
-export const downloadableModels: ModelInfo[] = [
-  {
-    id: "ollama-llama3.1:8b",
-    name: "llama3.1:8b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-llama3.1:70b",
-    name: "llama3.1:70b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-llama3.2:3b",
-    name: "llama3.2:3b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-llama3.2:8b",
-    name: "llama3.2:8b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-mistral:7b",
-    name: "mistral:7b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-codellama:7b",
-    name: "codellama:7b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-qwen2.5:7b",
-    name: "qwen2.5:7b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-gemma2:9b",
-    name: "gemma2:9b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-phi3:3.8b",
-    name: "phi3:3.8b",
-    provider: "ollama",
-  },
-  {
-    id: "ollama-neural-chat:7b",
-    name: "neural-chat:7b",
-    provider: "ollama",
-  },
-];
-
-export const fallbackModels: ModelInfo[] = downloadableModels;
-
 const MODELS_CACHE_KEY = "presentation-models-cache";
 const SELECTED_MODEL_KEY = "presentation-selected-model";
 const CACHE_EXPIRY_KEY = "presentation-models-cache-expiry";
 const CACHE_DURATION = 5 * 60 * 1000;
+
+const SUPPORTED_PROVIDERS = ["openai", "lmstudio"] as const;
+
+function migrateStaleModelPreferences(): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    const selected = localStorage.getItem(SELECTED_MODEL_KEY);
+    if (!selected) return;
+
+    const parsed = JSON.parse(selected) as { modelProvider: string; modelId: string };
+    if (!SUPPORTED_PROVIDERS.includes(parsed.modelProvider as typeof SUPPORTED_PROVIDERS[number])) {
+      localModelLogger.warn("Migrating stale model preference", {
+        previousProvider: parsed.modelProvider,
+      });
+      localStorage.setItem(
+        SELECTED_MODEL_KEY,
+        JSON.stringify({ modelProvider: "openai", modelId: "gpt-4o-mini" }),
+      );
+    }
+  } catch {
+    // Ignore migration errors.
+  }
+}
 
 function getCachedModels(): ModelInfo[] | null {
   if (typeof window === "undefined") {
@@ -192,6 +162,8 @@ export function getSelectedModel(): {
   if (typeof window === "undefined") {
     return null;
   }
+
+  migrateStaleModelPreferences();
 
   try {
     const selected = localStorage.getItem(SELECTED_MODEL_KEY);

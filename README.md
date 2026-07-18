@@ -269,7 +269,7 @@ Create personalized themes to match your brand or style:
 
 ## 🧠 Local Models Guide
 
-You can use either Ollama or LM Studio for using local models in ALLWEONE presentation ai.
+You can use LM Studio for using local models in ALLWEONE presentation ai.
 
 ### LM Studio
 
@@ -277,20 +277,15 @@ You can use either Ollama or LM Studio for using local models in ALLWEONE presen
 2. In the LM Studio app, turn the Server ON and enable CORS.
 3. Download any model you want to use inside LM Studio.
 
-### Ollama
-
-1. Install Ollama.
-2. Download whichever model you want to use (for example: `ollama pull llama3.1`).
-
 ### Using Local Models in the App
 
 1. Open the app and open the text model selector.
-2. Chose the model you want to use (it must be downloaded in lm studio or ollama)
+2. Choose the model you want to use (it must be downloaded in LM Studio)
 3. Enjoy the generation
 
 Notes:
 
-- Models will automatically appear in the Model Selector when the LM Studio server or the Ollama daemon is running.
+- Models will automatically appear in the Model Selector when the LM Studio server is running.
 - Make sure LM Studio has CORS enabled so the browser can connect.
 
 ## 📁 Project Structure

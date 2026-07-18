@@ -53,7 +53,7 @@ export const SlideItem = React.memo(function SlideItem({
               <StaticPresentationEditor
                 initialContent={slide}
                 className={cn(
-                  "min-h-75 rounded-md border",
+                  "min-h-[18.75rem] rounded-md border",
                   !isPresenting &&
                     slide.id === currentSlideId &&
                     "border-primary ring-4! ring-primary ring-offset-2!",
@@ -64,7 +64,7 @@ export const SlideItem = React.memo(function SlideItem({
               <PresentationEditor
                 initialContent={slide}
                 className={cn(
-                  "min-h-75 rounded-md border",
+                  "min-h-[18.75rem] rounded-md border",
                   !isPresenting &&
                     slide.id === currentSlideId &&
                     "border-primary ring-2! ring-primary",

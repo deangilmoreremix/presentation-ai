@@ -301,7 +301,7 @@ export function RightPanelRenderer() {
         >
           <div
             ref={panelRef}
-            className={`${FLOATING_TOOLBAR_IGNORE_CLASS} flex h-full w-104 shrink-0 flex-col border-l bg-background`}
+             className={`${FLOATING_TOOLBAR_IGNORE_CLASS} flex h-full w-[26rem] shrink-0 flex-col border-l bg-background`}
           >
             {!isSelfContained && (
               <PanelHeader panel={activeRightPanel} onClose={handleClose} />

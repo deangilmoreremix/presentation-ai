@@ -121,7 +121,7 @@ export function PresentationAgentPanel() {
   };
 
   return (
-    <div className="flex h-full w-104 flex-col border-l bg-background">
+    <div className="flex h-full w-[26rem] flex-col border-l bg-background">
       <div className="flex items-center justify-between border-b p-3">
         <div className="flex items-center gap-2">
           <Bot className="h-4 w-4" />

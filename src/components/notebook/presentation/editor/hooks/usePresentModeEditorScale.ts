@@ -1,5 +1,6 @@
 "use client";
 
+import debounce from "lodash.debounce";
 import { useEffect, useMemo, useState, type RefObject } from "react";
 
 import { getSlideBaseWidth } from "@/config/slideFormats";
@@ -166,6 +167,11 @@ export function usePresentModeEditorScale({
       rafId = requestAnimationFrame(updateMeasurements);
     };
 
+    const debouncedScheduleMeasurement = debounce(
+      scheduleMeasurement,
+      100,
+    );
+
     updateMeasurements();
 
     const resizeObserver = new ResizeObserver(scheduleMeasurement);
@@ -184,14 +190,23 @@ export function usePresentModeEditorScale({
       }
     }
 
-    window.addEventListener("resize", scheduleMeasurement, { passive: true });
-    window.visualViewport?.addEventListener("resize", scheduleMeasurement);
+    window.addEventListener("resize", debouncedScheduleMeasurement, {
+      passive: true,
+    });
+    window.visualViewport?.addEventListener(
+      "resize",
+      debouncedScheduleMeasurement,
+    );
 
     return () => {
       cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
-      window.removeEventListener("resize", scheduleMeasurement);
-      window.visualViewport?.removeEventListener("resize", scheduleMeasurement);
+      window.removeEventListener("resize", debouncedScheduleMeasurement);
+      window.visualViewport?.removeEventListener(
+        "resize",
+        debouncedScheduleMeasurement,
+      );
+      debouncedScheduleMeasurement.cancel();
     };
   }, [editorRef, isPresenting, regionRef]);
 

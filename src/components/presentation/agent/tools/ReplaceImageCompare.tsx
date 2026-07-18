@@ -294,7 +294,7 @@ export function PresentationReplaceImageCompare({
   }
 
   return (
-    <div className="w-full max-w-95">
+    <div className="w-full max-w-[23.75rem]">
       <div className="grid gap-3 md:grid-cols-2">
         <div
           role="button"

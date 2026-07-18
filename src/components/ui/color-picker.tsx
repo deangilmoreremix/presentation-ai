@@ -527,17 +527,19 @@ function ColorPicker({
                 <TooltipTrigger asChild>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "h-8 w-8 rounded-full border-2 border-dashed border-gray-300 bg-white",
-                          "flex items-center justify-center transition-transform hover:scale-110",
-                        )}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        <Plus className="h-4 w-4 text-gray-500" />
-                      </button>
+                       <button
+                         type="button"
+                         aria-label="Custom color"
+                         className={cn(
+                           "h-8 w-8 rounded-full border-2 border-dashed border-gray-300 bg-white",
+                           "flex items-center justify-center transition-transform hover:scale-110",
+                         )}
+                         onPointerDown={(e) => e.stopPropagation()}
+                         onMouseDown={(e) => e.stopPropagation()}
+                       >
+                         <Plus className="h-4 w-4 text-gray-500" />
+                         <span className="sr-only">Custom color</span>
+                       </button>
                     </PopoverTrigger>
                     <PopoverContent
                       align="start"

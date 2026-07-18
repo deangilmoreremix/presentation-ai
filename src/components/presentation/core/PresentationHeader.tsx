@@ -67,7 +67,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
   if (pathname === "/presentation/create")
     return (
       <header
-        className="notranslate flex min-h-12 w-full max-w-screen items-center justify-between gap-2 overflow-clip border-accent px-2 py-2"
+        className="notranslate flex min-h-12 w-full max-w-screen-xl items-center justify-between gap-2 overflow-clip border-accent px-2 py-2"
         translate="no"
       >
         <div className="flex min-w-0 items-center gap-2">

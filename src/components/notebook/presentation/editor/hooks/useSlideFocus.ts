@@ -9,12 +9,20 @@ export function useSlideFocus(
   slideId: string | undefined,
 ) {
   useEffect(() => {
+    let focusTimeout: ReturnType<typeof setTimeout> | null = null;
+
     if (currentSlideId === slideId) {
-      setTimeout(() => {
+      focusTimeout = setTimeout(() => {
         try {
           editor?.tf?.focus({ edge: "endEditor" });
         } catch {}
       }, 100);
     }
+
+    return () => {
+      if (focusTimeout) {
+        clearTimeout(focusTimeout);
+      }
+    };
   }, [currentSlideId, slideId, editor]);
 }

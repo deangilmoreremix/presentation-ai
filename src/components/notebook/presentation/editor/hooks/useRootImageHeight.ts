@@ -1,5 +1,6 @@
 "use client";
 
+import debounce from "lodash.debounce";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { BASE_HEIGHT } from "@/hooks/presentation/useRootImageActions";
@@ -160,7 +161,7 @@ export function useRootImageHeight({
       return;
     }
 
-    const updateViewportHeight = () => {
+    const updateViewportHeight = debounce(() => {
       const element = editorRef.current;
       const slideRoot = element?.closest<HTMLElement>(
         '[data-slide-content="true"]',
@@ -174,7 +175,7 @@ export function useRootImageHeight({
               Math.round(window.visualViewport?.height ?? 0),
             );
       setViewportHeightPx((prev) => (prev === nextHeight ? prev : nextHeight));
-    };
+    }, 150);
 
     updateViewportHeight();
     window.addEventListener("resize", updateViewportHeight, {
@@ -188,6 +189,7 @@ export function useRootImageHeight({
         "resize",
         updateViewportHeight,
       );
+      updateViewportHeight.cancel();
     };
   }, [isPresenting, isVerticalRootImageLayout]);
 

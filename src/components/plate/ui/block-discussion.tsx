@@ -202,7 +202,7 @@ const BlockCommentContent = ({
         )}
 
         <PopoverContent
-          className="max-h-[min(50dvh,calc(-24px+var(--radix-popper-available-height)))] w-95 max-w-[calc(100vw-24px)] min-w-32.5 overflow-y-auto rounded-xl border-border/50 bg-popover/95 p-0 shadow-xl backdrop-blur-md data-[state=closed]:opacity-0"
+          className="max-h-[min(50dvh,calc(-24px+var(--radix-popper-available-height)))] w-[23.75rem] max-w-[calc(100vw-24px)] min-w-[8.125rem] overflow-y-auto rounded-xl border-border/50 bg-popover/95 p-0 shadow-xl backdrop-blur-md data-[state=closed]:opacity-0"
           onCloseAutoFocus={(e) => e.preventDefault()}
           onOpenAutoFocus={(e) => e.preventDefault()}
           align="center"

@@ -35,7 +35,7 @@ export default function Compare({
 
   return (
     <div
-      className="scrollbar-thumb-rounded-full relative scrollbar-thin h-full max-h-55 w-full max-w-95 overflow-x-clip overflow-y-auto p-2 scrollbar-thumb-muted-foreground scrollbar-track-transparent"
+      className="scrollbar-thumb-rounded-full relative scrollbar-thin h-full max-h-[13.75rem] w-full max-w-[23.75rem] overflow-x-clip overflow-y-auto p-2 scrollbar-thumb-muted-foreground scrollbar-track-transparent"
       onScroll={handleScroll}
     >
       <div
@@ -75,7 +75,7 @@ export default function Compare({
               >
                 <StaticPresentationEditor
                   initialContent={slide}
-                  className="min-h-75 border"
+                   className="min-h-[18.75rem] border"
                   id={`preview-${slide.id}`}
                 />
               </SlideThumbnail>
@@ -112,7 +112,7 @@ export default function Compare({
               >
                 <StaticPresentationEditor
                   initialContent={slide}
-                  className="min-h-75 border"
+                   className="min-h-[18.75rem] border"
                   id={`preview-${slide.id}`}
                 />
               </SlideThumbnail>

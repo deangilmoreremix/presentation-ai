@@ -52,7 +52,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
-import { useTheme } from "next-themes";
+import { useAppTheme } from "@/provider/theme-provider";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
@@ -558,8 +558,8 @@ function PresentationProjectFilesSection({
               <div className="order-2 shrink-0 sm:order-1">
                 <div
                   className={cn(
-                    "relative h-8.5 shrink-0 overflow-hidden transition-[width] duration-300 ease-out",
-                    shouldShowSearchInput ? "w-36 sm:w-56 lg:w-64" : "w-8.5",
+                    "relative h-9 shrink-0 overflow-hidden transition-[width] duration-300 ease-out",
+                    shouldShowSearchInput ? "w-36 sm:w-56 lg:w-64" : "w-9",
                   )}
                 >
                   <Button
@@ -568,7 +568,7 @@ function PresentationProjectFilesSection({
                     size="sm"
                     onClick={() => setIsSearchOpen(true)}
                     className={cn(
-                      "absolute inset-0 size-8.5 p-0 transition-all duration-200 ease-out",
+                      "absolute inset-0 size-9 p-0 transition-all duration-200 ease-out",
                       shouldShowSearchInput &&
                         "pointer-events-none scale-95 opacity-0",
                     )}
@@ -592,7 +592,7 @@ function PresentationProjectFilesSection({
                       placeholder="Search"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      className="h-8.5 w-full min-w-0 rounded-lg border border-border bg-background py-1.5 pr-8 pl-9 text-sm text-foreground outline-none focus:border-primary"
+                       className="h-9 w-full min-w-0 rounded-lg border border-border bg-background py-1.5 pr-8 pl-9 text-sm text-foreground outline-none focus:border-primary"
                     />
                     <button
                       type="button"
@@ -614,7 +614,7 @@ function PresentationProjectFilesSection({
                   variant="outline"
                   size="sm"
                   onClick={onCreateNew}
-                  className="h-8.5 gap-1.5 rounded-lg px-3"
+                  className="h-9 gap-1.5 rounded-lg px-3"
                 >
                   <Plus className="size-4" />
                   <span>Create new</span>
@@ -625,12 +625,12 @@ function PresentationProjectFilesSection({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="relative size-8.5 p-0"
+                       className="relative size-9 p-0"
                     >
                       <SlidersHorizontal className="size-4" />
                       <span className="sr-only">Sort and filter files</span>
                       {activeFiltersCount > 0 ? (
-                        <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground sm:static sm:h-5 sm:min-w-5 sm:rounded-full">
+                        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground sm:static sm:h-5 sm:min-w-5 sm:rounded-full">
                           {activeFiltersCount}
                         </span>
                       ) : null}
@@ -1008,7 +1008,7 @@ function PresentationProjectFilesSection({
 export function PresentationDashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = useAppTheme();
   const [documentTypeFilter, setDocumentTypeFilter] =
     useState<PresentationDocumentTypeFilterValue>(
       ALL_PRESENTATION_DOCUMENT_TYPES,

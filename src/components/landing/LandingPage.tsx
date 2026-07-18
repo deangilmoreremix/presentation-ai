@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+import { useAppTheme } from "@/provider/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -107,7 +107,7 @@ const featureGroups = [
       {
         icon: Cpu,
         title: "Local LLM Support",
-        description: "Run with OpenAI, Ollama, or LM Studio. Detects local models automatically for offline generation.",
+        description: "Run with OpenAI or LM Studio. Detects local models automatically for offline generation.",
       },
     ],
   },
@@ -349,7 +349,7 @@ const pricingTiers = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = useAppTheme();
   const [localPrompt, setLocalPrompt] = useState("");
   const [numSlides, setNumSlides] = useState("5");
   const [language, setLanguage] = useState("en-US");
@@ -414,7 +414,7 @@ export default function LandingPage() {
             <div className="max-w-2xl mx-auto text-left mb-6">
               <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-lg">
                 <div className="mb-3">
-                  <label className="text-sm font-semibold text-foreground mb-1 block">
+                  <label htmlFor="presentation-prompt" className="text-sm font-semibold text-foreground mb-1 block">
                     Presentation prompt
                   </label>
                   <p className="text-xs text-muted-foreground">
@@ -423,6 +423,7 @@ export default function LandingPage() {
                 </div>
 
                 <textarea
+                  id="presentation-prompt"
                   value={localPrompt}
                   onChange={(e) => setLocalPrompt(e.target.value)}
                   placeholder="Enter your presentation topic..."
@@ -434,7 +435,7 @@ export default function LandingPage() {
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Number of Slides</div>
                     <Select value={numSlides} onValueChange={setNumSlides}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Number of slides">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -450,7 +451,7 @@ export default function LandingPage() {
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Language</div>
                     <Select value={language} onValueChange={setLanguage}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Language">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -473,6 +474,7 @@ export default function LandingPage() {
                       <Switch
                         checked={webSearchEnabled}
                         onCheckedChange={setWebSearchEnabled}
+                        aria-label="Web search"
                       />
                     </div>
                   </div>
@@ -502,6 +504,7 @@ export default function LandingPage() {
               <div className="grid gap-2 sm:grid-cols-2">
                 {examples.map((example) => (
                   <button
+                    type="button"
                     key={example.title}
                     onClick={() => handleExampleClick(example)}
                     className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/70 p-3 text-left hover:border-primary/50 hover:bg-muted/30 transition-colors"
@@ -610,7 +613,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/presentation/create">
-              <Card className="border-0 shadow-md hover:shadow-xl hover:scale-105 transition-all cursor-pointer h-full">
+              <Card className="border-0 shadow-md hover:shadow-xl active:scale-105 sm:hover:scale-105 transition-all cursor-pointer h-full">
                 <CardHeader>
                   <Sparkles className="h-8 w-8 text-primary mb-2" />
                   <CardTitle>Create Presentation</CardTitle>
@@ -620,7 +623,7 @@ export default function LandingPage() {
             </Link>
 
             <Link href="/image-studio">
-              <Card className="border-0 shadow-md hover:shadow-xl hover:scale-105 transition-all cursor-pointer h-full">
+              <Card className="border-0 shadow-md hover:shadow-xl active:scale-105 sm:hover:scale-105 transition-all cursor-pointer h-full">
                 <CardHeader>
                   <ScanSearch className="h-8 w-8 text-pink-500 mb-2" />
                   <CardTitle>Image Studio</CardTitle>
@@ -630,7 +633,7 @@ export default function LandingPage() {
             </Link>
 
             <Link href="/presentation">
-              <Card className="border-0 shadow-md hover:shadow-xl hover:scale-105 transition-all cursor-pointer h-full">
+              <Card className="border-0 shadow-md hover:shadow-xl active:scale-105 sm:hover:scale-105 transition-all cursor-pointer h-full">
                 <CardHeader>
                   <Presentation className="h-8 w-8 text-blue-500 mb-2" />
                   <CardTitle>My Presentations</CardTitle>
@@ -640,7 +643,7 @@ export default function LandingPage() {
             </Link>
 
             <Link href="/settings">
-              <Card className="border-0 shadow-md hover:shadow-xl hover:scale-105 transition-all cursor-pointer h-full">
+              <Card className="border-0 shadow-md hover:shadow-xl active:scale-105 sm:hover:scale-105 transition-all cursor-pointer h-full">
                 <CardHeader>
                   <Settings2 className="h-8 w-8 text-slate-500 mb-2" />
                   <CardTitle>Settings</CardTitle>
@@ -781,18 +784,18 @@ export default function LandingPage() {
               Share your ideas, ask questions, and collaborate with other developers. The fastest growing community for AI web agents.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Link href="https://discord.gg/232cdU5Z" target="_blank">
-                <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" asChild>
+                <Link href="https://discord.gg/232cdU5Z" target="_blank">
                   <ExternalLink className="h-5 w-5 mr-2" />
                   Join Discord
-                </Button>
-              </Link>
-              <a href="https://x.com/AllweoneAi" target="_blank" rel="noopener noreferrer">
-                <Button size="lg" variant="ghost">
+                </Link>
+              </Button>
+              <Button size="lg" variant="ghost" asChild>
+                <a href="https://x.com/AllweoneAi" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-5 w-5 mr-2" />
                   Follow @allweone
-                </Button>
-              </a>
+                </a>
+              </Button>
             </div>
           </div>
         </div>
@@ -882,20 +885,20 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Link href="/presentation">
-                <Button size="lg" className="w-full sm:w-auto">
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Start Creating Now
-                  <ArrowRight className="h-5 w-5 ml-2" />
-                </Button>
+            <Button size="lg" className="w-full sm:w-auto" asChild>
+              <Link href="/presentation">
+                <Sparkles className="h-5 w-5 mr-2" />
+                Start Creating Now
+                <ArrowRight className="h-5 w-5 ml-2" />
               </Link>
-              <Link href="https://github.com/allweonedev/presentation-ai" target="_blank">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+            </Button>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto" asChild>
+                <Link href="https://github.com/allweonedev/presentation-ai" target="_blank">
                   <Github className="h-5 w-5 mr-2" />
                   View on GitHub
                   <ExternalLink className="h-5 w-5 ml-2" />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
 
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground flex-wrap">

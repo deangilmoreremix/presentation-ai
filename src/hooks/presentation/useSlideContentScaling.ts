@@ -272,12 +272,12 @@ export function useSlideContentScaling(
       }
     }
 
-    const handleViewportResize = () => {
+    const handleViewportResize = debounce(() => {
       if (isPresenting) {
         resetPresentingScaleLock();
       }
       calculateScaling();
-    };
+    }, 100);
 
     // For present mode, react to viewport changes including mobile rotation.
     window.addEventListener("resize", handleViewportResize, {
@@ -293,6 +293,7 @@ export function useSlideContentScaling(
         "resize",
         handleViewportResize,
       );
+      handleViewportResize.cancel();
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
         resizeObserverRef.current = null;

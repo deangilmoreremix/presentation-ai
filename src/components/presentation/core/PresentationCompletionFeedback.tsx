@@ -74,10 +74,11 @@ export function PresentationCompletionFeedback({
       ".presentation-slides",
     );
 
+    let rafId: number | null = null;
+
     const update = () => {
       if (!containerRef.current) return;
       const top = containerRef.current.getBoundingClientRect().top;
-      // Stop background at the scrollbar's left edge, not the viewport's right edge
       const scrollbarWidth = scrollEl
         ? scrollEl.offsetWidth - scrollEl.clientWidth
         : 0;
@@ -88,14 +89,25 @@ export function PresentationCompletionFeedback({
       setBgStyle({ top, right });
     };
 
+    const throttledUpdate = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        update();
+      });
+    };
+
     update();
 
-    scrollEl?.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    scrollEl?.addEventListener("scroll", throttledUpdate, { passive: true });
+    window.addEventListener("resize", throttledUpdate);
 
     return () => {
-      scrollEl?.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      scrollEl?.removeEventListener("scroll", throttledUpdate);
+      window.removeEventListener("resize", throttledUpdate);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 

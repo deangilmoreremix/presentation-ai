@@ -16,8 +16,8 @@ import {
   useLocalModels,
 } from "@/hooks/presentation/useLocalModels";
 import { usePresentationState } from "@/states/presentation-state";
-import { Bot, Cpu, Loader2, Monitor } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Bot, Loader2, Monitor } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const modelPickerLogger = createLogger("client:model-picker");
 const OPENAI_MODELS = [
@@ -94,28 +94,60 @@ export function ModelPicker({
 }: {
   shouldShowLabel?: boolean;
 }) {
-  const { modelProvider, setModelProvider, modelId, setModelId } =
-    usePresentationState();
+  const {
+    modelProvider,
+    setModelProvider,
+    modelId,
+    setModelId,
+  } = usePresentationState();
 
   const { data: modelsData, isLoading, isInitialLoad } = useLocalModels();
   const hasRestoredFromStorage = useRef(false);
+  const [unsupportedProviderWarning, setUnsupportedProviderWarning] =
+    useState<string | null>(null);
 
   useEffect(() => {
     if (!hasRestoredFromStorage.current) {
       const savedModel = getSelectedModel();
       if (savedModel) {
-        modelPickerLogger.info("Restoring previously selected model", {
-          modelProvider: savedModel.modelProvider,
-          modelId: savedModel.modelId || "gpt-4o-mini",
-        });
-        setModelProvider(
-          savedModel.modelProvider as "openai" | "ollama" | "lmstudio",
-        );
-        setModelId(savedModel.modelId);
+        if (
+          savedModel.modelProvider === "ollama" ||
+          !["openai", "lmstudio"].includes(savedModel.modelProvider)
+        ) {
+          modelPickerLogger.warn(
+            "Clearing unsupported saved model provider",
+            {
+              modelProvider: savedModel.modelProvider,
+            },
+          );
+          setSelectedModel("openai", "gpt-4o-mini");
+          setModelProvider("openai");
+          setModelId("gpt-4o-mini");
+          setUnsupportedProviderWarning(
+            `${savedModel.modelProvider} models are no longer supported. Switched to GPT-4o-mini.`,
+          );
+        } else {
+          const restoredProvider = savedModel.modelProvider as
+            | "openai"
+            | "lmstudio";
+          modelPickerLogger.info("Restoring previously selected model", {
+            modelProvider: restoredProvider,
+            modelId: savedModel.modelId || "gpt-4o-mini",
+          });
+          setModelProvider(restoredProvider);
+          setModelId(savedModel.modelId);
+        }
       }
       hasRestoredFromStorage.current = true;
     }
   }, [setModelId, setModelProvider]);
+
+  useEffect(() => {
+    if (unsupportedProviderWarning) {
+      const timer = setTimeout(() => setUnsupportedProviderWarning(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [unsupportedProviderWarning]);
 
   const displayData = modelsData || {
     localModels: [],
@@ -125,42 +157,32 @@ export function ModelPicker({
 
   const { localModels, downloadableModels, showDownloadable } = displayData;
 
-  const ollamaModels = localModels.filter(
-    (model) => model.provider === "ollama",
-  );
   const lmStudioModels = localModels.filter(
     (model) => model.provider === "lmstudio",
   );
-  const downloadableOllamaModels = downloadableModels.filter(
-    (model) => model.provider === "ollama",
-  );
-
   const createModelOption = (
     model: (typeof localModels)[0],
     isDownloadable = false,
   ) => ({
     id: model.id,
     label: model.name,
-    displayLabel:
-      model.provider === "ollama"
-        ? `ollama ${model.name}`
-        : `lm-studio ${model.name}`,
-    icon: model.provider === "ollama" ? Cpu : Monitor,
+    displayLabel: `lm-studio ${model.name}`,
+    icon: Monitor,
     description: isDownloadable
-      ? `Downloadable ${model.provider === "ollama" ? "Ollama" : "LM Studio"} model (will auto-download)`
-      : `Local ${model.provider === "ollama" ? "Ollama" : "LM Studio"} model`,
+      ? `Downloadable LM Studio model (will auto-download)`
+      : `Local LM Studio model`,
   });
 
   const getCurrentModelValue = () => {
-    if (modelProvider === "ollama") {
-      return `ollama-${modelId}`;
-    }
-
     if (modelProvider === "lmstudio") {
       return `lmstudio-${modelId}`;
     }
 
-    return `openai-${getOpenAIModel(modelId).id}`;
+    if (modelProvider === "openai") {
+      return `openai-${getOpenAIModel(modelId).id}`;
+    }
+
+    return `openai-${getOpenAIModel("gpt-4o-mini").id}`;
   };
 
   const getCurrentModelOption = () => {
@@ -178,7 +200,7 @@ export function ModelPicker({
     if (localModel) {
       return {
         label: localModel.name,
-        icon: localModel.provider === "ollama" ? Cpu : Monitor,
+        icon: Monitor,
       };
     }
 
@@ -188,7 +210,7 @@ export function ModelPicker({
     if (downloadableModel) {
       return {
         label: downloadableModel.name,
-        icon: downloadableModel.provider === "ollama" ? Cpu : Monitor,
+        icon: Monitor,
       };
     }
 
@@ -212,31 +234,6 @@ export function ModelPicker({
       return;
     }
 
-    if (value.startsWith("ollama-")) {
-      const model = value.replace("ollama-", "");
-      const isDownloadableSelection = downloadableModels.some(
-        (candidate) => candidate.id === value,
-      );
-      modelPickerLogger.info("Selected Ollama model", {
-        modelProvider: "ollama",
-        modelId: model,
-        isDownloadableSelection,
-      });
-      if (isDownloadableSelection) {
-        modelPickerLogger.info(
-          "Selected a downloadable Ollama model suggestion; the server will download it on first use if needed",
-          {
-            modelProvider: "ollama",
-            modelId: model,
-          },
-        );
-      }
-      setModelProvider("ollama");
-      setModelId(model);
-      setSelectedModel("ollama", model);
-      return;
-    }
-
     if (value.startsWith("lmstudio-")) {
       const model = value.replace("lmstudio-", "");
       modelPickerLogger.info("Selected LM Studio model", {
@@ -250,13 +247,18 @@ export function ModelPicker({
   };
 
   return (
-    <div className="min-w-0">
-      {shouldShowLabel && (
-        <label className="block text-xs font-medium text-muted-foreground">
-          Text model
-        </label>
-      )}
-      <Select value={getCurrentModelValue()} onValueChange={handleModelChange}>
+      <div className="min-w-0">
+        {shouldShowLabel && (
+          <label className="block text-xs font-medium text-muted-foreground">
+            Text model
+          </label>
+        )}
+        {unsupportedProviderWarning && (
+          <div className="mt-1 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            {unsupportedProviderWarning}
+          </div>
+        )}
+        <Select value={getCurrentModelValue()} onValueChange={handleModelChange}>
         <SelectTrigger className="h-8 w-auto max-w-full gap-2 overflow-hidden rounded-full border-border bg-background px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent sm:h-9 sm:px-3.5 sm:text-sm">
           <div className="flex min-w-0 items-center gap-2">
             {(() => {
@@ -309,36 +311,6 @@ export function ModelPicker({
               </SelectItem>
             ))}
           </SelectGroup>
-
-          {ollamaModels.length > 0 && (
-            <SelectGroup>
-              <SelectLabel>Local Ollama Models</SelectLabel>
-              {ollamaModels.map((model) => {
-                const option = createModelOption(model);
-                const Icon = option.icon;
-
-                return (
-                  <SelectItem
-                    key={option.id}
-                    value={option.id}
-                    className="overflow-hidden"
-                  >
-                    <div className="flex min-w-0 max-w-full items-center gap-3">
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                        <span className="truncate text-sm">
-                          {option.displayLabel}
-                        </span>
-                        <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
-                          {option.description}
-                        </span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          )}
 
           {lmStudioModels.length > 0 && (
             <SelectGroup>
@@ -393,35 +365,6 @@ export function ModelPicker({
             </SelectGroup>
           )}
 
-          {showDownloadable && downloadableOllamaModels.length > 0 && (
-            <SelectGroup>
-              <SelectLabel>Downloadable Ollama Models</SelectLabel>
-              {downloadableOllamaModels.map((model) => {
-                const option = createModelOption(model, true);
-                const Icon = option.icon;
-
-                return (
-                  <SelectItem
-                    key={option.id}
-                    value={option.id}
-                    className="overflow-hidden"
-                  >
-                    <div className="flex min-w-0 max-w-full items-center gap-3">
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                        <span className="truncate text-sm">
-                          {option.displayLabel}
-                        </span>
-                        <span className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted-foreground">
-                          {option.description}
-                        </span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          )}
         </SelectContent>
       </Select>
     </div>

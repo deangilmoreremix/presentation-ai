@@ -173,7 +173,7 @@ export function ImagePreview({
 
   if (!element.url) {
     return (
-      <div className="flex h-full min-h-75 w-full animate-in flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-muted/30 p-8 text-center duration-500 fade-in">
+      <div className="flex h-full min-h-[18.75rem] w-full animate-in flex-col items-center justify-center gap-4 rounded-lg border border-dashed bg-muted/30 p-8 text-center duration-500 fade-in">
         <div className="rounded-full bg-muted p-4">
           <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
         </div>

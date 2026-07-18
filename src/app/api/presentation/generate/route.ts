@@ -17,7 +17,7 @@ import {
 
 type SlidesRequest = Omit<PresentationGenerationPromptInput, "currentDate"> & {
   modelId?: string;
-  modelProvider?: "openai" | "ollama" | "lmstudio";
+  modelProvider?: "openai" | "lmstudio";
   apiKey?: string;
   presentationId?: string;
 };

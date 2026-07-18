@@ -104,7 +104,7 @@ type PendingPresentationCreateRequest = {
   attachments?: NotebookAttachment[];
   language: string;
   modelId: string;
-  modelProvider: "openai" | "ollama" | "lmstudio";
+  modelProvider: "openai" | "lmstudio";
   numSlides: number;
   generationAspectRatio?: PresentationGenerationAspectRatio;
   outputFormat?: "flow" | "html";
@@ -129,7 +129,7 @@ interface PresentationState {
   themeDataByTheme: Record<string, ThemeProperties | null | undefined>;
   generatedThemeData: ThemeProperties | null;
   language: string;
-  modelProvider: "openai" | "ollama" | "lmstudio";
+  modelProvider: "openai" | "lmstudio";
   modelId: string;
   pageStyle: string;
   presentationInput: string;
@@ -257,7 +257,7 @@ interface PresentationState {
   thumbnailUrl?: string;
   setThumbnailUrl: (url: string | undefined) => void;
   setLanguage: (lang: string) => void;
-  setModelProvider: (provider: "openai" | "ollama" | "lmstudio") => void;
+  setModelProvider: (provider: "openai" | "lmstudio") => void;
   setModelId: (id: string) => void;
   setPageStyle: (style: string) => void;
   setPresentationInput: (input: string) => void;

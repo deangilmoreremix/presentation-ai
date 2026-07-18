@@ -1,13 +1,13 @@
 import { createBlankPresentation } from "@/app/_actions/notebook/presentation/presentationActions";
 import { usePresentationState } from "@/states/presentation-state";
-import { useTheme } from "next-themes";
+import { useAppTheme } from "@/provider/theme-provider";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 export function useBlankPresentationCreator() {
   const router = useRouter();
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme } = useAppTheme();
   const [isCreating, setIsCreating] = useState(false);
   const { language, setCurrentPresentation, setTheme } = usePresentationState();
 

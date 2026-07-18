@@ -136,7 +136,7 @@ export default function AntvInfographicStatic(
     <SlateElement {...props}>
       <div
         className={cn(
-          "relative my-4 min-h-75 overflow-hidden rounded-lg",
+          "relative my-4 min-h-[18.75rem] overflow-hidden rounded-lg",
           alignmentClasses[align],
         )}
         style={{
@@ -150,7 +150,7 @@ export default function AntvInfographicStatic(
         {/* Container is always mounted so instance can be created */}
         <div
           ref={containerRef}
-          className="min-h-75 w-full overflow-hidden"
+          className="min-h-[18.75rem] w-full overflow-hidden"
           style={{
             minHeight: "300px",
             display: element.isLoading || hasError ? "none" : "block",

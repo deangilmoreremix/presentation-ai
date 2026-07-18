@@ -4,11 +4,7 @@ import { NextResponse } from "next/server";
 interface LocalModelInfo {
   id: string;
   name: string;
-  provider: "ollama" | "lmstudio";
-}
-
-interface OllamaTagsResponse {
-  models?: Array<{ name?: string }>;
+  provider: "lmstudio";
 }
 
 interface LMStudioNativeResponse {
@@ -24,7 +20,6 @@ interface LMStudioOpenAIResponse {
 }
 
 const routeLogger = createLogger("api:presentation-local-models");
-const OLLAMA_TAGS_URL = "http://localhost:11434/api/tags";
 const LM_STUDIO_NATIVE_MODELS_URL = "http://localhost:1234/api/v1/models";
 const LM_STUDIO_OPENAI_MODELS_URL = "http://localhost:1234/v1/models";
 const LOCAL_FETCH_TIMEOUT_MS = 2_500;
@@ -49,34 +44,6 @@ function dedupeModels(models: LocalModelInfo[]): LocalModelInfo[] {
     seen.add(model.id);
     return true;
   });
-}
-
-async function fetchOllamaModels(): Promise<LocalModelInfo[]> {
-  try {
-    const response = await fetch(OLLAMA_TAGS_URL, {
-      cache: "no-store",
-      signal: createTimeoutSignal(LOCAL_FETCH_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ollama responded with ${response.status}`);
-    }
-
-    const data = (await response.json()) as OllamaTagsResponse;
-    return (data.models ?? [])
-      .map((model) => model.name?.trim())
-      .filter((name): name is string => Boolean(name))
-      .map((name) => ({
-        id: `ollama-${name}`,
-        name,
-        provider: "ollama" as const,
-      }));
-  } catch (error) {
-    routeLogger.warn("Failed to fetch Ollama models", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return [];
-  }
 }
 
 async function fetchLMStudioModels(): Promise<LocalModelInfo[]> {
@@ -149,14 +116,11 @@ async function fetchLMStudioModels(): Promise<LocalModelInfo[]> {
 }
 
 export async function GET() {
-  const [ollamaModels, lmStudioModels] = await Promise.all([
-    fetchOllamaModels(),
-    fetchLMStudioModels(),
-  ]);
+  const lmStudioModels = await fetchLMStudioModels();
 
   return NextResponse.json(
     {
-      models: dedupeModels([...ollamaModels, ...lmStudioModels]),
+      models: dedupeModels(lmStudioModels),
     },
     {
       headers: {

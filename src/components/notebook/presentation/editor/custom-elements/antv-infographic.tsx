@@ -153,7 +153,7 @@ const AntvInfographicBase = memo(function AntvInfographic(
             data-infographic-resize-handle="true"
           />
 
-          <div className="relative min-h-75 w-full overflow-hidden rounded-lg">
+          <div className="relative min-h-[18.75rem] w-full overflow-hidden rounded-lg">
             {hasError ? (
               <div className="flex h-50 w-full flex-col items-center justify-center rounded-lg bg-red-50 text-red-500 dark:bg-red-950">
                 <p className="font-medium">Failed to generate diagram</p>
@@ -174,7 +174,7 @@ const AntvInfographicBase = memo(function AntvInfographic(
                 <div
                   ref={containerRef}
                   data-infographic-canvas="true"
-                  className="min-h-75 w-full overflow-hidden"
+                   className="min-h-[18.75rem] w-full overflow-hidden"
                   style={{
                     minHeight: "300px",
                     opacity: element.isLoading ? 0.35 : 1,

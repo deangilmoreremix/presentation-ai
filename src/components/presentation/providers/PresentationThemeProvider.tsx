@@ -1,11 +1,12 @@
 "use client";
 
-import { useTheme as useGlobalTheme } from "next-themes";
+import { useAppTheme } from "@/provider/theme-provider";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -23,14 +24,14 @@ const PresentationThemeContext = createContext<
 
 /**
  * Custom hook to access the presentation theme context.
- * This is a drop-in replacement for next-themes' useTheme within the presentation route.
+ * This is a drop-in replacement for the global useAppTheme within the presentation route.
  *
  * If used outside of a PresentationThemeProvider (e.g., globally under RootLayout),
- * it seamlessly falls back to using the global next-themes system, avoiding runtime errors.
+ * it seamlessly falls back to using the global custom theme system, avoiding runtime errors.
  */
 export function usePresentationTheme() {
   const context = useContext(PresentationThemeContext);
-  const globalTheme = useGlobalTheme();
+  const globalTheme = useAppTheme();
 
   if (context === undefined) {
     const theme = (globalTheme.theme === "dark" ? "dark" : "light") as Theme;
@@ -72,6 +73,22 @@ export function PresentationThemeProvider({
   syncWithDefaultTheme?: boolean;
 }) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
+  const hadDarkRef = useRef(false);
+
+  // Capture whether the dark class was originally present and restore selectively on unmount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = window.document.documentElement;
+    hadDarkRef.current = root.classList.contains("dark");
+    const originalColorScheme = root.style.colorScheme;
+
+    return () => {
+      if (!hadDarkRef.current) {
+        root.classList.remove("dark");
+      }
+      root.style.colorScheme = originalColorScheme;
+    };
+  }, []);
 
   // Sync state if syncWithDefaultTheme is true and defaultTheme changes
   useEffect(() => {
@@ -86,19 +103,6 @@ export function PresentationThemeProvider({
     },
     [],
   );
-
-  // Capture original document classes and color scheme, and restore on unmount
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const root = window.document.documentElement;
-    const originalClass = root.className;
-    const originalColorScheme = root.style.colorScheme;
-
-    return () => {
-      root.className = originalClass;
-      root.style.colorScheme = originalColorScheme;
-    };
-  }, []);
 
   // Update HTML class and color-scheme for the current tab
   useEffect(() => {
