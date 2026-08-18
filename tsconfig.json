@@ -32,6 +32,12 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "next-auth/react": [
+        "./src/lib/auth/next-auth-react-stub.ts"
+      ],
+      "@prisma/client/runtime/client": [
+        "./src/prisma/client.ts"
       ]
     }
   },

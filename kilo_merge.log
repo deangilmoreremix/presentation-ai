@@ -1,0 +1,1199 @@
+Auto-merging .env.example
+CONFLICT (add/add): Merge conflict in .env.example
+Auto-merging .gitignore
+CONFLICT (add/add): Merge conflict in .gitignore
+Auto-merging README.md
+CONFLICT (add/add): Merge conflict in README.md
+Auto-merging next.config.js
+CONFLICT (add/add): Merge conflict in next.config.js
+Auto-merging package.json
+CONFLICT (add/add): Merge conflict in package.json
+Auto-merging pnpm-lock.yaml
+CONFLICT (add/add): Merge conflict in pnpm-lock.yaml
+Auto-merging pnpm-workspace.yaml
+CONFLICT (add/add): Merge conflict in pnpm-workspace.yaml
+Auto-merging prisma/schema.prisma
+CONFLICT (add/add): Merge conflict in prisma/schema.prisma
+Auto-merging src/ai/agents/presentation/createAgent.ts
+CONFLICT (add/add): Merge conflict in src/ai/agents/presentation/createAgent.ts
+Auto-merging src/ai/lib/postgres.ts
+CONFLICT (add/add): Merge conflict in src/ai/lib/postgres.ts
+Auto-merging src/ai/tools/presentation/tools.ts
+CONFLICT (add/add): Merge conflict in src/ai/tools/presentation/tools.ts
+Auto-merging src/app/_actions/apps/image-studio/fetch.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/apps/image-studio/fetch.ts
+Auto-merging src/app/_actions/apps/image-studio/generate.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/apps/image-studio/generate.ts
+Auto-merging src/app/_actions/apps/image-studio/pixabay.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/apps/image-studio/pixabay.ts
+Auto-merging src/app/_actions/apps/image-studio/unsplash.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/apps/image-studio/unsplash.ts
+Auto-merging src/app/_actions/image/generate.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/image/generate.ts
+Auto-merging src/app/_actions/image/unsplash.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/image/unsplash.ts
+Auto-merging src/app/_actions/notebook/presentation/clearPresentationChat.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/notebook/presentation/clearPresentationChat.ts
+Auto-merging src/app/_actions/notebook/presentation/fetchPresentations.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/notebook/presentation/fetchPresentations.ts
+Auto-merging src/app/_actions/notebook/presentation/presentationActions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/notebook/presentation/presentationActions.ts
+Auto-merging src/app/_actions/presentation/font-pair-actions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/font-pair-actions.ts
+Auto-merging src/app/_actions/presentation/generate-slide-image.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/generate-slide-image.ts
+Auto-merging src/app/_actions/presentation/getPresentationMessages.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/getPresentationMessages.ts
+Auto-merging src/app/_actions/presentation/presentation-thumbnail-actions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/presentation-thumbnail-actions.ts
+Auto-merging src/app/_actions/presentation/sharedPresentationActions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/sharedPresentationActions.ts
+Auto-merging src/app/_actions/presentation/theme-actions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/theme-actions.ts
+Auto-merging src/app/_actions/presentation/theme-favorite-actions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/theme-favorite-actions.ts
+Auto-merging src/app/_actions/presentation/theme-like-actions.ts
+CONFLICT (add/add): Merge conflict in src/app/_actions/presentation/theme-like-actions.ts
+Auto-merging src/app/api/agent/presentation/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/agent/presentation/route.ts
+Auto-merging src/app/api/agent/presentation/search/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/agent/presentation/search/route.ts
+Auto-merging src/app/api/presentation/edit-diagram/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/edit-diagram/route.ts
+Auto-merging src/app/api/presentation/generate-image-slides/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/generate-image-slides/route.ts
+Auto-merging src/app/api/presentation/generate-slide/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/generate-slide/route.ts
+Auto-merging src/app/api/presentation/generate/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/generate/route.ts
+Auto-merging src/app/api/presentation/outline/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/outline/route.ts
+Auto-merging src/app/api/presentation/prompt-to-diagram/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/prompt-to-diagram/route.ts
+Auto-merging src/app/api/presentation/text-to-diagram/route.ts
+CONFLICT (add/add): Merge conflict in src/app/api/presentation/text-to-diagram/route.ts
+Auto-merging src/app/api/uploadthing/core.ts
+CONFLICT (add/add): Merge conflict in src/app/api/uploadthing/core.ts
+Auto-merging src/app/layout.tsx
+CONFLICT (add/add): Merge conflict in src/app/layout.tsx
+Auto-merging src/app/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/page.tsx
+Auto-merging src/app/presentation/[id]/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/presentation/[id]/page.tsx
+Auto-merging src/app/presentation/create/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/presentation/create/page.tsx
+Auto-merging src/app/presentation/generate/[id]/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/presentation/generate/[id]/page.tsx
+Auto-merging src/app/presentation/layout.tsx
+CONFLICT (add/add): Merge conflict in src/app/presentation/layout.tsx
+Auto-merging src/app/presentation/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/presentation/page.tsx
+Auto-merging src/app/share/presentation/[id]/page.tsx
+CONFLICT (add/add): Merge conflict in src/app/share/presentation/[id]/page.tsx
+Auto-merging src/components/notebook/presentation/components/ModelPicker.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/ModelPicker.tsx
+Auto-merging src/components/notebook/presentation/components/PresentationDashboard.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/PresentationDashboard.tsx
+Auto-merging src/components/notebook/presentation/components/PresentationGenerationManager.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/PresentationGenerationManager.tsx
+Auto-merging src/components/notebook/presentation/components/outline/GenerateImageSlidesButton.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/GenerateImageSlidesButton.tsx
+Auto-merging src/components/notebook/presentation/components/outline/Header.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/Header.tsx
+Auto-merging src/components/notebook/presentation/components/outline/OutlineItem.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/OutlineItem.tsx
+Auto-merging src/components/notebook/presentation/components/outline/OutlineList.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/OutlineList.tsx
+Auto-merging src/components/notebook/presentation/components/outline/OutlineTemplateModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/OutlineTemplateModal.tsx
+Auto-merging src/components/notebook/presentation/components/outline/ToolCallDisplay.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/outline/ToolCallDisplay.tsx
+Auto-merging src/components/notebook/presentation/components/theme/PresentationCustomizer.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/PresentationCustomizer.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ScaledSlide.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ScaledSlide.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ThemeBackground.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ThemeBackground.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ThemeModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ThemeModal.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ThemeModalContent.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ThemeModalContent.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ThemeModalPreview.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ThemeModalPreview.tsx
+Auto-merging src/components/notebook/presentation/components/theme/ThemeSettings.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/ThemeSettings.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/ColorSettingsPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/ColorSettingsPanel.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/ColorsStep.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/ColorsStep.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactColorGrid.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactColorGrid.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactGradientGrid.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactGradientGrid.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactImageSelector.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactImageSelector.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactUploadZone.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/CompactUploadZone.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/index.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/index.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/utils.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CompactBackgroundSelector/utils.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CreateThemeFooter.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CreateThemeFooter.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CreateThemeHeader.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CreateThemeHeader.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CreateThemeModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CreateThemeModal.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/CreateThemeStepper.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/CreateThemeStepper.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/DesignStep.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/DesignStep.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/PreviewSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/PreviewSection.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/SlidePreview.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/SlidePreview.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/StepContent.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/StepContent.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/create-theme-types.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/create-theme-types.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/CurrentFontDisplay.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/CurrentFontDisplay.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/CustomFontCreator.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/CustomFontCreator.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/FontCombinationsList.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/FontCombinationsList.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/FontPickerField.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/FontPickerField.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/FontStepHeader.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/FontStepHeader.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/UserFontPairs.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/UserFontPairs.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/index.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/index.tsx
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/types.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/types.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/useFontUpload.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/useFontUpload.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/font-step/useSaveFontPair.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/font-step/useSaveFontPair.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/usePreviewData.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/usePreviewData.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/useStepNavigation.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/useStepNavigation.ts
+Auto-merging src/components/notebook/presentation/components/theme/create-theme/useThemeCreationLogic.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/create-theme/useThemeCreationLogic.ts
+Auto-merging src/components/notebook/presentation/components/theme/types.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/types.ts
+Auto-merging src/components/notebook/presentation/components/theme/useThemeModalState.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/components/theme/useThemeModalState.ts
+Auto-merging src/components/notebook/presentation/editor/components/EditablePlate.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/components/EditablePlate.tsx
+Auto-merging src/components/notebook/presentation/editor/components/PresentationRoot.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/components/PresentationRoot.tsx
+Auto-merging src/components/notebook/presentation/editor/components/StaticPlate.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/components/StaticPlate.tsx
+Auto-merging src/components/notebook/presentation/editor/context/SlideGenerationContext.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/context/SlideGenerationContext.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/GenerateSlideUI.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/GenerateSlideUI.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/SlideTemplateModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/SlideTemplateModal.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/antv-infographic.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/antv-infographic.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/area-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/area-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/arrow-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/arrow-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/arrow-list.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/arrow-list.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/bar-graph.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/bar-graph.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/before-after-side.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/before-after-side.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/before-after.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/before-after.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/box-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/box-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/box-plot-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/box-plot-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/box.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/box.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/bubble-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/bubble-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/bullet-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/bullet-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/bullet.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/bullet.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/button.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/button.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/candlestick-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/candlestick-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor-dialog.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor-dialog.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/chart-type-picker.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/chart-type-picker.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/editable-header.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/editable-header.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-cell.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-cell.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-header.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-header.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-row.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid-row.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/grid.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/index.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/index.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/toolbar.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/types.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/types.ts
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-data-editor/use-chart-editor.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-data-editor/use-chart-editor.ts
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chart-utils.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chart-utils.ts
+Auto-merging src/components/notebook/presentation/editor/custom-elements/charts/ChartRenderer.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/charts/ChartRenderer.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/chord-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/chord-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/compare-side.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/compare-side.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/compare.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/compare.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/composed-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/composed-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/cone-funnel-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/cone-funnel-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/cons-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/cons-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/cycle-element.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/cycle-element.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/cycle-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/cycle-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/donut-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/donut-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/embeds/EmbedRenderer.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/embeds/EmbedRenderer.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/event-boundary.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/event-boundary.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/flex-box.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/flex-box.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/funnel-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/funnel-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/generating-leaf.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/generating-leaf.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/heatmap-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/heatmap-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/histogram-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/histogram-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/icon-list-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/icon-list-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/icon-list.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/icon-list.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/icon.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/icon.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/ActionButtons.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/ActionButtons.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/CropModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/CropModal.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/EmbedControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/EmbedControls.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/ErrorDisplay.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/ErrorDisplay.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/GenerateControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/GenerateControls.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/GifSearchControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/GifSearchControls.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/ImagePreview.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/ImagePreview.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/ImageSearchControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/ImageSearchControls.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/YourImagesControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/YourImagesControls.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/index.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/index.ts
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-editor/useImageDimensions.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-editor/useImageDimensions.ts
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-placeholder.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-placeholder.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-slide/ImageSlide.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-slide/ImageSlide.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/image-slide/ImageSlideStatic.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/image-slide/ImageSlideStatic.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/legacy/visualization-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/legacy/visualization-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/legacy/visualization-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/legacy/visualization-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/legacy/visualization-list-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/legacy/visualization-list-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/legacy/visualization-list.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/legacy/visualization-list.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/line-graph.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/line-graph.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/linear-gauge.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/linear-gauge.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/nightingale-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/nightingale-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/ohlc-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/ohlc-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pie-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pie-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/placeholder-card.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/placeholder-card.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-element.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-element.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-heading-element.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-heading-element.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-icon.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-icon.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-image-element.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-image-element.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-image-placeholder.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-image-placeholder.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-paragraph-element.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-paragraph-element.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/presentation-table-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/presentation-table-node.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pros-cons.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pros-cons.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pros-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pros-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pyramid-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pyramid-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pyramid-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pyramid-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/pyramid.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/pyramid.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/quote.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/quote.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/radar-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/radar-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/radial-bar-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/radial-bar-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/radial-column-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/radial-column-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/radial-gauge.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/radial-gauge.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/range-area-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/range-area-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/range-bar-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/range-bar-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/root-image.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/root-image.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/sankey-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/sankey-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/scatter-plot.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/scatter-plot.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/sequence-arrow-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/sequence-arrow-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/sequence-arrow.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/sequence-arrow.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/staircase-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/staircase-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/staircase.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/staircase.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/antv-infographic-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/antv-infographic-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/area-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/area-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/arrow-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/arrow-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/arrow-list-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/arrow-list-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/bar-graph-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/bar-graph-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/before-after-side-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/before-after-side-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/before-after-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/before-after-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/box-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/box-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/box-plot-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/box-plot-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/box-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/box-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/bubble-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/bubble-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/bullet-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/bullet-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/bullet-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/bullet-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/button-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/button-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/candlestick-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/candlestick-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/chord-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/chord-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/compare-side-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/compare-side-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/compare-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/compare-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/composed-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/composed-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/cone-funnel-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/cone-funnel-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/cons-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/cons-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/cycle-element-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/cycle-element-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/cycle-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/cycle-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/donut-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/donut-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/editor-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/editor-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/flex-box-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/flex-box-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/funnel-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/funnel-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/generating-leaf-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/generating-leaf-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/heatmap-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/heatmap-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/histogram-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/histogram-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/icon-list-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/icon-list-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/icon-list-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/icon-list-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/icon-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/icon-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/line-graph-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/line-graph-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/linear-gauge-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/linear-gauge-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/media-embed-element-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/media-embed-element-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/nightingale-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/nightingale-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/ohlc-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/ohlc-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pie-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pie-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/presentation-heading-element-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/presentation-heading-element-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/presentation-image-element-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/presentation-image-element-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/presentation-paragraph-element-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/presentation-paragraph-element-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/presentation-table-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/presentation-table-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pros-cons-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pros-cons-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pros-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pros-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pyramid-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pyramid-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pyramid-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pyramid-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/pyramid-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/pyramid-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/quote-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/quote-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/radar-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/radar-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/radial-bar-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/radial-bar-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/radial-column-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/radial-column-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/radial-gauge-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/radial-gauge-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/range-area-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/range-area-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/range-bar-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/range-bar-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/root-image-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/root-image-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/sankey-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/sankey-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/scatter-plot-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/scatter-plot-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/sequence-arrow-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/sequence-arrow-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/sequence-arrow-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/sequence-arrow-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/staircase-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/staircase-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/staircase-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/staircase-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/stats-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/stats-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/stats-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/stats-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/sunburst-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/sunburst-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/timeline-item-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/timeline-item-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/timeline-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/timeline-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/treemap-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/treemap-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/static/waterfall-chart-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/static/waterfall-chart-static.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/stats-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/stats-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/stats.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/stats.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/sunburst-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/sunburst-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/timeline-item.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/timeline-item.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/timeline.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/timeline.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/treemap-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/treemap-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/custom-elements/waterfall-chart.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/custom-elements/waterfall-chart.tsx
+Auto-merging src/components/notebook/presentation/editor/dnd/components/LayoutImageDrop.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/components/LayoutImageDrop.tsx
+Auto-merging src/components/notebook/presentation/editor/dnd/hooks/useDndNode.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/hooks/useDndNode.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/hooks/useDragNode.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/hooks/useDragNode.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/hooks/useDraggable.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/hooks/useDraggable.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/hooks/useDropNode.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/hooks/useDropNode.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/transforms/onDropNode.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/transforms/onDropNode.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/transforms/onHoverNode.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/transforms/onHoverNode.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/utils/getDropPath.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/utils/getDropPath.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/utils/getHoverDirection.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/utils/getHoverDirection.ts
+Auto-merging src/components/notebook/presentation/editor/dnd/utils/updateSiblingsForcefully.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/dnd/utils/updateSiblingsForcefully.ts
+Auto-merging src/components/notebook/presentation/editor/hooks/useEditorFonts.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/hooks/useEditorFonts.ts
+Auto-merging src/components/notebook/presentation/editor/hooks/usePresentationEditorInstance.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/hooks/usePresentationEditorInstance.ts
+Auto-merging src/components/notebook/presentation/editor/hooks/useRootImageHeight.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/hooks/useRootImageHeight.ts
+Auto-merging src/components/notebook/presentation/editor/lib.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/lib.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins.ts
+Auto-merging src/components/notebook/presentation/editor/plugins/antv-infographic-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/antv-infographic-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/arrow-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/arrow-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/basic-blocks-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/basic-blocks-kit.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/before-after-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/before-after-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/box-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/box-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/bullet-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/bullet-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/button-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/button-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/chart-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/chart-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/compare-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/compare-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/cycle-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/cycle-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/empty-block.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/empty-block.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/flex-box-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/flex-box-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/generating-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/generating-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/icon-list-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/icon-list-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/icon-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/icon-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/legacy/visualization-list-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/legacy/visualization-list-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/presentation-basic-blocks-base-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/presentation-basic-blocks-base-kit.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/pros-cons-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/pros-cons-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/pyramid-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/pyramid-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/quote-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/quote-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/sequence-arrow-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/sequence-arrow-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/slide-placeholder-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/slide-placeholder-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/staircase-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/staircase-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/static-custom-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/static-custom-kit.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/stats-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/stats-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/plugins/timeline-plugin.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/plugins/timeline-plugin.tsx
+Auto-merging src/components/notebook/presentation/editor/presentation-editor-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/presentation-editor-static.tsx
+Auto-merging src/components/notebook/presentation/editor/presentation-editor.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/presentation-editor.tsx
+Auto-merging src/components/notebook/presentation/editor/utils.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/utils.ts
+Auto-merging src/components/notebook/presentation/editor/utils/alignment-utils.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/utils/alignment-utils.ts
+Auto-merging src/components/notebook/presentation/editor/utils/infographic-utils.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/utils/infographic-utils.ts
+Auto-merging src/components/notebook/presentation/editor/utils/slide-format-styles.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/utils/slide-format-styles.ts
+Auto-merging src/components/notebook/presentation/editor/utils/slideSignature.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/editor/utils/slideSignature.ts
+Auto-merging src/components/notebook/presentation/recording/RecordingControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/recording/RecordingControls.tsx
+Auto-merging src/components/notebook/presentation/recording/RecordingPreviewDialog.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/recording/RecordingPreviewDialog.tsx
+Auto-merging src/components/notebook/presentation/recording/WebcamOverlay.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/recording/WebcamOverlay.tsx
+Auto-merging src/components/notebook/presentation/utils/parser.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/utils/parser.ts
+Auto-merging src/components/notebook/presentation/utils/slide-serializer.ts
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/utils/slide-serializer.ts
+Auto-merging src/components/notebook/presentation/utils/template-previews.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/utils/template-previews.tsx
+Auto-merging src/components/notebook/presentation/utils/templates.tsx
+CONFLICT (add/add): Merge conflict in src/components/notebook/presentation/utils/templates.tsx
+Auto-merging src/components/plate/editor-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/editor-kit.tsx
+Auto-merging src/components/plate/hooks/use-floating-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/hooks/use-floating-toolbar.tsx
+Auto-merging src/components/plate/hooks/use-upload-file.ts
+CONFLICT (add/add): Merge conflict in src/components/plate/hooks/use-upload-file.ts
+Auto-merging src/components/plate/hooks/useDiscussionPluginSync.ts
+CONFLICT (add/add): Merge conflict in src/components/plate/hooks/useDiscussionPluginSync.ts
+Auto-merging src/components/plate/hooks/usePlateEditor.ts
+CONFLICT (add/add): Merge conflict in src/components/plate/hooks/usePlateEditor.ts
+Auto-merging src/components/plate/plugins/ai-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/ai-kit.tsx
+Auto-merging src/components/plate/plugins/autoformat-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/autoformat-kit.tsx
+Auto-merging src/components/plate/plugins/basic-marks-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/basic-marks-kit.tsx
+Auto-merging src/components/plate/plugins/block-selection-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/block-selection-kit.tsx
+Auto-merging src/components/plate/plugins/code-block-base-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/code-block-base-kit.tsx
+Auto-merging src/components/plate/plugins/code-block-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/code-block-kit.tsx
+Auto-merging src/components/plate/plugins/comment-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/comment-kit.tsx
+Auto-merging src/components/plate/plugins/copilot-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/copilot-kit.tsx
+Auto-merging src/components/plate/plugins/discussion-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/discussion-kit.tsx
+Auto-merging src/components/plate/plugins/dnd-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/dnd-kit.tsx
+Auto-merging src/components/plate/plugins/font-base-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/font-base-kit.tsx
+Auto-merging src/components/plate/plugins/font-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/font-kit.tsx
+Auto-merging src/components/plate/plugins/layout-floating-toolbar-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/layout-floating-toolbar-kit.tsx
+Auto-merging src/components/plate/plugins/markdown-infographic-rules.ts
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/markdown-infographic-rules.ts
+Auto-merging src/components/plate/plugins/markdown-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/markdown-kit.tsx
+Auto-merging src/components/plate/plugins/suggestion-kit.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/plugins/suggestion-kit.tsx
+Auto-merging src/components/plate/ui/ai-menu.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/ai-menu.tsx
+Auto-merging src/components/plate/ui/ai-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/ai-node.tsx
+Auto-merging src/components/plate/ui/ai-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/ai-toolbar-button.tsx
+Auto-merging src/components/plate/ui/alert-dialog.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/alert-dialog.tsx
+Auto-merging src/components/plate/ui/align-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/align-toolbar-button.tsx
+Auto-merging src/components/plate/ui/block-discussion.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-discussion.tsx
+Auto-merging src/components/plate/ui/block-draggable.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-draggable.tsx
+Auto-merging src/components/plate/ui/block-list-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-list-static.tsx
+Auto-merging src/components/plate/ui/block-list.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-list.tsx
+Auto-merging src/components/plate/ui/block-selection.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-selection.tsx
+Auto-merging src/components/plate/ui/block-suggestion.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/block-suggestion.tsx
+Auto-merging src/components/plate/ui/blockquote-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/blockquote-node-static.tsx
+Auto-merging src/components/plate/ui/blockquote-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/blockquote-node.tsx
+Auto-merging src/components/plate/ui/calendar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/calendar.tsx
+Auto-merging src/components/plate/ui/callout-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/callout-node-static.tsx
+Auto-merging src/components/plate/ui/callout-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/callout-node.tsx
+Auto-merging src/components/plate/ui/caption.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/caption.tsx
+Auto-merging src/components/plate/ui/checkbox.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/checkbox.tsx
+Auto-merging src/components/plate/ui/code-block-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/code-block-node-static.tsx
+Auto-merging src/components/plate/ui/code-block-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/code-block-node.tsx
+Auto-merging src/components/plate/ui/code-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/code-node-static.tsx
+Auto-merging src/components/plate/ui/code-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/code-node.tsx
+Auto-merging src/components/plate/ui/column-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/column-node-static.tsx
+Auto-merging src/components/plate/ui/column-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/column-node.tsx
+Auto-merging src/components/plate/ui/command.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/command.tsx
+Auto-merging src/components/plate/ui/comment-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/comment-node-static.tsx
+Auto-merging src/components/plate/ui/comment-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/comment-node.tsx
+Auto-merging src/components/plate/ui/comment-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/comment-toolbar-button.tsx
+Auto-merging src/components/plate/ui/comment.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/comment.tsx
+Auto-merging src/components/plate/ui/cursor-overlay.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/cursor-overlay.tsx
+Auto-merging src/components/plate/ui/date-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/date-node-static.tsx
+Auto-merging src/components/plate/ui/date-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/date-node.tsx
+Auto-merging src/components/plate/ui/doc-fixed-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/doc-fixed-toolbar.tsx
+Auto-merging src/components/plate/ui/dropdown-menu.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/dropdown-menu.tsx
+Auto-merging src/components/plate/ui/editor-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/editor-static.tsx
+Auto-merging src/components/plate/ui/editor.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/editor.tsx
+Auto-merging src/components/plate/ui/emoji-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/emoji-node.tsx
+Auto-merging src/components/plate/ui/emoji-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/emoji-toolbar-button.tsx
+Auto-merging src/components/plate/ui/equation-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/equation-node-static.tsx
+Auto-merging src/components/plate/ui/equation-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/equation-node.tsx
+Auto-merging src/components/plate/ui/export-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/export-toolbar-button.tsx
+Auto-merging src/components/plate/ui/fixed-toolbar-buttons.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/fixed-toolbar-buttons.tsx
+Auto-merging src/components/plate/ui/fixed-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/fixed-toolbar.tsx
+Auto-merging src/components/plate/ui/floating-toolbar-buttons.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/floating-toolbar-buttons.tsx
+Auto-merging src/components/plate/ui/floating-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/floating-toolbar.tsx
+Auto-merging src/components/plate/ui/font-color-picker-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/font-color-picker-toolbar-button.tsx
+Auto-merging src/components/plate/ui/font-color-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/font-color-toolbar-button.tsx
+Auto-merging src/components/plate/ui/font-family-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/font-family-toolbar-button.tsx
+Auto-merging src/components/plate/ui/font-size-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/font-size-toolbar-button.tsx
+Auto-merging src/components/plate/ui/heading-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/heading-node-static.tsx
+Auto-merging src/components/plate/ui/heading-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/heading-node.tsx
+Auto-merging src/components/plate/ui/highlight-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/highlight-node-static.tsx
+Auto-merging src/components/plate/ui/highlight-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/highlight-node.tsx
+Auto-merging src/components/plate/ui/highlight-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/highlight-toolbar-button.tsx
+Auto-merging src/components/plate/ui/history-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/history-toolbar-button.tsx
+Auto-merging src/components/plate/ui/hr-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/hr-node-static.tsx
+Auto-merging src/components/plate/ui/hr-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/hr-node.tsx
+Auto-merging src/components/plate/ui/image-generation-model.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/image-generation-model.tsx
+Auto-merging src/components/plate/ui/import-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/import-toolbar-button.tsx
+Auto-merging src/components/plate/ui/indent-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/indent-toolbar-button.tsx
+Auto-merging src/components/plate/ui/inline-combobox.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/inline-combobox.tsx
+Auto-merging src/components/plate/ui/insert-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/insert-toolbar-button.tsx
+Auto-merging src/components/plate/ui/kbd-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/kbd-node-static.tsx
+Auto-merging src/components/plate/ui/kbd-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/kbd-node.tsx
+Auto-merging src/components/plate/ui/line-height-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/line-height-toolbar-button.tsx
+Auto-merging src/components/plate/ui/link-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/link-node-static.tsx
+Auto-merging src/components/plate/ui/link-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/link-node.tsx
+Auto-merging src/components/plate/ui/link-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/link-toolbar-button.tsx
+Auto-merging src/components/plate/ui/link-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/link-toolbar.tsx
+Auto-merging src/components/plate/ui/list-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/list-toolbar-button.tsx
+Auto-merging src/components/plate/ui/mark-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/mark-toolbar-button.tsx
+Auto-merging src/components/plate/ui/media-audio-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-audio-node-static.tsx
+Auto-merging src/components/plate/ui/media-audio-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-audio-node.tsx
+Auto-merging src/components/plate/ui/media-embed-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-embed-node.tsx
+Auto-merging src/components/plate/ui/media-embed-placeholder.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-embed-placeholder.tsx
+Auto-merging src/components/plate/ui/media-embeds.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-embeds.tsx
+Auto-merging src/components/plate/ui/media-file-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-file-node-static.tsx
+Auto-merging src/components/plate/ui/media-file-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-file-node.tsx
+Auto-merging src/components/plate/ui/media-image-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-image-node-static.tsx
+Auto-merging src/components/plate/ui/media-image-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-image-node.tsx
+Auto-merging src/components/plate/ui/media-placeholder-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-placeholder-node.tsx
+Auto-merging src/components/plate/ui/media-preview-dialog.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-preview-dialog.tsx
+Auto-merging src/components/plate/ui/media-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-toolbar-button.tsx
+Auto-merging src/components/plate/ui/media-toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-toolbar.tsx
+Auto-merging src/components/plate/ui/media-upload-toast.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-upload-toast.tsx
+Auto-merging src/components/plate/ui/media-video-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-video-node-static.tsx
+Auto-merging src/components/plate/ui/media-video-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/media-video-node.tsx
+Auto-merging src/components/plate/ui/mention-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/mention-node-static.tsx
+Auto-merging src/components/plate/ui/mention-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/mention-node.tsx
+Auto-merging src/components/plate/ui/mode-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/mode-toolbar-button.tsx
+Auto-merging src/components/plate/ui/more-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/more-toolbar-button.tsx
+Auto-merging src/components/plate/ui/paragraph-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/paragraph-node-static.tsx
+Auto-merging src/components/plate/ui/paragraph-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/paragraph-node.tsx
+Auto-merging src/components/plate/ui/resize-handle.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/resize-handle.tsx
+Auto-merging src/components/plate/ui/slash-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/slash-node.tsx
+Auto-merging src/components/plate/ui/suggestion-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/suggestion-node-static.tsx
+Auto-merging src/components/plate/ui/suggestion-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/suggestion-node.tsx
+Auto-merging src/components/plate/ui/suggestion-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/suggestion-toolbar-button.tsx
+Auto-merging src/components/plate/ui/table-icons.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/table-icons.tsx
+Auto-merging src/components/plate/ui/table-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/table-node-static.tsx
+Auto-merging src/components/plate/ui/table-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/table-node.tsx
+Auto-merging src/components/plate/ui/table-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/table-toolbar-button.tsx
+Auto-merging src/components/plate/ui/text-case-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/text-case-toolbar-button.tsx
+Auto-merging src/components/plate/ui/text-to-diagram-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/text-to-diagram-toolbar-button.tsx
+Auto-merging src/components/plate/ui/toc-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toc-node-static.tsx
+Auto-merging src/components/plate/ui/toc-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toc-node.tsx
+Auto-merging src/components/plate/ui/toggle-node-static.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toggle-node-static.tsx
+Auto-merging src/components/plate/ui/toggle-node.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toggle-node.tsx
+Auto-merging src/components/plate/ui/toggle-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toggle-toolbar-button.tsx
+Auto-merging src/components/plate/ui/toolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/toolbar.tsx
+Auto-merging src/components/plate/ui/turn-into-toolbar-button.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/ui/turn-into-toolbar-button.tsx
+Auto-merging src/components/plate/utils/font-loader.tsx
+CONFLICT (add/add): Merge conflict in src/components/plate/utils/font-loader.tsx
+Auto-merging src/components/plate/utils/transforms.ts
+CONFLICT (add/add): Merge conflict in src/components/plate/utils/transforms.ts
+Auto-merging src/components/presentation/agent/Compare.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/Compare.tsx
+Auto-merging src/components/presentation/agent/PresentationAgentPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/PresentationAgentPanel.tsx
+Auto-merging src/components/presentation/agent/tools/ChangeTheme.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/tools/ChangeTheme.tsx
+Auto-merging src/components/presentation/agent/tools/EditSlideProperties.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/tools/EditSlideProperties.tsx
+Auto-merging src/components/presentation/agent/tools/EditingSlide.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/tools/EditingSlide.tsx
+Auto-merging src/components/presentation/agent/tools/ReplaceImage.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/tools/ReplaceImage.tsx
+Auto-merging src/components/presentation/agent/tools/ReplaceImageCompare.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/agent/tools/ReplaceImageCompare.tsx
+Auto-merging src/components/presentation/buttons/ExportButton.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/buttons/ExportButton.tsx
+Auto-merging src/components/presentation/buttons/PresentButton.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/buttons/PresentButton.tsx
+Auto-merging src/components/presentation/buttons/ShareButton.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/buttons/ShareButton.tsx
+Auto-merging src/components/presentation/controls/PresentationMenu.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/PresentationMenu.tsx
+Auto-merging src/components/presentation/controls/SubscriptionModal.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/SubscriptionModal.tsx
+Auto-merging src/components/presentation/controls/ZoomControl.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/ZoomControl.tsx
+Auto-merging src/components/presentation/controls/global-settings/GlobalSettings.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/GlobalSettings.tsx
+Auto-merging src/components/presentation/controls/global-settings/hooks/useCommonValues.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/hooks/useCommonValues.ts
+Auto-merging src/components/presentation/controls/global-settings/hooks/useUpdateAllSlides.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/hooks/useUpdateAllSlides.ts
+Auto-merging src/components/presentation/controls/global-settings/sections/AlignmentSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/AlignmentSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/FontsSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/FontsSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/FormatsSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/FormatsSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/PageBackgroundSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/PageBackgroundSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/PremiumFeaturesSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/PremiumFeaturesSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/TypographySizeSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/TypographySizeSection.tsx
+Auto-merging src/components/presentation/controls/global-settings/sections/WidthSection.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/controls/global-settings/sections/WidthSection.tsx
+Auto-merging src/components/presentation/core/PresentationHeader.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/core/PresentationHeader.tsx
+Auto-merging src/components/presentation/core/PresentationPage.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/core/PresentationPage.tsx
+Auto-merging src/components/presentation/edit-panel/RightEditPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/RightEditPanel.tsx
+Auto-merging src/components/presentation/edit-panel/RightPanelRenderer.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/RightPanelRenderer.tsx
+Auto-merging src/components/presentation/edit-panel/sections/BackgroundImageEditor.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/BackgroundImageEditor.tsx
+Auto-merging src/components/presentation/edit-panel/sections/BackgroundPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/BackgroundPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ChartEditorControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ChartEditorControls.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ChartEditorPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ChartEditorPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ChartPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ChartPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ChartPreview.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ChartPreview.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ElementsPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ElementsPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/GradientMaker.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/GradientMaker.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ImageEditorPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ImageEditorPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/InfographicEditorControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/InfographicEditorControls.tsx
+Auto-merging src/components/presentation/edit-panel/sections/InfographicEditorPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/InfographicEditorPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/MediaEmbedPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/MediaEmbedPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/PresentationImageEditorPanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/PresentationImageEditorPanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/ThemePanel.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/ThemePanel.tsx
+Auto-merging src/components/presentation/edit-panel/sections/elements.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/elements.ts
+Auto-merging src/components/presentation/edit-panel/sections/theme/Filter.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/Filter.tsx
+Auto-merging src/components/presentation/edit-panel/sections/theme/ThemeCard.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/ThemeCard.tsx
+Auto-merging src/components/presentation/edit-panel/sections/theme/ThemeHeader.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/ThemeHeader.tsx
+Auto-merging src/components/presentation/edit-panel/sections/theme/ThemeSelector.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/ThemeSelector.tsx
+Auto-merging src/components/presentation/edit-panel/sections/theme/ThemeTabs.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/ThemeTabs.tsx
+Auto-merging src/components/presentation/edit-panel/sections/theme/theme-panel-state.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/edit-panel/sections/theme/theme-panel-state.ts
+Auto-merging src/components/presentation/export/contentWalker.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/contentWalker.ts
+Auto-merging src/components/presentation/export/cssVariableResolver.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/cssVariableResolver.ts
+Auto-merging src/components/presentation/export/domSlideScanner.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/domSlideScanner.ts
+Auto-merging src/components/presentation/export/domToPptxConverter.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/domToPptxConverter.ts
+Auto-merging src/components/presentation/export/index.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/index.ts
+Auto-merging src/components/presentation/export/types.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/export/types.ts
+Auto-merging src/components/presentation/floating-toolbar/AlignmentControl.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/AlignmentControl.tsx
+Auto-merging src/components/presentation/floating-toolbar/ChartControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ChartControls.tsx
+Auto-merging src/components/presentation/floating-toolbar/ColorControl.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ColorControl.tsx
+Auto-merging src/components/presentation/floating-toolbar/ColumnSizeSlider.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ColumnSizeSlider.tsx
+Auto-merging src/components/presentation/floating-toolbar/DeleteButton.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/DeleteButton.tsx
+Auto-merging src/components/presentation/floating-toolbar/EditWithAI.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/EditWithAI.tsx
+Auto-merging src/components/presentation/floating-toolbar/ElementTypeSelector.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ElementTypeSelector.tsx
+Auto-merging src/components/presentation/floating-toolbar/ImageControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ImageControls.tsx
+Auto-merging src/components/presentation/floating-toolbar/InfographicControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/InfographicControls.tsx
+Auto-merging src/components/presentation/floating-toolbar/LayoutFloatingToolbar.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/LayoutFloatingToolbar.tsx
+Auto-merging src/components/presentation/floating-toolbar/LayoutFloatingToolbarButtons.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/LayoutFloatingToolbarButtons.tsx
+Auto-merging src/components/presentation/floating-toolbar/LayoutPreviewSheet.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/LayoutPreviewSheet.tsx
+Auto-merging src/components/presentation/floating-toolbar/OrientationControl.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/OrientationControl.tsx
+Auto-merging src/components/presentation/floating-toolbar/SidednessControl.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/SidednessControl.tsx
+Auto-merging src/components/presentation/floating-toolbar/ToggleControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ToggleControls.tsx
+Auto-merging src/components/presentation/floating-toolbar/ToolbarContext.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/ToolbarContext.tsx
+Auto-merging src/components/presentation/floating-toolbar/index.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/floating-toolbar/index.ts
+Auto-merging src/components/presentation/present-mode/PresentModeHeader.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/present-mode/PresentModeHeader.tsx
+Auto-merging src/components/presentation/present-mode/PresentModePhoneOverlay.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/present-mode/PresentModePhoneOverlay.tsx
+Auto-merging src/components/presentation/present-mode/PresentModeProgressBar.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/present-mode/PresentModeProgressBar.tsx
+Auto-merging src/components/presentation/present-mode/index.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/present-mode/index.ts
+Auto-merging src/components/presentation/present-mode/present-mode-styles.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/present-mode/present-mode-styles.ts
+Auto-merging src/components/presentation/providers/PresentationThemeProvider.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/providers/PresentationThemeProvider.tsx
+Auto-merging src/components/presentation/shared/LoadingState.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/shared/LoadingState.tsx
+Auto-merging src/components/presentation/shared/PresentingLoadingOverlay.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/shared/PresentingLoadingOverlay.tsx
+Auto-merging src/components/presentation/shared/SharedGenerateControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/shared/SharedGenerateControls.tsx
+Auto-merging src/components/presentation/shared/SharedGifSearchControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/shared/SharedGifSearchControls.tsx
+Auto-merging src/components/presentation/shared/SharedImageSearchControls.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/shared/SharedImageSearchControls.tsx
+Auto-merging src/components/presentation/sidebar/SlideSidebar.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/sidebar/SlideSidebar.tsx
+Auto-merging src/components/presentation/sidebar/SlideThumbnail.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/sidebar/SlideThumbnail.tsx
+Auto-merging src/components/presentation/slides/SlideEditor.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/SlideEditor.tsx
+Auto-merging src/components/presentation/slides/SlideItem.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/SlideItem.tsx
+Auto-merging src/components/presentation/slides/SlideWrapper.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/SlideWrapper.tsx
+Auto-merging src/components/presentation/slides/SlidesContainer.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/SlidesContainer.tsx
+Auto-merging src/components/presentation/slides/slide-editor/MagicMenuDropdown.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/slide-editor/MagicMenuDropdown.tsx
+Auto-merging src/components/presentation/slides/slide-editor/MoreOptionsDropdown.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/slide-editor/MoreOptionsDropdown.tsx
+Auto-merging src/components/presentation/slides/slide-editor/PaletteDropdown.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/slide-editor/PaletteDropdown.tsx
+Auto-merging src/components/presentation/slides/slide-editor/SlideEditorContext.tsx
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/slide-editor/SlideEditorContext.tsx
+Auto-merging src/components/presentation/slides/slide-editor/types.ts
+CONFLICT (add/add): Merge conflict in src/components/presentation/slides/slide-editor/types.ts
+Auto-merging src/components/ui/dialog.tsx
+CONFLICT (add/add): Merge conflict in src/components/ui/dialog.tsx
+Auto-merging src/components/ui/icon-picker.tsx
+CONFLICT (add/add): Merge conflict in src/components/ui/icon-picker.tsx
+Auto-merging src/components/ui/image-source-selector.tsx
+CONFLICT (add/add): Merge conflict in src/components/ui/image-source-selector.tsx
+Auto-merging src/env.js
+CONFLICT (add/add): Merge conflict in src/env.js
+Auto-merging src/hooks/presentation/infographic/findInfographicNode.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/findInfographicNode.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicActions.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicActions.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicGeneration.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicGeneration.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicInstance.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicInstance.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicMutationSync.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicMutationSync.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicRendering.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicRendering.ts
+Auto-merging src/hooks/presentation/infographic/useAntvInfographicTheme.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useAntvInfographicTheme.ts
+Auto-merging src/hooks/presentation/infographic/useSyncedAntvElementRef.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/infographic/useSyncedAntvElementRef.ts
+Auto-merging src/hooks/presentation/scaling/index.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/scaling/index.ts
+Auto-merging src/hooks/presentation/scaling/scaling-utils.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/scaling/scaling-utils.ts
+Auto-merging src/hooks/presentation/useClearPresentationChat.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useClearPresentationChat.ts
+Auto-merging src/hooks/presentation/useDebouncedSave.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useDebouncedSave.ts
+Auto-merging src/hooks/presentation/useForceUpdateChildrenOnLengthChange.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useForceUpdateChildrenOnLengthChange.ts
+Auto-merging src/hooks/presentation/useImageUpload.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useImageUpload.ts
+Auto-merging src/hooks/presentation/usePresentModeOrientation.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentModeOrientation.ts
+Auto-merging src/hooks/presentation/usePresentationAutoScroll.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentationAutoScroll.ts
+Auto-merging src/hooks/presentation/usePresentationData.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentationData.ts
+Auto-merging src/hooks/presentation/usePresentationHistory.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentationHistory.ts
+Auto-merging src/hooks/presentation/usePresentationNavigation.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentationNavigation.ts
+Auto-merging src/hooks/presentation/usePresentationSlides.tsx
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/usePresentationSlides.tsx
+Auto-merging src/hooks/presentation/useRecording.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useRecording.ts
+Auto-merging src/hooks/presentation/useRootImageActions.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useRootImageActions.ts
+Auto-merging src/hooks/presentation/useSlideChangeWatcher.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useSlideChangeWatcher.ts
+Auto-merging src/hooks/presentation/useSlideContentScaling.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useSlideContentScaling.ts
+Auto-merging src/hooks/presentation/useSlideOperations.ts
+CONFLICT (add/add): Merge conflict in src/hooks/presentation/useSlideOperations.ts
+Auto-merging src/lib/ai/tool-names.ts
+CONFLICT (add/add): Merge conflict in src/lib/ai/tool-names.ts
+Auto-merging src/lib/model-picker.ts
+CONFLICT (add/add): Merge conflict in src/lib/model-picker.ts
+Auto-merging src/lib/modelPicker.ts
+CONFLICT (add/add): Merge conflict in src/lib/modelPicker.ts
+Auto-merging src/lib/presentation/customization.ts
+CONFLICT (add/add): Merge conflict in src/lib/presentation/customization.ts
+Auto-merging src/lib/presentation/themes.ts
+CONFLICT (add/add): Merge conflict in src/lib/presentation/themes.ts
+Auto-merging src/lib/presentation/thumbnail.ts
+CONFLICT (add/add): Merge conflict in src/lib/presentation/thumbnail.ts
+Auto-merging src/prisma/client.ts
+CONFLICT (add/add): Merge conflict in src/prisma/client.ts
+Auto-merging src/server/auth.ts
+CONFLICT (add/add): Merge conflict in src/server/auth.ts
+Auto-merging src/server/db.ts
+CONFLICT (add/add): Merge conflict in src/server/db.ts
+Auto-merging src/server/share/authorization.ts
+CONFLICT (add/add): Merge conflict in src/server/share/authorization.ts
+Auto-merging src/states/presentation-history-state.ts
+CONFLICT (add/add): Merge conflict in src/states/presentation-history-state.ts
+Auto-merging src/states/presentation-recording-state.ts
+CONFLICT (add/add): Merge conflict in src/states/presentation-recording-state.ts
+Auto-merging src/states/presentation-state.ts
+CONFLICT (add/add): Merge conflict in src/states/presentation-state.ts
+Auto-merging src/styles/presentation.css
+CONFLICT (add/add): Merge conflict in src/styles/presentation.css
+Auto-merging tsconfig.json
+CONFLICT (add/add): Merge conflict in tsconfig.json
+Automatic merge failed; fix conflicts and then commit the result.

@@ -15,13 +15,23 @@ const ANONYMOUS_USER = {
 
 export async function auth() {
   try {
-    // getUser returns null in the stub implementation
-    // Auth is optional - always returns anonymous user
+    const user = await getUser();
+    if (user) {
+      return {
+        user: {
+          id: user.id,
+          email: user.email ?? null,
+          name: user.user_metadata?.full_name ?? user.email ?? "User",
+          image: user.user_metadata?.avatar_url ?? null,
+          isAdmin: false,
+        },
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+      };
+    }
   } catch (error) {
     console.error("Auth error:", error);
   }
-  
-  // Return anonymous user
+
   return {
     user: ANONYMOUS_USER,
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
