@@ -1,6 +1,6 @@
 # Netlify Deployment Guide
 
-This guide covers deploying Presentation AI to Netlify with Supabase.
+This guide covers deploying Smart Presentations to Netlify with Supabase.
 
 ## Step 1: Create `netlify.toml`
 

@@ -1,15 +1,45 @@
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
+import { ANONYMOUS_USER_ID } from "@/lib/supabase/server";
 
 interface SessionIdentity {
   userId: string | null;
   userEmail: string | null;
 }
 
+const ANONYMOUS_SESSION_COOKIE = "anonymous_session_id";
+
+export async function getAnonymousSessionId(): Promise<string> {
+  const cookieStore = await cookies();
+  let sessionId = cookieStore.get(ANONYMOUS_SESSION_COOKIE)?.value;
+
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    cookieStore.set(ANONYMOUS_SESSION_COOKIE, sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+      path: "/",
+    });
+  }
+
+  return sessionId;
+}
+
 export async function getSessionIdentity(): Promise<SessionIdentity> {
   const currentUser = await getCurrentUser();
+
+  if (currentUser.id === ANONYMOUS_USER_ID) {
+    return {
+      userId: ANONYMOUS_USER_ID,
+      userEmail: currentUser.email,
+    };
+  }
+
   return {
-    userId: currentUser?.id ?? null,
-    userEmail: currentUser?.email ?? null,
+    userId: currentUser.id,
+    userEmail: currentUser.email,
   };
 }
 

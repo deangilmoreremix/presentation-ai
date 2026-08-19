@@ -1,129 +1,143 @@
 "use client";
 
-import React from "react";
-import { cn } from "@/components/plate/utils";
-import { type TElement } from "platejs";
-import { useDraggable, useDropLine } from "@platejs/dnd";
-import { GripVertical } from "lucide-react";
-import { useReadOnly } from "slate-react";
-import { usePluginOption } from "platejs/react";
-import { BlockSelectionPlugin } from "@platejs/selection/react";
-import { Button } from "@/components/plate/ui/button";
+import { cva } from "class-variance-authority";
+import { NodeApi, PathApi } from "platejs";
+import { PlateElement, type PlateElementProps } from "platejs/react";
+
+import { IconPicker } from "@/components/ui/icon-picker";
+import { cn } from "@/lib/utils";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/plate/ui/tooltip";
-import { Portal } from "@radix-ui/react-tooltip";
-import { BULLET_ELEMENT } from "../lib";
+  type TBulletGroupElement,
+  type TBulletItemElement,
+} from "../plugins/bullet-plugin";
+import { getAlignmentClasses } from "../utils";
+import { getPresentationAccentColor } from "./color-utils";
+import { getSiblingIndexContext } from "./sibling-index";
+
+export const bulletItemVariants = cva("", {
+  variants: {
+    bulletType: {
+      numbered: "flex items-start",
+      basic: "flex items-start",
+      arrow: "flex items-start",
+    },
+  },
+});
+
+export const bulletMarkerVariants = cva("shrink-0", {
+  variants: {
+    bulletType: {
+      numbered:
+        "flex size-12 items-center justify-center rounded-md bg-primary text-xl font-bold text-primary-foreground",
+      basic: "mt-1 flex size-6 items-center justify-center rounded-full",
+      arrow: "mt-1 flex size-6 items-center justify-center",
+    },
+  },
+});
+
+// Arrow SVG component for arrow bullet type
+export const ArrowMarker = ({ color }: { color: string }) => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 155.139 155.139"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <polygon
+      fill={color}
+      points="155.139,77.566 79.18,1.596 79.18,45.978 0,45.978 0,109.155 79.18,109.155 79.18,153.542"
+    />
+  </svg>
+);
 
 // BulletItem component for numbered blocks with content
-export const BulletItem = ({
-  index,
-  element,
-  children,
-}: {
-  index: number;
-  element: TElement;
-  children: React.ReactNode;
-}) => {
-  const readOnly = useReadOnly();
-  const isSelectionAreaVisible = usePluginOption(BlockSelectionPlugin, "isSelectionAreaVisible");
+export const BulletItem = (props: PlateElementProps<TBulletItemElement>) => {
+  const { index, parentElement } = getSiblingIndexContext<TBulletGroupElement>(
+    props.editor,
+    props.element,
+    props.path,
+  );
+  const fallbackParentPath = PathApi.parent(props.path);
+  const fallbackParentElement = NodeApi.get(
+    props.editor,
+    fallbackParentPath,
+  ) as TBulletGroupElement | undefined;
+  const resolvedParentElement = parentElement ?? fallbackParentElement;
+  const bulletType = resolvedParentElement?.bulletType ?? "numbered";
 
-  // Add draggable functionality
-  const { isDragging, previewRef, handleRef } = useDraggable({
-    element,
-    orientation: "vertical",
-    canDropNode: ({ dragEntry, dropEntry }) => {
-      return (
-        dragEntry[0].type === BULLET_ELEMENT &&
-        dropEntry[0].type === BULLET_ELEMENT
-      );
-    },
-  });
+  // Get alignment - use item alignment if set, otherwise inherit from parent
+  const itemAlignment = props.element.alignment;
+  const parentAlignment = resolvedParentElement?.alignment;
+  const alignment = itemAlignment ?? parentAlignment ?? "left";
+  const { icon } = props.element;
+  const markerColor = getPresentationAccentColor(
+    props.element,
+    resolvedParentElement,
+    "var(--presentation-primary)",
+  );
 
-  // Add drop line indicator
-  const { dropLine } = useDropLine({
-    id: element.id as string,
-    orientation: "vertical",
-  });
+  const handleIconSelect = (iconName: string) => {
+    const itemPath = props.editor.api.findPath(props.element);
+    if (!itemPath) return;
+    props.editor.tf.setNodes({ icon: iconName }, { at: itemPath });
+  };
 
+  const markerPlaceholder =
+    bulletType === "numbered" ? (
+      <span className="text-xl font-bold">{index + 1}</span>
+    ) : bulletType === "arrow" ? (
+      <ArrowMarker color={markerColor} />
+    ) : (
+      <span
+        className="size-2 rounded-full"
+        style={{ backgroundColor: markerColor }}
+      />
+    );
+
+  // Force sibling refresh when index changes
   return (
-    <div
-      ref={previewRef}
-      className={cn(
-        "group/bullet-item relative",
-        isDragging && "opacity-50",
-        dropLine && "drop-target",
-      )}
-    >
-      {/* Drop target indicator lines */}
-      {!readOnly && !isSelectionAreaVisible && dropLine && (
-        <div
-          className={cn(
-            "absolute z-50 bg-primary/50",
-            dropLine === "top" && "inset-x-0 top-0 h-1",
-            dropLine === "bottom" && "inset-x-0 bottom-0 h-1",
-          )}
-        />
-      )}
-
-      {/* Drag handle that appears on hover */}
-      {!readOnly && !isSelectionAreaVisible && (
-        <div
-          ref={handleRef}
-          className={cn(
-            "absolute left-0 top-1/2 z-50 -translate-x-full -translate-y-1/2 pr-2",
-            "pointer-events-auto flex items-center",
-            "opacity-0 transition-opacity group-hover/bullet-item:opacity-100",
-          )}
-        >
-          <BulletItemDragHandle />
-        </div>
-      )}
-
+    <PlateElement {...props} className={cn("group/bullet-item relative")}>
       {/* The bullet item layout with numbered block and content */}
-      <div className="flex items-start">
-        {/* Numbered square/block */}
-        <div
-          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md bg-primary text-xl font-bold text-primary-foreground"
-          style={{
-            backgroundColor: "var(--presentation-primary)",
-            color: "var(--presentation-background)",
+      <div
+        className={cn(
+          "gap-3",
+          bulletItemVariants({ bulletType }),
+          alignment === "right" && "flex-row-reverse",
+        )}
+      >
+        {/* Bullet marker - numbered, basic dot, or arrow */}
+        <IconPicker
+          defaultIcon={icon}
+          placeholder={markerPlaceholder}
+          onIconSelect={(iconName) => handleIconSelect(iconName)}
+          onIconRemove={() => {
+            const itemPath = props.editor.api.findPath(props.element);
+            if (!itemPath) return;
+            props.editor.tf.setNodes({ icon: "" }, { at: itemPath });
           }}
-        >
-          {index + 1}
-        </div>
+          className={cn(
+            bulletMarkerVariants({ bulletType }),
+            "shadow-none hover:opacity-80",
+            bulletType === "numbered" && "text-primary-foreground",
+            bulletType !== "numbered" && "border-transparent bg-transparent",
+          )}
+          size={bulletType === "numbered" ? "lg" : "md"}
+          data-decor="true"
+          style={{
+            backgroundColor:
+              bulletType === "numbered" ? markerColor : "transparent",
+            borderColor: "transparent",
+            color:
+              bulletType === "numbered"
+                ? "var(--presentation-background)"
+                : markerColor,
+          }}
+        />
 
-        {/* Content area */}
-        <div className="ml-4 flex-1">{children}</div>
+        <div className={cn("flex-1", getAlignmentClasses(alignment))}>
+          {props.children}
+        </div>
       </div>
-    </div>
+    </PlateElement>
   );
 };
-
-// Drag handle component
-const BulletItemDragHandle = React.memo(() => {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button size="icon" variant="ghost" className="h-5 px-1">
-            <GripVertical
-              className="size-4 text-muted-foreground"
-              onClick={(event) => {
-                event.stopPropagation();
-                event.preventDefault();
-              }}
-            />
-          </Button>
-        </TooltipTrigger>
-        <Portal>
-          <TooltipContent>Drag to move item</TooltipContent>
-        </Portal>
-      </Tooltip>
-    </TooltipProvider>
-  );
-});
-BulletItemDragHandle.displayName = "BulletItemDragHandle";

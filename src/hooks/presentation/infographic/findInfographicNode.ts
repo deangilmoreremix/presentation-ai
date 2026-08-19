@@ -3,8 +3,8 @@
 import { type NodeEntry } from "platejs";
 import { type PlateEditor } from "platejs/react";
 
-import { ANTV_INFOGRAPHIC } from "@/components/notebook/presentation/editor/lib";
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
+import { ANTV_INFOGRAPHIC } from "@/components/presentation/editor/lib";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 
 function isAntvInfographicElement(
   node: unknown,

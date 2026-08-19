@@ -57,11 +57,11 @@ export function Searched({
       </CollapsibleTrigger>
       <CollapsibleContent className="grid max-w-full grid-cols-1 gap-y-2 p-4">
         {results.map((result) => {
-          let domain = "allweone.com";
+          let domain = "smartpresentations.ai";
           try {
-            domain = new URL(result.url || "https://allweone.com").hostname;
+            domain = new URL(result.url || "https://smartpresentations.ai").hostname;
           } catch {
-            domain = "allweone.com";
+            domain = "smartpresentations.ai";
           }
           const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 

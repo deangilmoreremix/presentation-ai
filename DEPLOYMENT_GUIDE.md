@@ -1,6 +1,6 @@
 # Production Deployment Guide
 
-This guide covers deploying Presentation AI to production with Supabase and Vercel (or any other platform).
+This guide covers deploying Smart Presentations to production with Supabase and Vercel (or any other platform).
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ This guide covers deploying Presentation AI to production with Supabase and Verc
 ### 1.1 Create Supabase Project
 
 1. Go to https://app.supabase.com/project/new
-2. Enter project name: `presentation-ai` (or your choice)
+2. Enter project name: `smart-presentations` (or your choice)
 3. Select region closest to your users
 4. Choose Free tier
 5. Click "Create new project"
@@ -139,14 +139,14 @@ vercel --prod
 
 # Follow prompts:
 # - Link to existing project? No (create new)
-# - Project name: presentation-ai
+# - Project name: smart-presentations
 # - Directory: ./
 # - Want to modify settings? No
 ```
 
 After first deploy, configure environment variables in Vercel dashboard:
 
-1. Go to https://vercel.com/[your-org]/presentation-ai/settings/environment-variables
+1. Go to https://vercel.com/[your-org]/smart-presentations/settings/environment-variables
 2. Add all variables from Step 2
 3. Redeploy for changes to take effect
 
@@ -220,11 +220,11 @@ railway init
 railway up
 ```
 
-### Docker (Self-Hosted)
+### Docker Deployment
 
 ```bash
 # Build image
-docker build -t presentation-ai .
+docker build -t smart-presentations .
 
 # Run with environment variables
 docker run -d \
@@ -235,7 +235,7 @@ docker run -d \
   -e GOOGLE_CLIENT_ID="..." \
   -e GOOGLE_CLIENT_SECRET="..." \
   -e OPENAI_API_KEY="..." \
-  presentation-ai
+  smart-presentations
 ```
 
 Or with Docker Compose (includes PostgreSQL):
@@ -442,6 +442,6 @@ Final checklist:
 
 ---
 
-**🎉 Congratulations! Your Presentation AI is now live and ready for thousands of users.**
+**🎉 Congratulations! Your Smart Presentations app is now live and ready for thousands of users.**
 
 Need help? Open an issue on GitHub or join our Discord community.

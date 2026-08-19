@@ -14,7 +14,7 @@
 
 1. Go to https://netlify.com and sign up (free)
 2. Click "Add new site" → "Import an existing project"
-3. Connect your GitHub repository: `deangilmoreremix/presentation-ai`
+3. Connect your GitHub repository: `deangilmoreremix/smart-presentations`
 4. Configure build settings:
    - **Build command:** `pnpm build`
    - **Publish directory:** `.next/standalone`
@@ -88,7 +88,7 @@ The `.github/workflows/ci-cd.yml` already includes a database migration step.
 
 ### 6. Update NEXTAUTH_URL
 
-After you get your Netlify site URL (e.g., `https://presentation-ai.netlify.app`):
+After you get your Netlify site URL (e.g., `https://smart-presentations.netlify.app`):
 
 1. Go to Netlify dashboard → Site settings → Build & Deploy → Environment
 2. Update `NEXTAUTH_URL` to your actual Netlify URL

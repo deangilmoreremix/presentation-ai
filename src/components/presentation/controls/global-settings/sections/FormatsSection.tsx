@@ -130,7 +130,7 @@ export function FormatsSection() {
             <SelectGroup>
               <SelectLabel>Format</SelectLabel>
               <SelectItem value="presentation">Presentation</SelectItem>
-              {/* <SelectItem value="webpage">Webpage</SelectItem> */}
+              <SelectItem value="webpage">Webpage</SelectItem>
               <SelectItem value="document">Document</SelectItem>
               <SelectItem value="social">Social</SelectItem>
             </SelectGroup>

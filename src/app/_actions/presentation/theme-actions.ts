@@ -1,8 +1,7 @@
 "use server";
 
 import { presentationThemeStyleDataSchema } from "@/lib/presentation/theme-schema";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 import * as z from "zod";
 
 // Schema for creating/updating a theme
@@ -32,14 +31,6 @@ type ThemeRow = {
 // Create a new custom theme
 export async function createCustomTheme(formData: ThemeFormData) {
   try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return {
-      success: false,
-      message: "You must be signed in to create a theme",
-    };
-  }
-
     const validatedData = themeSchema.parse(formData);
     const supabase = await createClient();
     if (!supabase) {
@@ -55,7 +46,7 @@ export async function createCustomTheme(formData: ThemeFormData) {
         logo_url: validatedData.logoUrl ?? null,
         is_public: false,
         is_admin: false,
-        user_id: currentUser.id,
+        user_id: await getClerkUserId(),
       })
       .select("id")
       .single<{ id: string }>();
@@ -88,32 +79,10 @@ export async function updateCustomTheme(
   formData: ThemeFormData,
 ) {
   try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return {
-      success: false,
-      message: "You must be signed in to update a theme",
-    };
-  }
-
     const validatedData = themeSchema.parse(formData);
     const supabase = await createClient();
     if (!supabase) {
       return { success: false, message: "Supabase is not configured" };
-    }
-
-    const { data: existingTheme, error: fetchErr } = await supabase
-      .from("presentation_themes")
-      .select("user_id")
-      .eq("id", themeId)
-      .maybeSingle<Pick<ThemeRow, "user_id">>();
-
-    if (fetchErr) throw fetchErr;
-    if (!existingTheme) {
-      return { success: false, message: "Theme not found" };
-    }
-    if (existingTheme.user_id !== currentUser.id) {
-      return { success: false, message: "Not authorized to update this theme" };
     }
 
     const { error } = await supabase
@@ -126,7 +95,8 @@ export async function updateCustomTheme(
         is_public: false,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", themeId);
+      .eq("id", themeId)
+      .eq("user_id", await getClerkUserId());
 
     if (error) throw error;
 
@@ -155,14 +125,6 @@ export async function updateAdminPresentationTheme(
   formData: ThemeFormData,
 ) {
   try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser?.isAdmin) {
-      return {
-        success: false,
-        message: "Not authorized to update system themes",
-      };
-    }
-
     const validatedData = themeSchema.parse(formData);
     const supabase = await createClient();
     if (!supabase) {
@@ -260,14 +222,7 @@ export async function getSystemPresentationThemes() {
 // Get all custom themes for the current user
 export async function getUserCustomThemes() {
   try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return {
-      success: false,
-      message: "You must be signed in to view your themes",
-      themes: [],
-    };
-  }
+    const userId = await getClerkUserId();
 
     const supabase = await createClient();
     if (!supabase) {
@@ -277,7 +232,7 @@ export async function getUserCustomThemes() {
     const { data: themes, error } = await supabase
       .from("presentation_themes")
       .select("*")
-      .eq("user_id", currentUser.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -312,22 +267,12 @@ type PublicThemeRow = ThemeRow & {
 // Get all public themes, including like counts and user engagement flags
 export async function getPublicCustomThemes() {
   try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return {
-      success: false,
-      message: "You must be signed in to view public themes",
-      themes: [],
-    };
-  }
-  const userId = currentUser.id;
-
     const supabase = await createClient();
     if (!supabase) {
       return { success: false, message: "Supabase is not configured", themes: [] };
     }
 
-    let query = supabase
+    const { data: themes, error } = await supabase
       .from("presentation_themes")
       .select(
         "*, user:users(name), presentation_theme_likes!left(id, user_id), favorite_presentation_themes!left(id, user_id)",
@@ -335,14 +280,6 @@ export async function getPublicCustomThemes() {
       .eq("is_public", true)
       .eq("is_admin", false)
       .order("created_at", { ascending: false });
-
-    if (userId) {
-      query = query
-        .eq("presentation_theme_likes.user_id", userId)
-        .eq("favorite_presentation_themes.user_id", userId);
-    }
-
-    const { data: themes, error } = await query;
 
     if (error) throw error;
 
@@ -433,49 +370,3 @@ export async function getCustomThemeById(themeId: string) {
   }
 }
 
-// Delete a custom theme (only by owner)
-export async function deleteCustomTheme(themeId: string) {
-  try {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    return { success: false, message: "You must be signed in to delete a theme" };
-    }
-
-    const supabase = await createClient();
-    if (!supabase) {
-      return { success: false, message: "Supabase is not configured" };
-    }
-
-    const { data: existingTheme, error: fetchErr } = await supabase
-      .from("presentation_themes")
-      .select("user_id, is_admin")
-      .eq("id", themeId)
-      .maybeSingle<Pick<ThemeRow, "user_id" | "is_admin">>();
-
-    if (fetchErr) throw fetchErr;
-    if (!existingTheme) {
-      return { success: false, message: "Theme not found" };
-    }
-    if (existingTheme.is_admin) {
-      return { success: false, message: "Cannot delete a system theme" };
-    }
-    if (existingTheme.user_id !== currentUser.id) {
-      return { success: false, message: "Not authorized to delete this theme" };
-    }
-
-    const { error } = await supabase
-      .from("presentation_themes")
-      .delete()
-      .eq("id", themeId);
-
-    if (error) throw error;
-
-    return { success: true, message: "Theme deleted successfully" };
-  } catch (error) {
-    console.error("Failed to delete custom theme:", error);
-    return {
-      success: false,
-      message: "Unable to delete theme. Please try again later.",
-    };
-  }
-}

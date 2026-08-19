@@ -28,9 +28,9 @@ import {
 } from "platejs/react";
 import * as React from "react";
 
-import { useDraggable } from "@/components/notebook/presentation/editor/dnd/hooks/useDraggable";
-import { useDropLine } from "@/components/notebook/presentation/editor/dnd/hooks/useDropLine";
-import { type CanDropCallback } from "@/components/notebook/presentation/editor/dnd/hooks/useDropNode";
+import { useDraggable } from "@/components/presentation/editor/dnd/hooks/useDraggable";
+import { useDropLine } from "@/components/presentation/editor/dnd/hooks/useDropLine";
+import { type CanDropCallback } from "@/components/presentation/editor/dnd/hooks/useDropNode";
 import {
   BLOCKS,
   BUTTON_ELEMENT,
@@ -40,7 +40,7 @@ import {
   isLayoutChildType,
   LABEL_ELEMENT,
   QUOTE_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import { useIsTouchDevice } from "@/components/plate/hooks/use-is-touch-device";
 import { Button } from "@/components/plate/ui/button";
 import {

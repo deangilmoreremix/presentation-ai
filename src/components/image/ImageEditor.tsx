@@ -1,24 +1,33 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload, Scissors, RefreshCw } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, Upload, Scissors, Download, RefreshCw } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/supabase-provider";
-import type {
-  ImageModel,
-  GptImageSize,
-  ImageQuality,
-  OutputFormat,
+import {
+  type ImageModel,
+  type GptImageSize,
+  type ImageQuality,
+  type OutputFormat,
+  type ImageBackground,
 } from "@/lib/image/types";
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2", "dall-e-2"];
 
 // Sizes
 const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
@@ -40,38 +49,57 @@ interface ImageEditorProps {
 export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) {
   const { user } = useAuth();
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [mask, setMask] = useState<File | null>(null);
+  const [maskPreview, setMaskPreview] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<ImageModel>("gpt-image-1");
   const [size, setSize] = useState<GptImageSize>("1024x1024");
   const [quality, setQuality] = useState<ImageQuality>("high");
   const [format, setFormat] = useState<OutputFormat>("png");
-  const [isEditing, setIsEditing] = useState(false);
+  const [compression, setCompression] = useState<number>(90);
+  const [background, setBackground] = useState<ImageBackground>("opaque");
+  const [n, setN] = useState(1);
+  const [isEditingImage, setIsEditingImage] = useState(false);
+  const [isCreatingVariation, setIsCreatingVariation] = useState(false);
   const [editedImages, setEditedImages] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [failedAction, setFailedAction] = useState<"edit" | "variation" | null>(null);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const maskInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      if (maskPreview) URL.revokeObjectURL(maskPreview);
+    };
+  }, [imagePreview, maskPreview]);
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
       setImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const handleMaskSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (maskPreview) URL.revokeObjectURL(maskPreview);
       setMask(file);
+      setMaskPreview(URL.createObjectURL(file));
     }
   };
 
   const handleEdit = async () => {
     if (!image || !prompt || !user) return;
 
-    setIsEditing(true);
+    setIsEditingImage(true);
     setError(null);
+    setFailedAction(null);
 
     try {
       const formData = new FormData();
@@ -82,6 +110,9 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
       formData.append("size", size);
       formData.append("quality", quality);
       formData.append("outputFormat", format);
+      formData.append("outputCompression", String(compression));
+      formData.append("background", background);
+      formData.append("n", String(n));
       formData.append("apiKey", getApiKey() ?? "");
 
       const response = await fetch("/api/image/edit", {
@@ -99,21 +130,23 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
       onImageEdited?.(data.images);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to edit image");
+      setFailedAction("edit");
     } finally {
-      setIsEditing(false);
+      setIsEditingImage(false);
     }
   };
 
   const handleVariation = async () => {
     if (!image || !user) return;
 
-    setIsEditing(true);
+    setIsCreatingVariation(true);
     setError(null);
+    setFailedAction(null);
 
     try {
       const formData = new FormData();
       formData.append("image", image);
-      formData.append("model", "dall-e-2");
+      formData.append("model", model);
       formData.append("size", size);
       formData.append("apiKey", getApiKey() ?? "");
 
@@ -132,8 +165,9 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
       onImageEdited?.(data.images);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create variation");
+      setFailedAction("variation");
     } finally {
-      setIsEditing(false);
+      setIsCreatingVariation(false);
     }
   };
 
@@ -167,6 +201,15 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
                 <Upload className="mr-2 h-4 w-4" />
                 {image ? image.name : "Select Image"}
               </Button>
+              {imagePreview && (
+                <div className="mt-2 rounded-lg border bg-muted/50 p-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="aspect-video w-full rounded object-cover"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Mask Upload (Optional) */}
@@ -192,6 +235,15 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
                 <Upload className="mr-2 h-4 w-4" />
                 {mask ? mask.name : "Select Mask"}
               </Button>
+              {maskPreview && (
+                <div className="mt-2 rounded-lg border bg-muted/50 p-2">
+                  <img
+                    src={maskPreview}
+                    alt="Mask preview"
+                    className="aspect-video w-full rounded object-cover"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Edit Prompt */}
@@ -224,14 +276,111 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
               </Select>
             </div>
 
+            {/* Size, Quality, Format, Count */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-size">Size</Label>
+                <Select value={size} onValueChange={(v) => setSize(v as GptImageSize)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_SIZES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-quality">Quality</Label>
+                <Select value={quality} onValueChange={(v) => setQuality(v as ImageQuality)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_QUALITIES.map((q) => (
+                      <SelectItem key={q} value={q}>
+                        {q}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-format">Format</Label>
+                <Select value={format} onValueChange={(v) => setFormat(v as OutputFormat)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OUTPUT_FORMATS.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f.toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-n">Count: {n}</Label>
+                <Select value={String(n)} onValueChange={(v) => setN(Number(v))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4].map((num) => (
+                      <SelectItem key={num} value={String(num)}>
+                        {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Compression Slider */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-compression" className="text-sm">
+                Compression: {compression}%
+              </Label>
+              <Slider
+                id="edit-compression"
+                value={[compression]}
+                onValueChange={([v]) => setCompression(v ?? 90)}
+                max={100}
+                min={0}
+                step={10}
+                className="w-32"
+              />
+            </div>
+
+            {/* Background Toggle */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-transparent-bg" className="text-sm">
+                Transparent Background
+              </Label>
+              <Switch
+                id="edit-transparent-bg"
+                checked={background === "transparent"}
+                onCheckedChange={(checked) => setBackground(checked ? "transparent" : "opaque")}
+              />
+            </div>
+
             {/* Edit Actions */}
             <div className="flex gap-2">
               <Button
                 onClick={handleEdit}
-                disabled={!image || !prompt || isEditing || !user}
+                disabled={!image || !prompt || isEditingImage || !user}
                 className="flex-1"
               >
-                {isEditing ? (
+                {isEditingImage ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Editing...
@@ -240,24 +389,50 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
                   "Edit Image"
                 )}
               </Button>
-              <Button
-                onClick={handleVariation}
-                disabled={!image || isEditing || !user}
-                variant="outline"
-                className="flex-1"
-              >
-                {isEditing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Variations"
-                )}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleVariation}
+                      disabled={!image || isCreatingVariation || !user}
+                      className="flex-1"
+                    >
+                      {isCreatingVariation ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create Variations"
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Generate new variations of the uploaded image using AI
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <div className="flex items-center gap-2 rounded-md border border-destructive/50 bg-destructive/10 p-2">
+                <p className="flex-1 text-sm text-destructive">{error}</p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                  onClick={() => {
+                    setError(null);
+                    setFailedAction(null);
+                    if (failedAction === "edit") handleEdit();
+                    else if (failedAction === "variation") handleVariation();
+                  }}
+                  title="Retry"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -277,22 +452,25 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
                       alt={`Edited ${index + 1}`}
                       className="aspect-square w-full rounded-lg object-cover shadow-md"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="absolute inset-0 flex items-end justify-center gap-2 rounded-lg bg-gradient-to-t from-black/60 to-transparent p-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                       <Button
                         size="sm"
                         variant="secondary"
+                        className="h-8 w-8 p-0"
                         onClick={() => {
                           const a = document.createElement("a");
                           a.href = url;
                           a.download = `edited-${index}.${format}`;
                           a.click();
                         }}
+                        title="Download"
                       >
-                        Download
+                        <Download className="h-4 w-4" />
                       </Button>
                       {onImageSelect && (
                         <Button
                           size="sm"
+                          className="h-8 px-2 text-xs"
                           onClick={() => onImageSelect(url)}
                         >
                           Use
@@ -304,7 +482,7 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
               </div>
             ) : (
               <div className="flex min-h-96 flex-col items-center justify-center rounded-lg border-2 border-dashed">
-                {isEditing ? (
+                {isEditingImage || isCreatingVariation ? (
                   <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
                 ) : (
                   <>

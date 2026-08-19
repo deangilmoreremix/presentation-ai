@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 interface SlideThumbnailProps {
   index: number;
   isActive: boolean;
-  onClick: () => void;
+  isSelected?: boolean;
+  onClick: (event: React.MouseEvent) => void;
   children: React.ReactNode;
   widthSize?: "S" | "M" | "L";
   containerWidth?: number;
@@ -19,6 +20,7 @@ interface SlideThumbnailProps {
 export function SlideThumbnail({
   index,
   isActive,
+  isSelected = false,
   onClick,
   children,
   widthSize = "M",
@@ -138,8 +140,12 @@ export function SlideThumbnail({
     <button
       type="button"
       className={cn(
-        "group relative cursor-pointer overflow-hidden rounded-md border transition-all hover:border-primary",
-        isActive ? "border-primary ring ring-primary" : "border-muted",
+        "group relative cursor-pointer overflow-hidden rounded-md border-2 transition-all hover:border-primary",
+        isActive
+          ? "border-primary ring-2 ring-primary"
+          : isSelected
+            ? "border-blue-500 ring-2 ring-blue-500/30"
+            : "border-muted",
       )}
       onClick={onClick}
     >

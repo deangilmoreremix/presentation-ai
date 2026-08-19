@@ -9,7 +9,6 @@ import { usePresentationState } from "@/states/presentation-state";
 import { AlignmentSection } from "./sections/AlignmentSection";
 import { FormatsSection } from "./sections/FormatsSection";
 import { PageBackgroundSection } from "./sections/PageBackgroundSection";
-import { PremiumFeaturesSection } from "./sections/PremiumFeaturesSection";
 import { ThemeSection } from "./sections/ThemeSection";
 import { TypographySizeSection } from "./sections/TypographySizeSection";
 import { WidthSection } from "./sections/WidthSection";
@@ -60,7 +59,6 @@ export function GlobalSettings() {
             <WidthSection />
             <AlignmentSection />
             <TypographySizeSection />
-            <PremiumFeaturesSection />
           </TabsContent>
 
           <TabsContent value="theme" className="mt-6">

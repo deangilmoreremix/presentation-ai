@@ -27,7 +27,7 @@ import { KEYS, type TElement } from "platejs";
 import { useEditorRef, type PlateEditor } from "platejs/react";
 import * as React from "react";
 
-import { PRESENTATION_TITLE_ELEMENT } from "@/components/notebook/presentation/editor/lib";
+import { PRESENTATION_TITLE_ELEMENT } from "@/components/presentation/editor/lib";
 import {
   DropdownMenu,
   DropdownMenuContent,

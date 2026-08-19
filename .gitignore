@@ -51,3 +51,6 @@ playwright-report/
 test-results/
 /historia/
 
+
+# clerk configuration (can include secrets)
+/.clerk/

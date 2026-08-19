@@ -9,8 +9,8 @@ import {
   convertInfographicData,
   parseInfographicTemplate,
   type InfographicPaletteThemeColors,
-} from "@/components/notebook/presentation/editor/utils/infographic-utils";
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/utils/infographic-utils";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import { ScrollList, type ScrollListRange } from "@/components/ui/scroll-list";
 import { INFOGRAPHIC_CATEGORIES } from "@/constants/antv-templates";
 import { renderInfographicPreviewHtml } from "@/hooks/presentation/infographic/infographic-preview-renderer";

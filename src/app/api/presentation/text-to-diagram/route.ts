@@ -244,11 +244,11 @@ Convert the above content into an AntV infographic diagram.`;
 export async function POST(req: Request) {
   let endSpanOnReturn = true;
   const actionName = "presentation.text_to_diagram.post";
-  const span = logger.startSpan(`allweone.api.${actionName}`, {
+  const span = logger.startSpan(`smart.api.${actionName}`, {
     attributes: {
-      "allweone.scope": "api",
-      "allweone.action.type": "api_route",
-      "allweone.action.name": actionName,
+      "smart.scope": "api",
+      "smart.action.type": "api_route",
+      "smart.action.name": actionName,
       "http.method": "POST",
       "http.route": "/api/presentation/text-to-diagram",
     },
@@ -258,8 +258,8 @@ export async function POST(req: Request) {
     const body: unknown = await req.json();
 
     if (!isTextToDiagramRequest(body) || body.prompt.trim().length === 0) {
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "missing_prompt",
+      span.event("smart.api.request_rejected", {
+        "smart.validation.error": "missing_prompt",
       });
       return NextResponse.json(
         { error: "No text provided for diagram generation" },
@@ -290,7 +290,7 @@ export async function POST(req: Request) {
       templateList,
       layoutInstruction,
     });
-    span.event("allweone.api.response_stream_created");
+    span.event("smart.api.response_stream_created");
     endSpanOnReturn = false;
 
     return createUIMessageStreamResponse({

@@ -5,12 +5,12 @@ Status: Approved (user approved approach "a", 7-day retention, fallback approach
 
 ## Context
 
-presentation-ai is open to everyone with no login. Each visitor is given a
+smart-presentations is open to everyone with no login. Each visitor is given a
 distinct **Supabase anonymous session** on load, so their content is isolated
 per-visitor (app-level ownership checks in `src/server/share/authorization.ts`).
 
 The database is **shared by many other apps**. Therefore any change must be
-strictly scoped to presentation-ai's own artifacts and must never alter global
+strictly scoped to smart-presentations's own artifacts and must never alter global
 DB behavior in a way that could affect other apps (no RLS flips on shared
 tables, no role changes, no deleting other apps' data).
 
@@ -32,7 +32,7 @@ Two loose ends remain from enabling anonymous sessions:
 
 - Enabling RLS on `base_documents` / `presentations` (rejected earlier: risky on
   a shared DB; app-level isolation is the chosen model).
-- Touching any non-presentation-ai table or any non-anonymous user.
+- Touching any non-smart-presentations table or any non-anonymous user.
 - Deleting anonymous users that still own content.
 
 ## Task 1 — Cleanup of stale anonymous users
@@ -44,7 +44,7 @@ plus a daily `pg_cron` schedule. Delivered as migration
 **Deletion predicate (all must hold):**
 - `auth.users.is_anonymous = true`
 - `coalesce(last_sign_in_at, created_at) < now() - retention` (default `7 days`)
-- Owns **zero** rows in `public.base_documents` (i.e. no presentation-ai content)
+- Owns **zero** rows in `public.base_documents` (i.e. no smart-presentations content)
 
 **Safety:**
 - Never deletes non-anonymous users.

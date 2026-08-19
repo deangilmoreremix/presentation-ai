@@ -20,8 +20,9 @@ interface LMStudioOpenAIResponse {
 }
 
 const routeLogger = createLogger("api:presentation-local-models");
-const LM_STUDIO_NATIVE_MODELS_URL = "http://localhost:1234/api/v1/models";
-const LM_STUDIO_OPENAI_MODELS_URL = "http://localhost:1234/v1/models";
+const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL ?? "http://localhost:1234";
+const LM_STUDIO_NATIVE_MODELS_URL = `${LM_STUDIO_BASE_URL}/api/v1/models`;
+const LM_STUDIO_OPENAI_MODELS_URL = `${LM_STUDIO_BASE_URL}/v1/models`;
 const LOCAL_FETCH_TIMEOUT_MS = 2_500;
 
 function createTimeoutSignal(timeoutMs: number): AbortSignal {

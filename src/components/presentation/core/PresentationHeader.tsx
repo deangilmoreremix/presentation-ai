@@ -1,15 +1,16 @@
 "use client";
 
-import { Bot, Palette } from "lucide-react";
+import { Bot, Palette, Paintbrush } from "lucide-react";
 import * as motion from "motion/react-client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 // Import our new components
 import { updatePresentationTitle } from "@/app/_actions/notebook/presentation/presentationActions";
-import AllweoneText from "@/components/globals/allweone-logo";
+import SmartPresentationsLogo from "@/components/globals/smart-presentations-logo";
 import { ExportButton } from "@/components/presentation/buttons/ExportButton";
+import { HistoryButtons } from "@/components/presentation/buttons/HistoryButtons";
 import { PresentButton } from "@/components/presentation/buttons/PresentButton";
 import { ShareButton } from "@/components/presentation/buttons/ShareButton";
 import { SaveStatus } from "@/components/presentation/buttons/SaveStatus";
@@ -18,7 +19,7 @@ import { PresentationSavingIndicator } from "@/components/presentation/core/Pres
 import { Button } from "@/components/ui/button";
 import { Brain } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/provider/SupabaseAuthProvider";
+import { useUser } from "@clerk/nextjs";
 import { usePresentationState } from "@/states/presentation-state";
 
 interface PresentationHeaderProps {
@@ -39,7 +40,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
     (s) => s.setActiveRightPanel,
   );
 
-  const { session, isLoading } = useAuth();
+  const { user, isLoaded } = useUser();
 
   const [presentationTitle, setPresentationTitle] = useState<string>(
     "Presentation",
@@ -52,7 +53,16 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
     !pathname.includes("generate");
   const showPresentationTitle = pathname !== "/presentation";
 
-  const isLoggedOut = !isLoading && !session;
+  const searchParams = useSearchParams();
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.has("export")) {
+      setIsExportDialogOpen(true);
+    }
+  }, [searchParams]);
+
+  const isLoggedOut = isLoaded && !user;
   const showBrand = isLoggedOut;
 
   // Update title when it changes in the state
@@ -85,7 +95,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
             transition={{ duration: 1 }}
           >
             <Link href="/" className="h-max">
-              <AllweoneText className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></AllweoneText>
+              <SmartPresentationsLogo className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></SmartPresentationsLogo>
             </Link>
           </motion.div>
         </div>
@@ -103,7 +113,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
       <div className="flex min-w-0 flex-1 items-center gap-2">
         {showBrand ? (
           <Link href="/">
-            <AllweoneText className="h-8 w-28" />
+            <SmartPresentationsLogo className="h-8 w-28" />
           </Link>
         ) : (
           <Link
@@ -169,6 +179,9 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
           <PresentationSavingIndicator />
         )}
 
+        {/* Undo/Redo - Visible in main toolbar */}
+        {isPresentationPage && !isPresenting && !isReadOnly && <HistoryButtons />}
+
         {/* Theme button - Only in presentation page, not outline or present mode */}
         {isPresentationPage && !isPresenting && !isReadOnly && (
           <Button
@@ -186,14 +199,38 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
           </Button>
         )}
 
+        {/* Customize Theme button - Only in presentation page, not outline or present mode */}
+        {isPresentationPage && !isPresenting && !isReadOnly && (
+          <Button
+            variant="ghost"
+            className="h-9 gap-1.5"
+            onClick={() => {
+              usePresentationState.getState().setIsThemeCreatorOpen(true);
+            }}
+          >
+            <Paintbrush className="size-4" />
+            <span className="sr-only">
+              Customize Theme
+            </span>
+            <span className="hidden sm:inline">
+              Customize Theme
+            </span>
+          </Button>
+        )}
+
         {/* Export button - Only in presentation page, not outline or present mode */}
-        {isPresentationPage && !isPresenting && !isReadOnly && <ExportButton />}
+        {isPresentationPage && (
+          <ExportButton
+            open={isExportDialogOpen}
+            onOpenChange={setIsExportDialogOpen}
+          />
+        )}
 
         {/* Save status - Only in presentation page, not outline or present mode */}
         {isPresentationPage && !isPresenting && !isReadOnly && <SaveStatus />}
 
         {/* Share button - Only in presentation page, not outline */}
-        {isPresentationPage && !isPresenting && !isReadOnly && <ShareButton />}
+        {isPresentationPage && <ShareButton />}
 
         {/* Agent button - Only in presentation page, not outline or present mode */}
         {isPresentationPage && !isPresenting && !isReadOnly && (

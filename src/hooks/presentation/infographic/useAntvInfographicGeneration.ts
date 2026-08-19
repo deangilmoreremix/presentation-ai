@@ -12,7 +12,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 import { findInfographicEntryById } from "@/hooks/presentation/infographic/findInfographicNode";
 import {
   buildInfographicLayoutInstruction,

@@ -1,8 +1,7 @@
 "use server";
 
 import { utapi } from "@/app/api/uploadthing/core";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 import { getOpenAIClient } from "@/lib/openai/client";
 import {
   DEFAULT_IMAGE_MODEL,
@@ -95,13 +94,8 @@ export async function generateImageAction(
   aspectRatio: ImageAspectRatio = "16:9",
   apiKey?: string,
 ) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser?.id) {
-    return { success: false, error: "You must be logged in to generate images" };
-  }
-
   try {
-    return await generateOpenAIImage(prompt, currentUser.id, aspectRatio);
+    return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, apiKey);
   } catch (error) {
     console.error("Error generating image:", error);
     return {

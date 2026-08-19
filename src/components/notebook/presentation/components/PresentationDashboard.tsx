@@ -7,16 +7,20 @@ import {
 import { togglePresentationFavorite } from "@/app/_actions/notebook/presentation/presentationFavoriteActions";
 import {
   createEmptyPresentation,
+  createPresentation,
   deletePresentation,
   duplicatePresentation,
   updatePresentationTitle,
 } from "@/app/_actions/notebook/presentation/presentationActions";
 import { useBlankPresentationCreator } from "@/hooks/presentation/useBlankPresentationCreator";
+import { uploadFiles } from "@/hooks/globals/useUploadthing";
 import {
   getPresentationGenerationAspectRatioLabel,
   type PresentationGenerationAspectRatio,
 } from "@/lib/presentation/aspect-ratio";
 import { buildPresentationCustomization } from "@/lib/presentation/customization";
+import { extractThemeFromPptx } from "@/lib/presentation/pptx-theme-extractor";
+import { type PlateNode, type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";
 import {
@@ -44,18 +48,25 @@ import {
   Pencil,
   Plus,
   Search,
+  Share2,
   SlidersHorizontal,
   Star,
+  Target,
   Trash2,
+  Type,
+  Users,
+  Upload,
   WandSparkles,
   X,
   Zap,
+  MessageSquare,
+  Download,
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useAppTheme } from "@/provider/theme-provider";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
@@ -81,6 +92,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -93,6 +105,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PresentationExamples } from "./PresentationExamples";
 import { PresentationTemplates } from "./PresentationTemplates";
+import { TEMPLATE_DEFINITIONS } from "../utils/templates";
 
 const ModelPicker = dynamic(
   () =>
@@ -126,6 +139,8 @@ type PresentationFileItem = {
   onRename: (nextName: string) => Promise<boolean>;
   onDelete: () => Promise<boolean>;
   onDuplicate: () => void;
+  onShare: () => void;
+  onExport: () => void;
 };
 
 type PresentationPage = Awaited<ReturnType<typeof fetchPresentations>>;
@@ -158,6 +173,57 @@ const SLIDE_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
   label: `${index + 1} slide${index === 0 ? "" : "s"}`,
   value: String(index + 1),
 }));
+
+const TONE_OPTIONS = [
+  { label: "Auto", value: "auto" },
+  { label: "General", value: "general" },
+  { label: "Persuasive", value: "persuasive" },
+  { label: "Inspiring", value: "inspiring" },
+  { label: "Instructive", value: "instructive" },
+  { label: "Engaging", value: "engaging" },
+] as const;
+
+const AUDIENCE_OPTIONS = [
+  { label: "Auto", value: "auto" },
+  { label: "General", value: "general" },
+  { label: "Business", value: "business" },
+  { label: "Investor", value: "investor" },
+  { label: "Teacher", value: "teacher" },
+  { label: "Student", value: "student" },
+] as const;
+
+const SCENARIO_OPTIONS = [
+  { label: "Auto", value: "auto" },
+  { label: "General", value: "general" },
+  { label: "Analysis report", value: "analysis-report" },
+  { label: "Teaching & training", value: "teaching-training" },
+  { label: "Promotional materials", value: "promotional-materials" },
+  { label: "Public speeches", value: "public-speeches" },
+] as const;
+
+const TEXT_CONTENT_OPTIONS = [
+  { label: "Minimal", value: "minimal" },
+  { label: "Concise", value: "concise" },
+  { label: "Detailed", value: "detailed" },
+  { label: "Extensive", value: "extensive" },
+] as const;
+
+const PAGE_STYLE_OPTIONS = [
+  { label: "Default", value: "default" },
+  { label: "Minimal", value: "minimal" },
+  { label: "Modern", value: "modern" },
+  { label: "Classic", value: "classic" },
+  { label: "Creative", value: "creative" },
+] as const;
+
+const PRESENTATION_STYLE_OPTIONS = [
+  { label: "Professional", value: "professional" },
+  { label: "Casual", value: "casual" },
+  { label: "Academic", value: "academic" },
+  { label: "Corporate", value: "corporate" },
+  { label: "Creative", value: "creative" },
+  { label: "Minimal", value: "minimal" },
+] as const;
 
 function getPresentationRoute(item: {
   hasContent: boolean;
@@ -335,10 +401,14 @@ function PresentationFileActionsMenu({
   file,
   onRenameRequest,
   onDeleteRequest,
+  onShareRequest,
+  onExportRequest,
 }: {
   file: PresentationFileItem;
   onRenameRequest: (file: PresentationFileItem) => void;
   onDeleteRequest: (file: PresentationFileItem) => void;
+  onShareRequest: (file: PresentationFileItem) => void;
+  onExportRequest: (file: PresentationFileItem) => void;
 }) {
   return (
     <div
@@ -397,6 +467,15 @@ function PresentationFileActionsMenu({
             {file.isFavorited ? "Remove from favorites" : "Add to favorites"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => onShareRequest(file)}>
+            <Share2 className="mr-2 size-4" />
+            Share
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onExportRequest(file)}>
+            <Download className="mr-2 size-4" />
+            Export
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={file.isDeletePending}
             className="text-destructive focus:text-destructive"
@@ -419,6 +498,7 @@ function PresentationProjectFilesSection({
   files,
   isLoading,
   onCreateNew,
+  onOpenTemplates,
   filterOptions,
   activeFilterId,
   onFilterChange,
@@ -430,6 +510,7 @@ function PresentationProjectFilesSection({
   files: PresentationFileItem[];
   isLoading?: boolean;
   onCreateNew: () => void;
+  onOpenTemplates: () => void;
   filterOptions: { id: string; label: string }[];
   activeFilterId: string;
   onFilterChange: (filterId: string) => void;
@@ -448,6 +529,176 @@ function PresentationProjectFilesSection({
   const [deleteTarget, setDeleteTarget] =
     useState<PresentationFileItem | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const acceptedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/gif",
+    ];
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const isAccepted =
+      acceptedTypes.includes(file.type) ||
+      ["pptx", "pdf", "png", "jpg", "jpeg", "webp", "gif"].includes(
+        extension ?? "",
+      );
+
+    if (!isAccepted) {
+      toast.error("Please select a .pptx, .pdf, or image file");
+      return;
+    }
+
+    const isImage = file.type.startsWith("image/");
+    const isPptx =
+      extension === "pptx" ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    const isPdf = extension === "pdf" || file.type === "application/pdf";
+
+    if (isPdf) {
+      toast.info("PDF import coming soon");
+      event.target.value = "";
+      return;
+    }
+
+    if (isPptx) {
+      try {
+        const theme = await extractThemeFromPptx(file);
+        const themeName = theme.name || "Imported";
+        const result = await createEmptyPresentation({
+          title: file.name.replace(/\.pptx$/i, ""),
+          theme: themeName,
+        });
+        if (result.success && result.presentation) {
+          toast.success("Presentation imported from PPTX");
+        } else {
+          toast.error(result.message || "Failed to import PPTX");
+        }
+      } catch (error) {
+        console.error("PPTX import error:", error);
+        toast.error("Failed to import PPTX file");
+      }
+      event.target.value = "";
+      return;
+    }
+
+    if (isImage) {
+      try {
+        const uploadedFiles = await uploadFiles("imageUploader", {
+          files: [file],
+        });
+        const imageUrl = uploadedFiles?.[0]?.ufsUrl;
+        if (!imageUrl) {
+          toast.error("Failed to upload image");
+          event.target.value = "";
+          return;
+        }
+        const slideId = crypto.randomUUID();
+        const imageSlideContent: PlateSlide = {
+          id: slideId,
+          content: [
+            {
+              type: "img",
+              url: imageUrl,
+              children: [{ text: "" }],
+            } as PlateNode,
+          ],
+          rootImage: {
+            query: file.name,
+            url: imageUrl,
+            embedType: "image",
+            imageSource: "upload",
+            layoutType: "background",
+          },
+          isImageSlide: true,
+          layoutType: "background",
+          alignment: "center",
+        };
+        const result = await createPresentation({
+          title: file.name.replace(/\.\w+$/, ""),
+          content: { slides: [imageSlideContent] },
+        });
+        if (result.success && result.presentation) {
+          toast.success("Presentation created from image");
+        } else {
+          toast.error(result.message || "Failed to create presentation from image");
+        }
+      } catch (error) {
+        console.error("Image import error:", error);
+        toast.error("Failed to import image");
+      }
+      event.target.value = "";
+      return;
+    }
+  };
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const selectedFiles = files.filter((file) => selectedIds.has(file.id));
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      const file = files.find((f) => f.id === id);
+      if (file) {
+        await file.onDelete();
+      }
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDuplicate = () => {
+    for (const id of selectedIds) {
+      const file = files.find((f) => f.id === id);
+      if (file) {
+        file.onDuplicate();
+      }
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkExport = () => {
+    for (const id of selectedIds) {
+      const file = files.find((f) => f.id === id);
+      if (file) {
+        file.onExport();
+      }
+    }
+    setSelectedIds(new Set());
+  };
+
+  const handleShareRequest = (file: PresentationFileItem) => {
+    file.onShare();
+  };
+
+  const handleExportRequest = (file: PresentationFileItem) => {
+    file.onExport();
+  };
 
   const tabs: { id: LibraryTab; label: string; icon: LucideIcon }[] = [
     { id: "all", label: "All", icon: Archive },
@@ -612,6 +863,23 @@ function PresentationProjectFilesSection({
                 </div>
               </div>
               <div className="order-1 flex min-w-0 flex-row-reverse items-center gap-2 sm:order-2 sm:flex-row">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pptx,.pdf,image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleImportClick}
+                  className="h-9 gap-1.5 rounded-lg px-3"
+                >
+                  <Upload className="size-4" />
+                  <span className="hidden sm:inline">Import</span>
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
@@ -621,6 +889,16 @@ function PresentationProjectFilesSection({
                 >
                   <Plus className="size-4" />
                   <span>Create new</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onOpenTemplates}
+                  className="h-9 gap-1.5 rounded-lg px-3"
+                >
+                  <LayoutTemplate className="size-4" />
+                  <span>New from template</span>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -725,6 +1003,55 @@ function PresentationProjectFilesSection({
         </div>
       </div>
 
+      {selectedFiles.length > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-accent/30 px-3 py-2">
+          <span className="text-sm font-medium">
+            {selectedFiles.length} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleBulkDuplicate}
+              className="h-8 gap-1.5"
+            >
+              <Copy className="size-3.5" />
+              <span>Duplicate</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleBulkExport}
+              className="h-8 gap-1.5"
+            >
+              <Download className="size-3.5" />
+              <span>Export</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleBulkDelete}
+              className="h-8 gap-1.5 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="size-3.5" />
+              <span>Delete</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClearSelection}
+              className="h-8"
+            >
+              <X className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-full overflow-x-auto overflow-y-hidden rounded-lg border border-border bg-background">
           {isLoading ? (
             viewMode === "grid" ? (
@@ -782,6 +1109,14 @@ function PresentationProjectFilesSection({
                   key={file.id}
                   className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card text-left transition-all duration-200 hover:border-primary/50 hover:shadow-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
                 >
+                  <div className="absolute top-2 left-2 z-40">
+                    <Checkbox
+                      checked={selectedIds.has(file.id)}
+                      onCheckedChange={() => handleToggleSelect(file.id)}
+                      onClick={(event) => event.stopPropagation()}
+                      className="size-4 bg-background/90 shadow-sm backdrop-blur"
+                    />
+                  </div>
                   <button
                     type="button"
                     aria-label={`Open ${file.name}`}
@@ -813,6 +1148,28 @@ function PresentationProjectFilesSection({
                         : "sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100",
                     )}
                   >
+                    <button
+                      type="button"
+                      aria-label={`Share ${file.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        file.onShare();
+                      }}
+                      className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                    >
+                      <Share2 className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Export ${file.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        file.onExport();
+                      }}
+                      className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+                    >
+                      <Download className="size-3.5" />
+                    </button>
                     <PresentationFavoriteButton
                       file={file}
                       className="border border-border/70 bg-background/90 shadow-sm backdrop-blur"
@@ -821,6 +1178,8 @@ function PresentationProjectFilesSection({
                       file={file}
                       onRenameRequest={openRenameDialog}
                       onDeleteRequest={setDeleteTarget}
+                      onShareRequest={handleShareRequest}
+                      onExportRequest={handleExportRequest}
                     />
                   </div>
                   <div className="pointer-events-none relative z-20 flex flex-1 flex-col p-3">
@@ -854,6 +1213,13 @@ function PresentationProjectFilesSection({
                     onClick={file.onClick}
                     className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-none"
                   />
+                  <div className="relative z-20">
+                    <Checkbox
+                      checked={selectedIds.has(file.id)}
+                      onCheckedChange={() => handleToggleSelect(file.id)}
+                      onClick={(event) => event.stopPropagation()}
+                    />
+                  </div>
                   <div className="pointer-events-none relative z-20 flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
                     {file.thumbnailUrl ? (
                       <Image
@@ -881,11 +1247,35 @@ function PresentationProjectFilesSection({
                     </div>
                   </div>
                   <div className="relative z-20 flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={`Share ${file.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        file.onShare();
+                      }}
+                      className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <Share2 className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Export ${file.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        file.onExport();
+                      }}
+                      className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <Download className="size-3.5" />
+                    </button>
                     <PresentationFavoriteButton file={file} />
                     <PresentationFileActionsMenu
                       file={file}
                       onRenameRequest={openRenameDialog}
                       onDeleteRequest={setDeleteTarget}
+                      onShareRequest={handleShareRequest}
+                      onExportRequest={handleExportRequest}
                     />
                   </div>
                 </div>
@@ -1043,27 +1433,29 @@ export function PresentationDashboard() {
     themeDataByTheme,
     generatedThemeData,
     pageStyle,
+    setPageStyle,
     presentationStyle,
+    setPresentationStyle,
     textContent,
+    setTextContent,
     tone,
+    setTone,
     audience,
+    setAudience,
     scenario,
+    setScenario,
     pageBackground,
     selectedSlideTemplates,
+    setSelectedSlideTemplates,
     outlineItemIds,
     outlineTemplateOverrides,
     resetPresentationState,
-    showTemplates,
     setShowTemplates,
   } = usePresentationState();
 
   useEffect(() => {
     setOutputFormat("flow");
   }, [setOutputFormat]);
-
-  useEffect(() => {
-    resetPresentationState();
-  }, [resetPresentationState]);
 
   const typeFilter =
     documentTypeFilter === ALL_PRESENTATION_DOCUMENT_TYPES
@@ -1371,6 +1763,8 @@ export function PresentationDashboard() {
       }
     },
     onDuplicate: () => duplicateMutation.mutate({ documentId: item.id }),
+    onShare: () => handleShare(item.id),
+    onExport: () => handleExport(item.id),
   }));
 
   const selectedLanguageLabel =
@@ -1381,6 +1775,27 @@ export function PresentationDashboard() {
     `${numSlides} slides`;
   const outputFormatLabel =
     getPresentationGenerationAspectRatioLabel(generationAspectRatio);
+  const selectedToneLabel =
+    TONE_OPTIONS.find((option) => option.value === tone)?.label ?? "Auto";
+  const selectedAudienceLabel =
+    AUDIENCE_OPTIONS.find((option) => option.value === audience)?.label ??
+    "Auto";
+  const selectedScenarioLabel =
+    SCENARIO_OPTIONS.find((option) => option.value === scenario)?.label ??
+    "Auto";
+  const selectedTextContentLabel =
+    TEXT_CONTENT_OPTIONS.find((option) => option.value === textContent)?.label ??
+    "Concise";
+  const selectedPageStyleLabel =
+    PAGE_STYLE_OPTIONS.find((option) => option.value === pageStyle)?.label ??
+    "Default";
+  const selectedPresentationStyleLabel =
+    PRESENTATION_STYLE_OPTIONS.find((option) => option.value === presentationStyle)
+      ?.label ?? "Professional";
+  const selectedSlideTemplatesLabel =
+    selectedSlideTemplates.length > 0
+      ? `${selectedSlideTemplates.length} template${selectedSlideTemplates.length === 1 ? "" : "s"}`
+      : "Templates";
   const filterOptions = useMemo(
     () => [
       { id: ALL_PRESENTATION_DOCUMENT_TYPES, label: "All" },
@@ -1395,6 +1810,8 @@ export function PresentationDashboard() {
     if (!prompt) {
       return;
     }
+
+    resetPresentationState();
 
     const initialTheme = resolvedTheme === "dark" ? "ebony" : "mystique";
     const title = prompt.substring(0, 50) || "Untitled Presentation";
@@ -1443,6 +1860,21 @@ export function PresentationDashboard() {
       console.error("Error creating presentation:", error);
       toast.error("Failed to create presentation");
     }
+  };
+
+  const handleShare = async (id: string) => {
+    const shareUrl = `${window.location.origin}/presentation/${id}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Presentation link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const handleExport = (id: string) => {
+    toast.info("Opening editor for export...");
+    router.push(`/presentation/${id}?export=true`);
   };
 
   return (
@@ -1512,6 +1944,127 @@ export function PresentationDashboard() {
             </DropdownMenuRadioGroup>
           </SettingPill>
 
+          <SettingPill icon={MessageSquare} label={selectedToneLabel}>
+            <DropdownMenuLabel>Tone</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={tone}
+              onValueChange={(value) => setTone(value as typeof tone)}
+            >
+              {TONE_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <SettingPill icon={Users} label={selectedAudienceLabel}>
+            <DropdownMenuLabel>Audience</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={audience}
+              onValueChange={(value) => setAudience(value as typeof audience)}
+            >
+              {AUDIENCE_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <SettingPill icon={Target} label={selectedScenarioLabel}>
+            <DropdownMenuLabel>Scenario</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={scenario}
+              onValueChange={(value) => setScenario(value as typeof scenario)}
+            >
+              {SCENARIO_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <SettingPill icon={Type} label={selectedTextContentLabel}>
+            <DropdownMenuLabel>Content Density</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={textContent}
+              onValueChange={(value) => setTextContent(value as typeof textContent)}
+            >
+              {TEXT_CONTENT_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <SettingPill icon={LayoutTemplate} label={selectedPageStyleLabel}>
+            <DropdownMenuLabel>Page Style</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={pageStyle} onValueChange={setPageStyle}>
+              {PAGE_STYLE_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <SettingPill icon={SlidersHorizontal} label={selectedPresentationStyleLabel}>
+            <DropdownMenuLabel>Presentation Style</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={presentationStyle}
+              onValueChange={setPresentationStyle}
+            >
+              {PRESENTATION_STYLE_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </SettingPill>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-8 items-center gap-2 rounded-full border border-border bg-background px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent sm:h-9 sm:px-3.5 sm:text-sm"
+              >
+                <LayoutTemplate className="size-3.5 sm:size-4" />
+                {selectedSlideTemplatesLabel}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 max-h-80 overflow-y-auto">
+              <DropdownMenuLabel>Slide Templates</DropdownMenuLabel>
+              {TEMPLATE_DEFINITIONS.map((template) => {
+                const isSelected = selectedSlideTemplates.includes(template.id);
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={template.id}
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedSlideTemplates([
+                          ...selectedSlideTemplates,
+                          template.id,
+                        ]);
+                      } else {
+                        setSelectedSlideTemplates(
+                          selectedSlideTemplates.filter(
+                            (id) => id !== template.id,
+                          ),
+                        );
+                      }
+                    }}
+                  >
+                    {template.name}
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -1551,10 +2104,12 @@ export function PresentationDashboard() {
         files={fileItems}
         isLoading={isLoading}
         onCreateNew={() => {
+          resetPresentationState();
           if (!isCreatingBlank) {
             void handleCreateBlank();
           }
         }}
+        onOpenTemplates={() => setShowTemplates(true)}
         filterOptions={filterOptions}
         activeFilterId={documentTypeFilter}
         onFilterChange={(filterId) =>

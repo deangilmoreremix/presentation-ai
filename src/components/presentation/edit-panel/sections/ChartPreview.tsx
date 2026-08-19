@@ -32,7 +32,7 @@ import {
   SUNBURST_CHART_ELEMENT,
   TREEMAP_CHART_ELEMENT,
   WATERFALL_CHART_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import LazyPreview from "@/components/notebook/presentation/utils/LazyPreview";
 import { cn } from "@/lib/utils";
 

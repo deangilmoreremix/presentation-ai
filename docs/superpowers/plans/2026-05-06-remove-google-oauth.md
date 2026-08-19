@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Completely remove Google OAuth authentication from the Presentation AI application, enabling anonymous usage.
+**Goal:** Completely remove Google OAuth authentication from the Smart Presentations application, enabling anonymous usage.
 
 **Architecture:** Remove all Supabase authentication components, update API routes to work without authentication, and modify UI to not require or display auth state.
 
@@ -143,7 +143,7 @@ export function Navigation() {
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold">ALLWEONE®</span>
+            <span className="text-xl font-bold">Smart Presentations</span>
           </Link>
 
           {/* Remove auth buttons - keep navigation clean */}

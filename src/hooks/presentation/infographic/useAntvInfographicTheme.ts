@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import {
   applyThemeToSyntax,
   type InfographicPaletteThemeColors,
-} from "@/components/notebook/presentation/editor/utils/infographic-utils";
+} from "@/components/presentation/editor/utils/infographic-utils";
 import { usePresentationTheme } from "@/components/presentation/providers/PresentationThemeProvider";
 import { resolvePresentationThemeData } from "@/lib/presentation/theme-resolution";
 import { usePresentationState } from "@/states/presentation-state";

@@ -14,8 +14,8 @@ import {
   type RefObject,
 } from "react";
 
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
-import { syncInfographicSyntaxWithData } from "@/components/notebook/presentation/editor/utils/infographic-utils";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
+import { syncInfographicSyntaxWithData } from "@/components/presentation/editor/utils/infographic-utils";
 import { findInfographicEntryById } from "@/hooks/presentation/infographic/findInfographicNode";
 import {
   cloneSerializableOptions,

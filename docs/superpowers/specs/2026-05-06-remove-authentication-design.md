@@ -1,7 +1,7 @@
 # Remove Authentication - Design
 
 ## Overview
-Remove all authentication checks and calls from the presentation-ai codebase while preserving Supabase database functionality. All users will operate as a single anonymous user.
+Remove all authentication checks and calls from the smart-presentations codebase while preserving Supabase database functionality. All users will operate as a single anonymous user.
 
 ## Current State
 - Authentication is implemented via Supabase

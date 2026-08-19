@@ -22,7 +22,6 @@ import {
   Star,
   CheckCircle,
   ArrowRight,
-  Github,
   ExternalLink,
   Presentation,
   Bot,
@@ -54,8 +53,6 @@ import {
   MoveVertical,
   Gauge,
   ScanSearch,
-  Users,
-  BookOpen,
 } from "lucide-react";
 
 const LANGUAGES = [
@@ -276,8 +273,8 @@ const featureGroups = [
       },
       {
         icon: Sparkles,
-        title: "Open Source",
-        description: "MIT-style codebase. Self-host or contribute. Full source on GitHub under allweonedev/presentation-ai.",
+        title: "AI-Ready Platform",
+        description: "Built as a modern AI platform. Plug in OpenAI, local LLMs via LM Studio, or your own API keys. Encrypted per-user key storage with validation.",
       },
     ],
   },
@@ -312,39 +309,6 @@ const examples = [
   { emoji: "🤖", title: "Advancements in Robotics and Automation", slides: "5 slides", language: "English" },
   { emoji: "🌱", title: "Innovations in Renewable Energy Technology", slides: "5 slides", language: "English" },
   { emoji: "🔒", title: "Cybersecurity Challenges in Engineering Systems", slides: "5 slides", language: "English" },
-];
-
-const pricingTiers = [
-  {
-    name: "Plus",
-    price: "$8",
-    period: "per month",
-    description: "Affordable shared credits for everyday AI work",
-    features: ["1,600 shared credits per month", "Chat, notebooks, and presentations", "Image generation from the same pool", "Buy extra credits anytime"],
-    href: "/billing",
-    cta: "Get Started",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    price: "$20",
-    period: "per month",
-    description: "The main plan for regular creation across the product",
-    features: ["4,000 shared credits per month", "Document-aware chat", "Presentation and notebook workflows", "Shared top-ups that never expire", "Best fit for most users"],
-    href: "/billing",
-    cta: "Choose Pro",
-    highlighted: true,
-  },
-  {
-    name: "Max",
-    price: "$80",
-    period: "per month",
-    description: "A larger credit pool for power users and heavy workflows",
-    features: ["16,000 shared credits per month", "Large presentation generation budget", "Heavy chat and notebook use", "Same unified credit accounting", "Buy extra credits anytime"],
-    href: "/billing",
-    cta: "Choose Max",
-    highlighted: false,
-  },
 ];
 
 export default function LandingPage() {
@@ -398,7 +362,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center mb-6">
               <Badge variant="secondary" className="px-4 py-2 text-sm">
                 <Star className="h-4 w-4 mr-2 fill-current" />
-                Open Source AI Presentation Generator
+                AI-Powered Smart Presentation App
               </Badge>
             </div>
 
@@ -533,7 +497,7 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Open source</span>
+                <span>AI-powered</span>
               </div>
             </div>
           </div>
@@ -553,18 +517,32 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featureGroups.flatMap((group) => group.features).slice(0, 6).map((feature, index) => (
-              <Card key={index} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base leading-relaxed">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+            {featureGroups.flatMap((group) => group.features).slice(0, 6).map((feature, index) => {
+              const category = featureGroups.find(g => g.features.includes(feature))?.category;
+              const routeMap: Record<string, string> = {
+                "AI Content Generation": "/presentation/create",
+                "Editor & Blocks": "/presentation/create",
+                "Image Studio": "/image-studio",
+                "Themes & Customization": "/presentation/create",
+                "Presentation & Sharing": "/presentation",
+                "Productivity & Platform": "/presentation/create",
+              };
+              const href = routeMap[category ?? ""] ?? "/presentation/create";
+              return (
+                <Link key={index} href={href}>
+                  <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardHeader>
+                      <CardTitle className="text-lg">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-base leading-relaxed">
+                        {feature.description}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -586,18 +564,31 @@ export default function LandingPage() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {group.features.map((feature) => (
-                <Card key={feature.title} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-sm leading-relaxed">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              ))}
+              {group.features.map((feature) => {
+                const routeMap: Record<string, string> = {
+                  "AI Content Generation": "/presentation/create",
+                  "Editor & Blocks": "/presentation/create",
+                  "Image Studio": "/image-studio",
+                  "Themes & Customization": "/presentation/create",
+                  "Presentation & Sharing": "/presentation",
+                  "Productivity & Platform": "/presentation/create",
+                };
+                const href = routeMap[group.category] ?? "/presentation/create";
+                return (
+                  <Link key={feature.title} href={href}>
+                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardHeader>
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription className="text-sm leading-relaxed">
+                          {feature.description}
+                        </CardDescription>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -728,60 +719,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-20 px-4 border-t bg-muted/30" id="pricing">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              One subscription covers chat, notebooks, presentations, and images.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingTiers.map((tier) => (
-              <Card key={tier.name} className={`border-0 shadow-md ${tier.highlighted ? "ring-2 ring-primary relative" : ""}`}>
-                {tier.highlighted && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{tier.name}</CardTitle>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold">{tier.price}</span>
-                    <span className="text-muted-foreground">{tier.period}</span>
-                  </div>
-                  <CardDescription>{tier.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {tier.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full"
-                    variant={tier.highlighted ? "default" : "outline"}
-                    asChild
-                  >
-                    <Link href={tier.href}>{tier.cta}</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Community CTA */}
       <section className="py-20 px-4 border-t" id="community">
         <div className="container mx-auto text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Join our Community</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Share your ideas, ask questions, and collaborate with other developers. The fastest growing community for AI web agents.
+              Share your presentations, get inspired by others, and stay updated on the latest AI features.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button size="lg" variant="outline" asChild>
@@ -790,63 +734,61 @@ export default function LandingPage() {
                   Join Discord
                 </Link>
               </Button>
-              <Button size="lg" variant="ghost" asChild>
-                <a href="https://x.com/AllweoneAi" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Follow @allweone
-                </a>
-              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Open Source Section */}
+      {/* AI Capabilities Section */}
       <section className="py-20 px-4 border-t bg-muted/30">
         <div className="container mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Open Source</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Why we're open source</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Powered by Advanced AI
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Smart Presentations uses leading AI models to understand your topic, research the web, and generate professional slides.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
-                <Lock className="h-6 w-6 text-primary" />
+                <Search className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Transparency</h3>
+              <h3 className="text-lg font-semibold mb-2">Web Research</h3>
               <p className="text-sm text-muted-foreground">
-                Our code is open for everyone to see, review, and improve. No black boxes or hidden agendas.
+                AI searches the web for current, accurate information to ground your presentations in real data.
               </p>
             </div>
 
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
-                <Users className="h-6 w-6 text-primary" />
+                <Bot className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Community-Driven</h3>
+              <h3 className="text-lg font-semibold mb-2">AI Agent Editor</h3>
               <p className="text-sm text-muted-foreground">
-                We believe in the power of community collaboration to create better software for everyone.
+                Edit slides conversationally. Ask the AI agent to change themes, regenerate content, or replace images mid-presentation.
               </p>
             </div>
 
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
-                <BookOpen className="h-6 w-6 text-primary" />
+                <ImagePlus className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Education</h3>
+              <h3 className="text-lg font-semibold mb-2">Image Generation</h3>
               <p className="text-sm text-muted-foreground">
-                Learn from our codebase, contribute to it, and grow your skills while helping others.
+                Generate full-bleed AI images for each slide with admin-curated prompts and multiple model options.
               </p>
             </div>
 
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto">
-                <CheckCircle className="h-6 w-6 text-primary" />
+                <Cpu className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Free Forever</h3>
+              <h3 className="text-lg font-semibold mb-2">Local & Cloud LLMs</h3>
               <p className="text-sm text-muted-foreground">
-                Our core features will always remain free and open source, ensuring accessibility for everyone.
+                Run with OpenAI or connect your own local models via LM Studio for offline AI generation.
               </p>
             </div>
           </div>
@@ -867,7 +809,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Powered by cutting-edge AI and modern web technologies. Fully open-source and community-driven.
+            Powered by cutting-edge AI models and modern web technologies. Generate professional presentations with intelligent automation.
           </p>
         </div>
       </section>
@@ -880,7 +822,7 @@ export default function LandingPage() {
               Ready to Create Amazing Presentations?
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Join the open-source community building the future of AI presentations.
+              Transform your ideas into professional AI-powered presentations in seconds.
               Start for free, no credit card required.
             </p>
 
@@ -892,13 +834,6 @@ export default function LandingPage() {
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Link>
             </Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto" asChild>
-                <Link href="https://github.com/allweonedev/presentation-ai" target="_blank">
-                  <Github className="h-5 w-5 mr-2" />
-                  View on GitHub
-                  <ExternalLink className="h-5 w-5 ml-2" />
-                </Link>
-              </Button>
             </div>
 
             <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground flex-wrap">
@@ -908,15 +843,11 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Open source</span>
+                <span>No credit card required</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <span>No data collection</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Self-hostable</span>
               </div>
             </div>
           </div>
@@ -931,15 +862,12 @@ export default function LandingPage() {
               <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-semibold">ALLWEONE®</span>
+              <span className="font-semibold">Smart Presentations</span>
             </div>
 
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
               <Link href="https://discord.gg/232cdU5Z" target="_blank" className="hover:text-foreground">
                 Discord
-              </Link>
-              <Link href="https://github.com/allweonedev/presentation-ai" target="_blank" className="hover:text-foreground">
-                GitHub
               </Link>
               <Link href="/presentation" className="hover:text-foreground">
                 Get Started
@@ -948,7 +876,7 @@ export default function LandingPage() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground">
-            © 2024 ALLWEONE®. All rights reserved.
+            © 2024 Smart Presentations. All rights reserved.
           </p>
         </div>
       </footer>

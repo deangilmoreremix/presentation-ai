@@ -2,8 +2,9 @@
 
 import "server-only";
 
+import { auth } from "@clerk/nextjs/server";
 import { logger } from "@/lib/observability/server/logger";
-import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 const ITEMS_PER_PAGE = 10;
 // In Prisma, `DocumentType.PRESENTATION === "PRESENTATION"`. We keep the
@@ -52,19 +53,14 @@ export async function fetchPresentations(
   const actionName = "presentation.fetchPresentations.fetchPresentations";
   const span = logger.startSpan(`notebook.server_action.${actionName}`, {
     attributes: {
-      "allweone.scope": "notebook",
-      "allweone.action.type": "server_action",
-      "allweone.action.name": actionName,
+      "smart.scope": "notebook",
+      "smart.action.type": "server_action",
+      "smart.action.name": actionName,
     },
   });
 
   try {
-    const currentUser = await getCurrentUser();
-    const userId = currentUser?.id;
-
-    if (!userId) {
-      return { items: [], hasMore: false };
-    }
+    const { userId } = await auth();
 
     const supabase = await createClient();
     if (!supabase) {
@@ -74,7 +70,10 @@ export async function fetchPresentations(
     const skip = page * ITEMS_PER_PAGE;
 
     if (options?.favoritesOnly) {
-      // Two-step: get the favorite document ids, then load those base documents.
+      if (!userId) {
+        return { items: [], hasMore: false };
+      }
+
       const { data: favRows, error: favErr } = await supabase
         .from("favorite_documents")
         .select("document_id")
@@ -92,7 +91,6 @@ export async function fetchPresentations(
         .select(
           "id, title, type, thumbnail_url, created_at, updated_at, is_public, user_id, presentation:presentations(content)",
         )
-        .eq("user_id", userId)
         .eq("type", type)
         .in("id", ids)
         .order("updated_at", { ascending: false })
@@ -103,15 +101,17 @@ export async function fetchPresentations(
       return shapeResult(docs ?? [], ITEMS_PER_PAGE);
     }
 
-    const { data: rows, error } = await supabase
+    const baseQuery = supabase
       .from("base_documents")
       .select(
         "id, title, type, thumbnail_url, created_at, updated_at, is_public, user_id, presentation:presentations(content)",
       )
-      .eq("user_id", userId)
       .eq("type", type)
       .order("updated_at", { ascending: false })
       .range(skip, skip + ITEMS_PER_PAGE);
+
+    const query = userId ? baseQuery.eq("user_id", userId) : baseQuery;
+    const { data: rows, error } = await query;
 
     if (error) throw error;
 

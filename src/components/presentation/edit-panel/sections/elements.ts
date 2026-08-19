@@ -77,7 +77,7 @@ import {
   TIMELINE_ITEM,
   TREEMAP_CHART_ELEMENT,
   WATERFALL_CHART_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import { CALLOUT_VARIANTS } from "@/components/plate/ui/callout-variants";
 
 export type PaletteItem = {

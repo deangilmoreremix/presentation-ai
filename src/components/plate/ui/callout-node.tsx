@@ -4,7 +4,7 @@ import { useBlockSelected } from "@platejs/selection/react";
 import { PlateElement } from "platejs/react";
 import type * as React from "react";
 
-import { PresentationIcon } from "@/components/notebook/presentation/editor/custom-elements/presentation-icon";
+import { PresentationIcon } from "@/components/presentation/editor/custom-elements/presentation-icon";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { cn } from "@/lib/utils";
 import { CALLOUT_VARIANTS, getCalloutVariant } from "./callout-variants";

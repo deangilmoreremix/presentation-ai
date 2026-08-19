@@ -17,8 +17,8 @@ import {
   MAX_WIDTH_PERCENTAGE,
   MIN_HEIGHT,
   MIN_WIDTH_PERCENTAGE,
-} from "@/components/notebook/presentation/editor/custom-elements/root-image-layout";
-import { useDraggable } from "@/components/notebook/presentation/editor/dnd/hooks/useDraggable";
+} from "@/components/presentation/editor/custom-elements/root-image-layout";
+import { useDraggable } from "@/components/presentation/editor/dnd/hooks/useDraggable";
 import {
   type LayoutType,
   type PlateSlide,
@@ -35,7 +35,7 @@ export {
   MAX_WIDTH_PERCENTAGE,
   MIN_HEIGHT,
   MIN_WIDTH_PERCENTAGE,
-} from "@/components/notebook/presentation/editor/custom-elements/root-image-layout";
+} from "@/components/presentation/editor/custom-elements/root-image-layout";
 
 type UseRootImageActionsOptions = {
   image?: RootImage;

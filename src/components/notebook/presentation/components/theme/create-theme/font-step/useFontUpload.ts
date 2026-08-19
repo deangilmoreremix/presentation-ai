@@ -1,9 +1,10 @@
-// font-step/hooks/useFontUpload.ts
+"use client";
+
 import { useState } from "react";
 import { useWatch, type Control } from "react-hook-form";
 import { toast } from "sonner";
 
-import { useUploadThing } from "@/hooks/globals/useUploadthing";
+import { useAssetUpload } from "@/hooks/presentation/useAssetUpload";
 import { loadCustomFont } from "@/lib/presentation/loadCustomFont";
 import { type ThemeFormValues } from "../../types";
 import { type LocalFont } from "./types";
@@ -20,13 +21,7 @@ interface UseFontUploadOptions {
 export function useFontUpload({ setValue, control }: UseFontUploadOptions) {
   const [isUploadingHeading, setIsUploadingHeading] = useState(false);
   const [isUploadingBody, setIsUploadingBody] = useState(false);
-
-  const { startUpload } = useUploadThing("fontUploader", {
-    onClientUploadComplete: () => {},
-    onUploadError: (error: Error) => {
-      console.error("Font upload error:", error.message);
-    },
-  });
+  const { uploadAsset } = useAssetUpload();
 
   const handleFontUpload = async (target: "heading" | "body") => {
     const input = document.createElement("input");
@@ -46,27 +41,28 @@ export function useFontUpload({ setValue, control }: UseFontUploadOptions) {
       else setIsUploadingBody(true);
 
       try {
-        const result = await startUpload([file]);
-        if (result?.[0]) {
-          const { serverData, ufsUrl } = result[0];
-          const options = { shouldDirty: true };
+        const result = await uploadAsset(file, {
+          bucket: "user-assets",
+          prefix: "fonts",
+        });
 
-          if (target === "heading") {
-            setValue("fonts.heading", serverData.familyName, options);
-            setValue("fonts.headingUrl", ufsUrl, options);
-          } else {
-            setValue("fonts.body", serverData.familyName, options);
-            setValue("fonts.bodyUrl", ufsUrl, options);
-          }
+        const options = { shouldDirty: true };
+        const familyName = file.name.replace(/\.[^.]+$/, "");
 
-          // Load the font immediately using FontFace API
-          try {
-            await loadCustomFont(serverData.familyName, ufsUrl, 400);
-            toast.success("Font uploaded and loaded successfully");
-          } catch (fontLoadError) {
-            console.error("Font uploaded but failed to load:", fontLoadError);
-            toast.success("Font uploaded successfully");
-          }
+        if (target === "heading") {
+          setValue("fonts.heading", familyName, options);
+          setValue("fonts.headingUrl", result.publicUrl, options);
+        } else {
+          setValue("fonts.body", familyName, options);
+          setValue("fonts.bodyUrl", result.publicUrl, options);
+        }
+
+        try {
+          await loadCustomFont(familyName, result.publicUrl, 400);
+          toast.success("Font uploaded and loaded successfully");
+        } catch (fontLoadError) {
+          console.error("Font uploaded but failed to load:", fontLoadError);
+          toast.success("Font uploaded successfully");
         }
       } catch (error) {
         console.error("Font upload failed:", error);
@@ -80,7 +76,6 @@ export function useFontUpload({ setValue, control }: UseFontUploadOptions) {
     input.click();
   };
 
-  // Use useWatch to get current font values for local custom fonts
   const headingUrl = useWatch({ control, name: "fonts.headingUrl" });
   const headingFamily = useWatch({ control, name: "fonts.heading" });
   const bodyUrl = useWatch({ control, name: "fonts.bodyUrl" });

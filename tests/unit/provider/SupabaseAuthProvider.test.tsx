@@ -1,33 +1,35 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { createBrowserClient } from "@supabase/ssr";
-import { SupabaseAuthProvider, useAuth } from "@/provider/SupabaseAuthProvider";
 
-const signInAnonymously = vi.fn().mockResolvedValue({
-  data: { user: { id: "anon-1" }, session: {} },
-  error: null,
-});
+// Store mock implementations
+const mockUser = vi.fn();
+const mockIsLoaded = vi.fn(() => true);
+const mockIsSignedIn = vi.fn(() => false);
 
-vi.mock("@supabase/ssr", () => ({
-  createBrowserClient: vi.fn(() => ({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: { id: "u1", email: "t@t.com" } },
-      }),
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { user: { id: "u1", email: "t@t.com" } } },
-      }),
-      signInAnonymously,
-      onAuthStateChange: vi.fn((callback) => {
-        callback("SIGNED_IN", { user: { id: "u1", email: "t@t.com" } });
-        return { data: { subscription: { unsubscribe: vi.fn() } } };
-      }),
-    },
-  })),
+vi.mock("@clerk/nextjs", () => ({
+  useUser: () => ({
+    user: mockUser(),
+    isLoaded: mockIsLoaded(),
+    isSignedIn: mockIsSignedIn(),
+  }),
 }));
 
+import { SupabaseAuthProvider, useAuth } from "@/provider/SupabaseAuthProvider";
+
 describe("SupabaseAuthProvider", () => {
+  beforeEach(() => {
+    mockUser.mockReturnValue(null);
+    mockIsLoaded.mockReturnValue(true);
+    mockIsSignedIn.mockReturnValue(false);
+  });
+
   it("exposes user and session via useAuth", async () => {
+    mockUser.mockReturnValueOnce({
+      id: "u1",
+      emailAddresses: [{ emailAddress: "t@t.com" }],
+    });
+    mockIsSignedIn.mockReturnValueOnce(true);
+
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <SupabaseAuthProvider>{children}</SupabaseAuthProvider>
     );
@@ -37,30 +39,26 @@ describe("SupabaseAuthProvider", () => {
     expect(result.current.session?.user.email).toBe("t@t.com");
   });
 
-  it("signs in anonymously when there is no existing session", async () => {
-    // Existing session present -> should NOT sign in anonymously.
-    signInAnonymously.mockClear();
+  it("returns anonymous user when not signed in", async () => {
+    mockUser.mockReturnValueOnce(null);
+    mockIsSignedIn.mockReturnValueOnce(false);
+
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <SupabaseAuthProvider>{children}</SupabaseAuthProvider>
     );
-    renderHook(() => useAuth(), { wrapper });
+    const { result } = renderHook(() => useAuth(), { wrapper });
     await act(async () => {});
-    expect(signInAnonymously).not.toHaveBeenCalled();
+    expect(result.current.user?.id).toBe("00000000-0000-0000-0000-000000000000");
+    expect(result.current.user?.email).toBe("anonymous@local");
+  });
 
-    // Now simulate no session -> should sign in anonymously.
-    signInAnonymously.mockClear();
-    vi.mocked(createBrowserClient).mockReturnValueOnce({
-      auth: {
-        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
-        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-        signInAnonymously,
-        onAuthStateChange: vi.fn(() => ({
-          data: { subscription: { unsubscribe: vi.fn() } },
-        })),
-      },
-    } as never);
-    renderHook(() => useAuth(), { wrapper });
-    await act(async () => {});
-    expect(signInAnonymously).toHaveBeenCalledTimes(1);
+  it("returns loading state when Clerk is loading", async () => {
+    mockIsLoaded.mockReturnValueOnce(false);
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <SupabaseAuthProvider>{children}</SupabaseAuthProvider>
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper });
+    expect(result.current.isLoading).toBe(true);
   });
 });

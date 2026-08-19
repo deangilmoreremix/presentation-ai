@@ -2,7 +2,7 @@
 
 import { Columns3 } from "lucide-react";
 
-import { getColumnSizeLabel } from "@/components/notebook/presentation/editor/lib";
+import { getColumnSizeLabel } from "@/components/presentation/editor/lib";
 import { ToolbarGroup } from "@/components/plate/ui/toolbar";
 import { Slider } from "@/components/ui/slider";
 import {

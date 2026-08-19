@@ -37,14 +37,14 @@ import {
 } from "react";
 import { useDrag } from "react-dnd";
 
-import { updateDroppedElementAfterDrop } from "@/components/notebook/presentation/editor/dnd/utils/updateSiblingsForcefully";
+import { updateDroppedElementAfterDrop } from "@/components/presentation/editor/dnd/utils/updateSiblingsForcefully";
 import {
   getElementId,
   getPaletteMutableSignature,
   replaceElementById,
   replaceFocusedEmptyParagraph,
   type PaletteDropTarget,
-} from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/utils/paletteDrop";
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { type MyEditor } from "@/components/plate/editor-kit";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -120,6 +120,7 @@ export const db = {
   },
   user: {
     findUnique: stubFn<StubUser | null>(null),
+    update: stubFn<StubUser | null>(null),
     upsert: stubFn<StubUser | null>(null),
   },
   baseDocument: {

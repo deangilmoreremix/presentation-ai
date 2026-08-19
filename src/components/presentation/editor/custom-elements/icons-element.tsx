@@ -8,10 +8,10 @@ import { PlateElement } from "platejs/react";
 
 // Import IconItem and constants
 import { IconItem } from "./icon-item";
-import { ICON_ITEM_ELEMENT, ICONS_ELEMENT } from "../lib";
+import { ICON_LIST_ITEM, ICON_LIST } from "../lib";
 
 export interface IconsElement extends TElement {
-  type: typeof ICONS_ELEMENT;
+  type: typeof ICON_LIST;
 }
 
 // Main icons component with withRef pattern
@@ -49,19 +49,19 @@ export const IconsElement = withRef<any>(
 
 // Create plugin for icons
 export const IconsPlugin = createPlatePlugin({
-  key: ICONS_ELEMENT,
+  key: ICON_LIST,
   node: {
     isElement: true,
-    type: ICONS_ELEMENT,
+    type: ICON_LIST,
     component: IconsElement,
   },
 });
 
 // Create plugin for icon item
 export const IconItemPlugin = createPlatePlugin({
-  key: ICON_ITEM_ELEMENT,
+  key: ICON_LIST_ITEM,
   node: {
     isElement: true,
-    type: ICON_ITEM_ELEMENT,
+    type: ICON_LIST_ITEM,
   },
 });

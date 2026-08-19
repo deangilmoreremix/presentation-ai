@@ -16,7 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/plate/ui/tooltip";
 import { Portal } from "@radix-ui/react-tooltip";
-import { ICON_ITEM_ELEMENT } from "../lib";
+import { ICON_LIST_ITEM } from "../lib";
 
 // IconItem component for individual items in the icons list
 export const IconItem = ({
@@ -35,8 +35,8 @@ export const IconItem = ({
     orientation: "vertical",
     canDropNode: ({ dragEntry, dropEntry }) => {
       return (
-        dragEntry[0].type === ICON_ITEM_ELEMENT &&
-        dropEntry[0].type === ICON_ITEM_ELEMENT
+        dragEntry[0].type === ICON_LIST_ITEM &&
+        dropEntry[0].type === ICON_LIST_ITEM
       );
     },
   });

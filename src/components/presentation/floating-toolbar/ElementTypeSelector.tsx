@@ -7,7 +7,7 @@ import {
   CATEGORY_ICONS,
   ELEMENT_CATEGORIES,
   ICON_LIST,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import {
   DropdownMenu,
   DropdownMenuContent,

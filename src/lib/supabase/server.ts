@@ -1,5 +1,6 @@
 import "server-only";
 
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -84,21 +85,29 @@ export type CurrentUser = {
 
 /**
  * Stable id for the seeded anonymous row in `auth.users` / `public.users`.
- * Retained for foreign-key safety; the shared anonymous-user fallback has
- * been removed from `getCurrentUser`, which now returns `null` when there is
- * no authenticated session.
+ * `getCurrentUser` returns an anonymous user object (with this id) when
+ * there is no authenticated session, rather than returning `null`.
  */
 export const ANONYMOUS_USER_ID = "00000000-0000-0000-0000-000000000000";
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export async function getClerkUserId(): Promise<string> {
+  const { userId } = await auth();
+  return userId ?? ANONYMOUS_USER_ID;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser> {
   const supabase = await createClient();
-  if (!supabase) return null;
+  const { userId } = await auth();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
+  if (!userId) {
+    return {
+      id: ANONYMOUS_USER_ID,
+      email: "anonymous@local",
+      role: "USER",
+      hasAccess: true,
+      isAdmin: false,
+    };
+  }
 
   type UsersRow = {
     id: string;
@@ -106,18 +115,30 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     role: string | null;
   };
 
-  const { data: dbUser } = await supabase
-    .from("users")
-    .select("id, has_access, role")
-    .eq("id", user.id)
-    .maybeSingle<UsersRow>();
+  let dbUser: UsersRow | null = null;
+  if (supabase) {
+    const { data } = await supabase
+      .from("users")
+      .select("id, has_access, role")
+      .eq("id", userId)
+      .maybeSingle<UsersRow>();
+    dbUser = data;
+  }
 
   const role = dbUser?.role ?? "USER";
   const hasAccess = dbUser?.has_access ?? false;
 
+  let email: string | null = null;
+  try {
+    const clerkUser = await currentUser();
+    email = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
+  } catch {
+    // Clerk user fetch unavailable; keep email as null
+  }
+
   return {
-    id: user.id,
-    email: user.email ?? null,
+    id: userId,
+    email,
     role,
     hasAccess,
     isAdmin: role === "ADMIN",

@@ -2,9 +2,9 @@
 
 import React from "react";
 
-import { SlideGenerationProvider } from "@/components/notebook/presentation/editor/context/SlideGenerationContext";
-import PresentationEditor from "@/components/notebook/presentation/editor/presentation-editor";
-import StaticPresentationEditor from "@/components/notebook/presentation/editor/presentation-editor-static";
+import { SlideGenerationProvider } from "@/components/presentation/editor/context/SlideGenerationContext";
+import PresentationEditor from "@/components/presentation/editor/presentation-editor";
+import StaticPresentationEditor from "@/components/presentation/editor/presentation-editor-static";
 import { SlideWrapper } from "@/components/presentation/slides/SlideWrapper";
 import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";

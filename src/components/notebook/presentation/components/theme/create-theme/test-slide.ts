@@ -19,7 +19,7 @@ export const testSlides: PlateSlide[] = [
               },
               {
                 type: "h1",
-                children: [{ text: "Welcome to ALLWEONE" }],
+                children: [{ text: "Welcome to Smart Presentations" }],
               },
               {
                 type: "p",
@@ -97,7 +97,7 @@ export const testSlides: PlateSlide[] = [
         type: "p",
         children: [
           {
-            text: "ALLWEONE comes with pre-defined sizes of typography that work best for legibility. Feel free to choose font families for your headings and body font.",
+            text: "Smart Presentations comes with pre-defined sizes of typography that work best for legibility. Feel free to choose font families for your headings and body font.",
           },
         ],
       },

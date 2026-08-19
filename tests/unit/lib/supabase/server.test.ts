@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("@supabase/ssr", () => ({
   createServerClient: vi.fn(),
@@ -8,27 +8,26 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
-import { getCurrentUser } from "@/lib/supabase/server";
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: vi.fn(),
+  currentUser: vi.fn(),
+}));
+
+import { getCurrentUser, ANONYMOUS_USER_ID } from "@/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 const ORIGINAL_ENV = process.env;
 
 type MockSupabaseClient = {
-  auth: {
-    getUser: ReturnType<typeof vi.fn>;
-  };
   from: ReturnType<typeof vi.fn>;
 };
 
 function createMockSupabaseClient(
-  userData: { id: string; email: string } | null,
   dbUser: { id: string; role: string; has_access: boolean } | null
 ): MockSupabaseClient {
-  const mockSupabase = {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: userData } }),
-    },
+  return {
     from: vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
@@ -37,8 +36,6 @@ function createMockSupabaseClient(
       }),
     }),
   };
-
-  return mockSupabase;
 }
 
 function setupEnv() {
@@ -50,9 +47,68 @@ describe("getCurrentUser", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     process.env = { ...ORIGINAL_ENV };
+    vi.mocked(auth).mockResolvedValue({ userId: null, sessionId: null } as any);
+    vi.mocked(currentUser).mockResolvedValue(null as any);
   });
 
-  it("returns null when supabase client is unavailable", async () => {
+  it("returns anonymous user when no authenticated session", async () => {
+    setupEnv();
+    const mockSupabase = createMockSupabaseClient(null);
+    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
+    vi.mocked(cookies).mockReturnValue({
+      getAll: vi.fn(),
+      setAll: vi.fn(),
+    } as any);
+
+    const result = await getCurrentUser();
+    expect(result.id).toBe(ANONYMOUS_USER_ID);
+    expect(result.email).toBe("anonymous@local");
+    expect(result.role).toBe("USER");
+  });
+
+  it("returns user from Clerk when authenticated", async () => {
+    setupEnv();
+    const mockSupabase = createMockSupabaseClient({
+      id: "clerk-user-id",
+      role: "ADMIN",
+      has_access: true,
+    });
+    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
+    vi.mocked(cookies).mockReturnValue({
+      getAll: vi.fn(),
+      setAll: vi.fn(),
+    } as any);
+    vi.mocked(auth).mockResolvedValue({ userId: "clerk-user-id", sessionId: "s1" } as any);
+    vi.mocked(currentUser).mockResolvedValue({
+      primaryEmailAddress: { emailAddress: "admin@example.com" },
+    } as any);
+
+    const result = await getCurrentUser();
+    expect(result.id).toBe("clerk-user-id");
+    expect(result.email).toBe("admin@example.com");
+    expect(result.role).toBe("ADMIN");
+    expect(result.isAdmin).toBe(true);
+  });
+
+  it("defaults role to USER when users table has no record", async () => {
+    setupEnv();
+    const mockSupabase = createMockSupabaseClient(null);
+    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
+    vi.mocked(cookies).mockReturnValue({
+      getAll: vi.fn(),
+      setAll: vi.fn(),
+    } as any);
+    vi.mocked(auth).mockResolvedValue({ userId: "clerk-user-id", sessionId: "s1" } as any);
+    vi.mocked(currentUser).mockResolvedValue({
+      primaryEmailAddress: { emailAddress: "user@example.com" },
+    } as any);
+
+    const result = await getCurrentUser();
+    expect(result.role).toBe("USER");
+    expect(result.isAdmin).toBe(false);
+  });
+
+  it("falls back to anonymous when supabase client is unavailable", async () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -64,63 +120,7 @@ describe("getCurrentUser", () => {
     } as any);
 
     const result = await getCurrentUser();
-    expect(result).toBeNull();
-  });
-
-  it("returns null when no authenticated session", async () => {
-    setupEnv();
-    const mockSupabase = createMockSupabaseClient(null, null);
-    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
-    vi.mocked(cookies).mockReturnValue({
-      getAll: vi.fn(),
-      setAll: vi.fn(),
-    } as any);
-
-    const result = await getCurrentUser();
-    expect(result).toBeNull();
-  });
-
-  it("enriches user with role and hasAccess from users table", async () => {
-    setupEnv();
-    const mockSupabase = createMockSupabaseClient(
-      { id: "user-1", email: "test@example.com" },
-      { id: "user-1", role: "ADMIN", has_access: true }
-    );
-    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
-    vi.mocked(cookies).mockReturnValue({
-      getAll: vi.fn(),
-      setAll: vi.fn(),
-    } as any);
-
-    const result = await getCurrentUser();
-    expect(result).toEqual({
-      id: "user-1",
-      email: "test@example.com",
-      role: "ADMIN",
-      hasAccess: true,
-      isAdmin: true,
-    });
-  });
-
-  it("defaults role to USER when users table has no record", async () => {
-    setupEnv();
-    const mockSupabase = createMockSupabaseClient(
-      { id: "user-2", email: "new@example.com" },
-      null
-    );
-    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
-    vi.mocked(cookies).mockReturnValue({
-      getAll: vi.fn(),
-      setAll: vi.fn(),
-    } as any);
-
-    const result = await getCurrentUser();
-    expect(result).toEqual({
-      id: "user-2",
-      email: "new@example.com",
-      role: "USER",
-      hasAccess: false,
-      isAdmin: false,
-    });
+    expect(result.id).toBe(ANONYMOUS_USER_ID);
+    expect(result.email).toBe("anonymous@local");
   });
 });

@@ -176,14 +176,14 @@ export async function POST(req: Request) {
   const actionName = "presentation.outline.post";
   const requestId = crypto.randomUUID();
   const routeLogger = createLogger("api:presentation-outline");
-  const span = logger.startSpan(`allweone.api.${actionName}`, {
+  const span = logger.startSpan(`smart.api.${actionName}`, {
     attributes: {
-      "allweone.scope": "api",
-      "allweone.action.type": "api_route",
-      "allweone.action.name": actionName,
+      "smart.scope": "api",
+      "smart.action.type": "api_route",
+      "smart.action.name": actionName,
       "http.method": "POST",
       "http.route": "/api/presentation/outline",
-      "allweone.request.id": requestId,
+      "smart.request.id": requestId,
     },
   });
 
@@ -205,11 +205,11 @@ export async function POST(req: Request) {
     const autoTheme = metadata.autoTheme ?? false;
 
     span.annotate({
-      "allweone.presentation.cards.count": numberOfCards,
-      "allweone.presentation.prompt.length": prompt.length,
-      "allweone.presentation.language": language,
-      "allweone.presentation.web_search": webSearch,
-      "allweone.presentation.auto_theme": autoTheme,
+      "smart.presentation.cards.count": numberOfCards,
+      "smart.presentation.prompt.length": prompt.length,
+      "smart.presentation.language": language,
+      "smart.presentation.web_search": webSearch,
+      "smart.presentation.auto_theme": autoTheme,
     });
     routeLogger.info("Validated outline request payload", {
       requestId,
@@ -229,8 +229,8 @@ export async function POST(req: Request) {
         language,
         messageCount: messages.length,
       });
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "missing_required_fields",
+      span.event("smart.api.request_rejected", {
+        "smart.validation.error": "missing_required_fields",
       });
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -339,7 +339,7 @@ export async function POST(req: Request) {
       modelProvider,
       modelId: modelId || "gpt-4o-mini",
     });
-    span.event("allweone.api.response_stream_created");
+    span.event("smart.api.response_stream_created");
     return createUIMessageStreamResponse({
       stream: toUIMessageStream(stream),
     });

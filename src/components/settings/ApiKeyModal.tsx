@@ -14,26 +14,31 @@ import {
 import { Label } from "@/components/ui/label";
 import { ApiKeyInputField } from "./ApiKeyInputField";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { getApiKey, getKeyStoragePreference } from "@/lib/key-storage";
 
 interface ApiKeyModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (key: string, storage: "client" | "server") => Promise<void>;
+  serverStorageSupported?: boolean;
 }
 
 /**
  * Modal for entering and validating OpenAI API key.
  * Appears when an authenticated user attempts to generate without a key.
  */
-export function ApiKeyModal({ open, onClose, onSave }: ApiKeyModalProps) {
+export function ApiKeyModal({ open, onClose, onSave, serverStorageSupported = true }: ApiKeyModalProps) {
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
-  const [preferServerStorage, setPreferServerStorage] = useState(true);
+  const [preferServerStorage, setPreferServerStorage] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [testResult, setTestResult] = useState<"idle" | "valid" | "invalid">("idle");
   const [testError, setTestError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [switchMode, setSwitchMode] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const [switchError, setSwitchError] = useState<string | null>(null);
 
   // Reset state when modal closes
   React.useEffect(() => {
@@ -44,6 +49,9 @@ export function ApiKeyModal({ open, onClose, onSave }: ApiKeyModalProps) {
       setSaveError(null);
       setIsTesting(false);
       setIsSaving(false);
+      setSwitchMode(false);
+      setSwitching(false);
+      setSwitchError(null);
     }
   }, [open]);
 
@@ -93,6 +101,43 @@ export function ApiKeyModal({ open, onClose, onSave }: ApiKeyModalProps) {
       setSaveError(error instanceof Error ? error.message : "Failed to save API key");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSwitchMode = async () => {
+    const currentPref = getKeyStoragePreference();
+    const newStorage = currentPref === "client" ? "server" : "client";
+    let existingKey = getApiKey();
+
+    if (!existingKey && newStorage === "client") {
+      try {
+        const response = await fetch("/api/user/api-key?raw=true", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          existingKey = data.rawKey || null;
+        }
+      } catch {
+        // noop
+      }
+    }
+
+    if (!existingKey) {
+      setSwitchError("No existing key found to switch. Please enter your key below.");
+      return;
+    }
+
+    setSwitching(true);
+    setSwitchError(null);
+
+    try {
+      await onSave(existingKey, newStorage);
+      onClose();
+    } catch (error) {
+      setSwitchError(error instanceof Error ? error.message : "Failed to switch storage mode");
+    } finally {
+      setSwitching(false);
     }
   };
 
@@ -155,20 +200,53 @@ export function ApiKeyModal({ open, onClose, onSave }: ApiKeyModalProps) {
             )}
           </div>
 
-          {/* Server Storage Toggle */}
-          <div className="flex items-center space-x-2 rounded-md border p-3">
-            <input
-              type="checkbox"
-              id="server-storage"
-              checked={preferServerStorage}
-              onChange={(e) => setPreferServerStorage(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <Label htmlFor="server-storage" className="flex-1 cursor-pointer text-sm">
-              Save encrypted on server (recommended)
-            </Label>
+          {/* Switch Storage Mode */}
+          <div className="rounded-md border p-3">
+            <p className="text-sm font-medium mb-2">Already have a key?</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Switch storage mode without re-entering your key.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSwitchMode}
+              disabled={switching}
+            >
+              {switching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Switching...
+                </>
+              ) : (
+                `Switch to ${getKeyStoragePreference() === "client" ? "server" : "local"} storage`
+              )}
+            </Button>
+            {switchError && (
+              <p className="text-xs text-destructive mt-2">{switchError}</p>
+            )}
           </div>
-          {!preferServerStorage && (
+
+          {/* Server Storage Toggle */}
+          {serverStorageSupported ? (
+            <div className="flex items-center space-x-2 rounded-md border p-3">
+              <input
+                type="checkbox"
+                id="server-storage"
+                checked={preferServerStorage}
+                onChange={(e) => setPreferServerStorage(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="server-storage" className="flex-1 cursor-pointer text-sm">
+                Save encrypted on server (recommended)
+              </Label>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Server storage is not available for your account. Your key will be stored locally in this browser.
+            </p>
+          )}
+          {serverStorageSupported && !preferServerStorage && (
             <p className="text-xs text-muted-foreground">
               Warning: Client-only storage means the key is stored in your browser and will be lost if you clear browser data. It also won&apos;t sync across devices.
             </p>

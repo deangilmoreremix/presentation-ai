@@ -32,8 +32,8 @@ import {
   STEPS_GROUP,
   supportsOrientation,
   TIMELINE_GROUP,
-} from "@/components/notebook/presentation/editor/lib";
-import StaticPresentationEditor from "@/components/notebook/presentation/editor/presentation-editor-static";
+} from "@/components/presentation/editor/lib";
+import StaticPresentationEditor from "@/components/presentation/editor/presentation-editor-static";
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { type MyEditor } from "@/components/plate/editor-kit";
 import { ToolbarButton, ToolbarGroup } from "@/components/plate/ui/toolbar";

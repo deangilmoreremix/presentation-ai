@@ -1,7 +1,6 @@
 # Network Connectivity Diagnostic Report
 
-**Project:** Presentation AI  
-**Supabase Project Ref:** `YOUR-PROJECT-REF`  
+**Project:** Smart Presentations  **Supabase Project Ref:** `YOUR-PROJECT-REF`  
 **Date:** 2025-05-06  
 **Environment:** Azure Cloud App (Linux)
 

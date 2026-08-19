@@ -2,7 +2,7 @@
 
 import { SlateElement, type SlateElementProps } from "platejs/static";
 
-import { PresentationIcon } from "@/components/notebook/presentation/editor/custom-elements/presentation-icon";
+import { PresentationIcon } from "@/components/presentation/editor/custom-elements/presentation-icon";
 import { cn } from "@/lib/utils";
 import { CALLOUT_VARIANTS, getCalloutVariant } from "./callout-variants";
 

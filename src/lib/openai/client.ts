@@ -5,13 +5,18 @@ import OpenAI from "openai";
  * Creates an OpenAI client with the provided API key or fallback.
  * Used by all AI generation actions.
  * Note: Database-dependent API key resolution removed - uses provided key or env var only.
+ *
+ * This module is safe to import even when OPENAI_API_KEY is missing.
+ * The missing-key check happens lazily inside getOpenAIClient().
  */
 export async function getOpenAIClient(_userId?: string, providedApiKey?: string): Promise<OpenAI> {
   // Use provided API key, or fall back to environment
   const apiKey = providedApiKey || env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("OpenAI API key is required. Provide one via apiKey parameter or OPENAI_API_KEY env var.");
+    throw new Error(
+      "OpenAI API key is required. Provide one via apiKey parameter or set OPENAI_API_KEY in your environment."
+    );
   }
 
   return new OpenAI({

@@ -2,7 +2,7 @@
 
 import { Infographic, type InfographicOptions } from "@antv/infographic";
 
-import { enforceInfographicCardBackground } from "@/components/notebook/presentation/editor/utils/infographic-card-background";
+import { enforceInfographicCardBackground } from "@/components/presentation/editor/utils/infographic-card-background";
 import { registerLucideIconLoader } from "./infographic-icon-loader";
 
 type PreviewRenderer = {

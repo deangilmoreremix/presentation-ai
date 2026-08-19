@@ -4,7 +4,7 @@
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useState } from "react";
 
-import { useUploadThing } from "@/hooks/globals/useUploadthing";
+import { useAssetUpload } from "@/hooks/presentation/useAssetUpload";
 
 export type PreviewImage = { id: string; file: File };
 export type Attachment = { id: string; url: string; type: string };
@@ -20,9 +20,8 @@ export function useImageUpload() {
     [],
   );
   const [previewImages, setPreviewImages] = useState<ImagePreview[]>([]);
-  const { startUpload } = useUploadThing("imageUploader");
+  const { uploadAsset } = useAssetUpload();
 
-  // Generate preview URLs when images change
   useEffect(() => {
     let active = true;
     const loadImages = async () => {
@@ -53,7 +52,6 @@ export function useImageUpload() {
       const acceptedFiles = files.filter((f) => f.type.startsWith("image/"));
       if (acceptedFiles.length === 0) return;
 
-      // Limit to MAX_IMAGES
       const remaining = MAX_IMAGES - images.length;
       if (remaining <= 0) return;
       const filesToAdd = acceptedFiles.slice(0, remaining);
@@ -68,13 +66,17 @@ export function useImageUpload() {
       setIsImageUploading((prev) => [...prev, { id, isLoading: true }]);
 
       try {
-        const response = await startUpload(filesToAdd);
-        const newAttachments =
-          response?.map((image) => ({
-            id,
-            url: image.ufsUrl,
-            type: fileType,
-          })) ?? [];
+        const uploaded = await Promise.all(
+          filesToAdd.map((file) =>
+            uploadAsset(file, { bucket: "presentation-images", prefix: "slides" }),
+          ),
+        );
+
+        const newAttachments = uploaded.map((result) => ({
+          id,
+          url: result.publicUrl,
+          type: fileType,
+        }));
 
         setIsImageUploading((prev) =>
           prev.map((item) =>
@@ -88,7 +90,7 @@ export function useImageUpload() {
         setImages((prev) => prev.filter((img) => img.id !== id));
       }
     },
-    [images.length, startUpload],
+    [images.length, uploadAsset],
   );
 
   const handleFileChange = useCallback(

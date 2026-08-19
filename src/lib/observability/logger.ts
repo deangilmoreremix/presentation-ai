@@ -31,7 +31,7 @@ function writeLog(
     ...(details ? { details } : {}),
     ...(error !== undefined ? { error: serializeError(error) } : {}),
   };
-  const prefix = `[presentation-ai][${scope}] ${message}`;
+  const prefix = `[smart-presentations][${scope}] ${message}`;
 
   if (level === "error") {
     console.error(prefix, payload);

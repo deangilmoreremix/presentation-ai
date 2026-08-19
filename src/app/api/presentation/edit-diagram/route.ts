@@ -184,11 +184,11 @@ Apply the user's requested changes to the infographic and output the complete mo
 export async function POST(req: Request) {
   let endSpanOnReturn = true;
   const actionName = "presentation.edit_diagram.post";
-  const span = logger.startSpan(`allweone.api.${actionName}`, {
+  const span = logger.startSpan(`smart.api.${actionName}`, {
     attributes: {
-      "allweone.scope": "api",
-      "allweone.action.type": "api_route",
-      "allweone.action.name": actionName,
+      "smart.scope": "api",
+      "smart.action.type": "api_route",
+      "smart.action.name": actionName,
       "http.method": "POST",
       "http.route": "/api/presentation/edit-diagram",
     },
@@ -201,8 +201,8 @@ export async function POST(req: Request) {
     };
 
     if (!currentSyntax || currentSyntax.trim().length === 0) {
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "missing_current_syntax",
+      span.event("smart.api.request_rejected", {
+        "smart.validation.error": "missing_current_syntax",
       });
       return NextResponse.json(
         { error: "No current syntax provided" },
@@ -211,8 +211,8 @@ export async function POST(req: Request) {
     }
 
     if (!prompt || prompt.trim().length === 0) {
-      span.event("allweone.api.request_rejected", {
-        "allweone.validation.error": "missing_prompt",
+      span.event("smart.api.request_rejected", {
+        "smart.validation.error": "missing_prompt",
       });
       return NextResponse.json(
         { error: "No edit prompt provided" },
@@ -231,7 +231,7 @@ export async function POST(req: Request) {
       prompt,
       templateList,
     });
-    span.event("allweone.api.response_stream_created");
+    span.event("smart.api.response_stream_created");
     endSpanOnReturn = false;
 
     return createUIMessageStreamResponse({

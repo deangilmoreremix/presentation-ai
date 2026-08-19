@@ -6,7 +6,7 @@ test.describe("Landing Page", () => {
   });
 
   test("should load the landing page without errors", async ({ page }) => {
-    await expect(page).toHaveTitle(/ALLWEONE|presentation/i);
+    await expect(page).toHaveTitle(/Smart Presentations|presentation/i);
   });
 
   test("should show sign in button", async ({ page }) => {

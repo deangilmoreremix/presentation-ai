@@ -14,7 +14,7 @@ import {
 } from "platejs/react";
 import * as React from "react";
 
-import { getDirectLayoutToolbarTargetEntry } from "@/components/notebook/presentation/editor/lib";
+import { getDirectLayoutToolbarTargetEntry } from "@/components/presentation/editor/lib";
 import { type MyEditor } from "@/components/plate/editor-kit";
 import {
   useFloatingToolbar,

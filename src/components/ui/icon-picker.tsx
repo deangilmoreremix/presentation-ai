@@ -11,7 +11,7 @@ import {
   resolvePresentationIcon,
   searchPresentationIcons,
   type ResolvedPresentationIcon,
-} from "@/components/notebook/presentation/editor/custom-elements/presentation-icon-utils";
+} from "@/components/presentation/editor/custom-elements/presentation-icon-utils";
 import { Button } from "@/components/ui/button";
 import { type buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

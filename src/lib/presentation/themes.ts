@@ -11,8 +11,8 @@ export type ThemeName =
   | "ebony"
   | "mystique"
   | "phantom"
-  | "allweoneLight"
-  | "allweoneDark"
+  | "smartLight"
+  | "smartDark"
   | "crimson"
   | "ember"
   | "sunset"
@@ -485,9 +485,9 @@ export const themes: { [key in ThemeName]: ThemeProperties } = {
     },
   },
 
-  // ==================== ALLWEONE ====================
-  allweoneLight: {
-    name: "Allweone",
+  // ==================== SMART PRESENTATIONS ====================
+  smartLight: {
+    name: "Smart Light",
     description: "Clean and high contrast",
     mode: "light",
     colors: {
@@ -522,8 +522,8 @@ export const themes: { [key in ThemeName]: ThemeProperties } = {
     },
   },
 
-  allweoneDark: {
-    name: "Allweone",
+  smartDark: {
+    name: "Smart Dark",
     description: "Cyberpunk glow",
     mode: "dark",
     colors: {

@@ -1,44 +1,73 @@
 "use client";
 
-import { Zap, Sparkles } from "lucide-react";
-import { usePresentationState } from "@/states/presentation-state";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { useMediaQuery } from "@/hooks/globals/useMediaQuery";
 import { Button } from "@/components/ui/button";
+import {
+  Credenza,
+  CredenzaContent,
+  CredenzaHeader,
+  CredenzaTitle,
+} from "@/components/ui/credenza";
+import { usePresentationState } from "@/states/presentation-state";
+import { TemplateLibrary } from "@/components/templates/TemplateLibrary";
 
 export function PresentationTemplates() {
   const { showTemplates, setShowTemplates } = usePresentationState();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   return (
-    <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
+    <Credenza open={showTemplates} onOpenChange={setShowTemplates}>
+      <CredenzaContent
+        shouldHaveClose={false}
+        className="max-h-[92dvh] max-w-250 gap-0 overflow-hidden p-0"
+      >
+        <CredenzaHeader className="flex flex-row items-center justify-between border-b p-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <Zap className="h-6 w-6 text-primary" />
-            <DialogTitle className="text-2xl font-bold">Templates</DialogTitle>
+            {isDesktop && (
+              <Button
+                onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+                variant="ghost"
+                size="icon"
+                className="size-8"
+              >
+                <span className="sr-only">Toggle sidebar</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="size-4"
+                >
+                  <rect width="7" height="7" x="3" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="3" rx="1" />
+                  <rect width="7" height="7" x="14" y="14" rx="1" />
+                  <rect width="7" height="7" x="3" y="14" rx="1" />
+                </svg>
+              </Button>
+            )}
+            <CredenzaTitle>Templates</CredenzaTitle>
           </div>
-        </DialogHeader>
-
-        <div className="flex flex-col items-center justify-center p-12 text-center">
-          <div className="mb-6 rounded-full bg-primary/10 p-4">
-            <Sparkles className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="mb-3 text-2xl font-bold text-gray-900 dark:text-white">
-            Coming Soon
-          </h3>
-          <p className="mb-6 max-w-md text-gray-600 dark:text-gray-400">
-            We&apos;re working on bringing you a collection of beautiful,
-            professionally designed templates. Stay tuned!
-          </p>
-          <Button variant="outline" onClick={() => setShowTemplates(false)}>
-            Got it
+          <Button
+            onClick={() => setShowTemplates(false)}
+            variant="ghost"
+            size="icon"
+            className="size-8"
+          >
+            <span className="sr-only">Close</span>
+            <span aria-hidden>×</span>
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </CredenzaHeader>
+        <TemplateLibrary
+          isSidebarVisible={isSidebarVisible}
+        />
+      </CredenzaContent>
+    </Credenza>
   );
 }

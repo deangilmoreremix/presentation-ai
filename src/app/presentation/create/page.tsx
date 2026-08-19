@@ -1,5 +1,5 @@
 "use client";
-import { createEmptyPresentation } from "@/app/_actions/notebook/presentation/presentationActions";
+import { createEmptyPresentation, countUserPresentations } from "@/app/_actions/notebook/presentation/presentationActions";
 import { ThemeBackground } from "@/components/notebook/presentation/components/theme/ThemeBackground";
 import { Spinner } from "@/components/ui/spinner";
 import { usePresentationState } from "@/states/presentation-state";
@@ -58,6 +58,12 @@ export default function Page() {
           result.presentation.id,
           result.presentation.title,
         );
+
+        // Check if this is the user's first presentation
+        const countResult = await countUserPresentations();
+        if (countResult.success && countResult.count === 1) {
+          toast.success("🎉 Your first AI presentation is ready!");
+        }
 
         // Navigate to the generate page
         startOutlineGeneration();

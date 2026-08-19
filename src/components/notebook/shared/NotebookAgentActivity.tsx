@@ -275,7 +275,7 @@ function renderActivityResult(
             rel="noreferrer"
             className="block break-all text-blue-500 underline underline-offset-2"
           >
-            Open source
+            View source
           </a>
         ) : null}
       </div>

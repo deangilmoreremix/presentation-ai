@@ -1,9 +1,7 @@
 "use server";
 
 import { logger } from "@/lib/observability/server/logger";
-import { createClient, getCurrentUser } from "@/lib/supabase/server";
-import { canEditDocument } from "@/server/share/authorization";
-import { normalizeShareEmail } from "@/server/share/utils";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 
 type UpdatePresentationThumbnailUrlParams = {
   id: string;
@@ -20,31 +18,13 @@ export async function updatePresentationThumbnailUrl({
     "presentation.presentationThumbnailActions.updatePresentationThumbnailUrl";
   const span = logger.startSpan(`presentation.server_action.${actionName}`, {
     attributes: {
-      "allweone.scope": "presentation",
-      "allweone.action.type": "server_action",
-      "allweone.action.name": actionName,
+      "smart.scope": "presentation",
+      "smart.action.type": "server_action",
+      "smart.action.name": actionName,
     },
   });
 
   try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      throw new Error("Unauthorized");
-    }
-
-    const canEdit = await canEditDocument(id, {
-      userId: currentUser.id,
-      userEmail: currentUser.email
-        ? normalizeShareEmail(currentUser.email)
-        : null,
-    });
-    if (!canEdit) {
-      return {
-        success: false,
-        message: "You do not have permission to edit this presentation",
-      };
-    }
-
     const supabase = await createClient();
     if (!supabase) {
       return {
@@ -59,7 +39,7 @@ export async function updatePresentationThumbnailUrl({
           .from("base_documents")
           .update({ thumbnail_url: thumbnailUrl })
           .eq("id", id)
-          .eq("user_id", currentUser.id)
+          .eq("user_id", await getClerkUserId())
           .is("thumbnail_url", null)
           .select("id");
 
@@ -76,7 +56,7 @@ export async function updatePresentationThumbnailUrl({
         .from("base_documents")
         .update({ thumbnail_url: thumbnailUrl })
         .eq("id", id)
-        .eq("user_id", currentUser.id);
+        .eq("user_id", await getClerkUserId());
 
       if (error) throw error;
 

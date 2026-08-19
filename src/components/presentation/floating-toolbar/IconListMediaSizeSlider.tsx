@@ -2,11 +2,11 @@
 
 import { ImageIcon } from "lucide-react";
 
-import { ICON_LIST } from "@/components/notebook/presentation/editor/lib";
+import { ICON_LIST } from "@/components/presentation/editor/lib";
 import {
   getIconListMediaSize,
   ICON_LIST_MEDIA_SIZE_BOUNDS,
-} from "@/components/notebook/presentation/editor/utils";
+} from "@/components/presentation/editor/utils";
 import { ToolbarGroup } from "@/components/plate/ui/toolbar";
 import { Slider } from "@/components/ui/slider";
 import {

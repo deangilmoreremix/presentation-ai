@@ -4,7 +4,7 @@ import { MessageSquareWarning } from "lucide-react";
 import { type TElement } from "platejs";
 import * as React from "react";
 
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import {
   CALLOUT_VARIANTS,
   type CalloutVariant,

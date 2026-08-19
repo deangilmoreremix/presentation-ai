@@ -1,4 +1,4 @@
-# Schema Reference — `presentation-ai` (Supabase)
+# Schema Reference — `smart-presentations` (Supabase)
 
 This document is the human-readable companion to the versioned SQL migrations in
 `supabase/migrations/` and the committed dump `supabase/schema.sql`. It maps each of the

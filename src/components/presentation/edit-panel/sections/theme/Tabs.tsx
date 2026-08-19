@@ -23,7 +23,7 @@ export function ThemeModalTabs({
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          ALLWEONE
+          Smart Presentations
         </button>
         <button
           onClick={() => onTabChange("public")}

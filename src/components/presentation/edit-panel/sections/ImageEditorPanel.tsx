@@ -16,14 +16,14 @@ import {
   ErrorDisplay,
   EditControls,
   GenerateControls,
-} from "@/components/notebook/presentation/editor/custom-elements/image-editor";
-import { CropModal } from "@/components/notebook/presentation/editor/custom-elements/image-editor/CropModal";
-import { EmbedControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/EmbedControls";
-import { GeneratedImagesGrid } from "@/components/notebook/presentation/editor/custom-elements/image-editor/GeneratedImagesGrid";
-import { GifSearchControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/GifSearchControls";
-import { ImageSearchControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/ImageSearchControls";
-import { useImageDimensions } from "@/components/notebook/presentation/editor/custom-elements/image-editor/useImageDimensions";
-import { YourImagesControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/YourImagesControls";
+} from "@/components/presentation/editor/custom-elements/image-editor";
+import { CropModal } from "@/components/presentation/editor/custom-elements/image-editor/CropModal";
+import { EmbedControls } from "@/components/presentation/editor/custom-elements/image-editor/EmbedControls";
+import { GeneratedImagesGrid } from "@/components/presentation/editor/custom-elements/image-editor/GeneratedImagesGrid";
+import { GifSearchControls } from "@/components/presentation/editor/custom-elements/image-editor/GifSearchControls";
+import { ImageSearchControls } from "@/components/presentation/editor/custom-elements/image-editor/ImageSearchControls";
+import { useImageDimensions } from "@/components/presentation/editor/custom-elements/image-editor/useImageDimensions";
+import { YourImagesControls } from "@/components/presentation/editor/custom-elements/image-editor/YourImagesControls";
 import { type ImageCropSettings } from "@/components/notebook/presentation/utils/types";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

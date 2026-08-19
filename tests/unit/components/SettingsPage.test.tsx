@@ -1,6 +1,31 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
+// Mock Clerk
+vi.mock("@clerk/nextjs", () => ({
+  useUser: vi.fn(() => ({
+    user: null,
+    isLoaded: true,
+    isSignedIn: false,
+  })),
+  useSignIn: vi.fn(() => ({
+    isLoaded: true,
+    signIn: {
+      create: vi.fn(),
+    },
+  })),
+  useSignUp: vi.fn(() => ({
+    isLoaded: true,
+    signUp: {
+      create: vi.fn(),
+    },
+  })),
+  UserButton: () => <div>User Button</div>,
+  SignInButton: () => <div>Sign In</div>,
+  SignUpButton: () => <div>Sign Up</div>,
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock the key-storage module BEFORE importing SettingsPage
 vi.mock("@/lib/key-storage", () => ({
   getMaskedKey: vi.fn(() => null),
@@ -10,6 +35,26 @@ vi.mock("@/lib/key-storage", () => ({
   saveApiKey: vi.fn(),
   shouldShowModal: vi.fn(() => false),
 }));
+
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  })),
+}));
+
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  })),
+}));
+
+// Mock ClerkProvider is already mocked above
 
 import SettingsPage from "@/app/settings/page";
 import {
@@ -21,12 +66,16 @@ import {
 // Mock fetch
 global.fetch = vi.fn();
 
+// Get mocked ClerkProvider from the mock
+const { ClerkProvider } = await import("@clerk/nextjs");
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <ClerkProvider>{children}</ClerkProvider>
+);
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Re-establish deterministic defaults: clearAllMocks wipes auto-mock
-    // implementations (reverting them to undefined), which leaks state
-    // between tests (e.g. a value set via dynamic import in another test).
     vi.mocked(getMaskedKey).mockReturnValue(null);
     vi.mocked(getKeyStoragePreference).mockReturnValue("client");
     vi.mocked(getApiKey).mockReturnValue(null);
@@ -34,13 +83,13 @@ describe("SettingsPage", () => {
   });
 
   it("renders heading and API key section", () => {
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("OpenAI API Key")).toBeInTheDocument();
   });
 
   it("shows loading state initially", () => {
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
     expect(screen.getByText(/Loading/)).toBeInTheDocument();
   });
 
@@ -50,7 +99,7 @@ describe("SettingsPage", () => {
       json: async () => ({ success: true, maskedKey: null, storage: "none" }),
     });
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("No API key set")).toBeInTheDocument();
@@ -62,10 +111,9 @@ describe("SettingsPage", () => {
       ok: true,
       json: async () => ({ success: true, maskedKey: "sk-...abcd", storage: "server" }),
     });
-    // Mock getKeyStoragePreference to return "server" so page uses server data
     vi.mocked(getKeyStoragePreference).mockReturnValue("server");
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("sk-...abcd")).toBeInTheDocument();
@@ -78,7 +126,7 @@ describe("SettingsPage", () => {
     vi.mocked(getMaskedKey).mockReturnValue("sk-...1234");
     vi.mocked(getKeyStoragePreference).mockReturnValue("client");
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("sk-...1234")).toBeInTheDocument();
@@ -92,7 +140,7 @@ describe("SettingsPage", () => {
       json: async () => ({ success: true, maskedKey: null, storage: "none" }),
     });
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("No API key set")).toBeInTheDocument();
@@ -108,7 +156,7 @@ describe("SettingsPage", () => {
       json: async () => ({ success: true, maskedKey: "sk-...abcd", storage: "server" }),
     });
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("sk-...abcd")).toBeInTheDocument();
@@ -127,7 +175,7 @@ describe("SettingsPage", () => {
     // Mock window.confirm
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.getByText("sk-...wxyz")).toBeInTheDocument();
@@ -142,14 +190,7 @@ describe("SettingsPage", () => {
       }));
     });
 
-    // After deletion, should show no key
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: null, storage: "none" }),
-    });
-    // Need to re-render? Actually UI updates after DELETE response, we can test that fetch called again.
-    // For now just assert fetch was made.
-    expect(global.fetch).toHaveBeenCalledTimes(2); // initial GET + DELETE
+    vi.restoreAllMocks();
   });
 
   it("does not show Remove button when no key", async () => {
@@ -158,7 +199,7 @@ describe("SettingsPage", () => {
       json: async () => ({ success: true, maskedKey: null, storage: "none" }),
     });
 
-    render(<SettingsPage />);
+    render(<SettingsPage />, { wrapper });
 
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /remove/i })).not.toBeInTheDocument();

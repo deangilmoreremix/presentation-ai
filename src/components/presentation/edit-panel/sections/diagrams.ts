@@ -2,8 +2,8 @@
 
 import { type TElement } from "platejs";
 
-import { ANTV_INFOGRAPHIC } from "@/components/notebook/presentation/editor/lib";
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
+import { ANTV_INFOGRAPHIC } from "@/components/presentation/editor/lib";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 import { INFOGRAPHIC_CATEGORIES } from "@/constants/antv-templates";
 
 export type DiagramItem = {

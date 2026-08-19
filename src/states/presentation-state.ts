@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { type Image as GeneratedImage } from "@/app/_actions/apps/image-studio/fetch";
-import { type PaletteDropTarget } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+import { type PaletteDropTarget } from "@/components/presentation/editor/utils/paletteDrop";
 import {
   normalizePresentationSlides,
   normalizePresentationValue,
@@ -437,13 +437,7 @@ interface PresentationState {
   isReorderingSlides: boolean;
   setIsReorderingSlides: (isReordering: boolean) => void;
 
-  // Attached files (uploaded via UploadThing) for outline with docs
-  attachedFiles: NotebookAttachment[];
-  setAttachedFiles: (files: NotebookAttachment[]) => void;
-  isUploadingAttachment: boolean;
-  setIsUploadingAttachment: (uploading: boolean) => void;
 
-  // Generated image cache by prompt
   generatedImageCache: Record<string, GeneratedImage[]>;
   setGeneratedImageCache: (prompt: string, images: GeneratedImage[]) => void;
 
@@ -475,19 +469,7 @@ interface PresentationState {
   ) => void;
   clearOutlineTemplateOverrides: () => void;
 
-  // DB template selection for generation
-  selectedDbTemplate: {
-    id: string;
-    title: string;
-    slides: PlateSlide[];
-  } | null;
-  setSelectedDbTemplate: (
-    template: { id: string; title: string; slides: PlateSlide[] } | null,
-  ) => void;
 
-  // Manual extraction state for presentation generation
-  isManualExtractionEnabled: boolean;
-  setIsManualExtractionEnabled: (enabled: boolean) => void;
   selectedChunks: Chunk[];
   setSelectedChunks: (chunks: Chunk[]) => void;
   addSelectedChunk: (chunk: Chunk) => void;
@@ -505,6 +487,9 @@ interface PresentationState {
   clearExtractorRagIds: () => void;
   setExtractorRagIds: (ids: string[]) => void;
   currentExtractorRagId: string | null;
+  // Attached files for notebook/outline
+  attachedFiles: NotebookAttachment[];
+  setAttachedFiles: (files: NotebookAttachment[]) => void;
   setCurrentExtractorRagId: (id: string | null) => void;
 
   // Zoom state for slide scaling in edit mode
@@ -600,9 +585,6 @@ export const usePresentationState = create<PresentationState>()(
       // Attached files state
       attachedFiles: [],
       setAttachedFiles: (files) => set({ attachedFiles: files }),
-      isUploadingAttachment: false,
-      setIsUploadingAttachment: (uploading) =>
-        set({ isUploadingAttachment: uploading }),
 
       // Generated image cache
       generatedImageCache: {},
@@ -654,15 +636,7 @@ export const usePresentationState = create<PresentationState>()(
       clearOutlineTemplateOverrides: () =>
         set({ outlineTemplateOverrides: {} }),
 
-      // DB template selection for generation
-      selectedDbTemplate: null,
-      setSelectedDbTemplate: (template) =>
-        set({ selectedDbTemplate: template }),
-
       // Manual extraction state
-      isManualExtractionEnabled: false,
-      setIsManualExtractionEnabled: (enabled) =>
-        set({ isManualExtractionEnabled: enabled }),
       selectedChunks: [],
       setSelectedChunks: (selectedChunks) => set({ selectedChunks }),
       addSelectedChunk: (chunk) =>
@@ -1326,7 +1300,6 @@ export const usePresentationState = create<PresentationState>()(
           themeDataByTheme: {},
           thumbnailUrl: undefined,
           generationAspectRatio: DEFAULT_PRESENTATION_GENERATION_ASPECT_RATIO,
-          isManualExtractionEnabled: false,
           selectedChunks: [],
           extractorRagIds: [],
           currentExtractorRagId: null,

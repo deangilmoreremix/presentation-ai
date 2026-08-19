@@ -1,4 +1,4 @@
-import { SupabaseAuthProvider } from "@/provider/SupabaseAuthProvider";
+import { ClerkProvider } from "@clerk/nextjs";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
@@ -10,8 +10,8 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Presentation AI",
-  description: "AI-powered presentation creation and editing.",
+  title: "Smart Presentations",
+  description: "AI-powered smart presentation creation. Generate, edit, and present beautiful AI-powered slides in seconds.",
 };
 
 export default async function RootLayout({
@@ -20,8 +20,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <TanStackQueryProvider>
-      <SupabaseAuthProvider>
+    <ClerkProvider>
+      <TanStackQueryProvider>
         <ThemeProvider>
           <html lang="en" suppressHydrationWarning>
             <body className={`${inter.className} antialiased`}>
@@ -30,7 +30,7 @@ export default async function RootLayout({
             </body>
           </html>
         </ThemeProvider>
-      </SupabaseAuthProvider>
-    </TanStackQueryProvider>
+      </TanStackQueryProvider>
+    </ClerkProvider>
   );
 }

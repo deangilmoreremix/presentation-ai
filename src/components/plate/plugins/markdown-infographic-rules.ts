@@ -5,8 +5,8 @@ import {
 } from "@platejs/markdown";
 import { nanoid, type TText } from "platejs";
 
-import { ANTV_INFOGRAPHIC } from "@/components/notebook/presentation/editor/lib";
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
+import { ANTV_INFOGRAPHIC } from "@/components/presentation/editor/lib";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 
 /** Minimal mdast Code node type for deserialization */
 interface MdastCodeNode {

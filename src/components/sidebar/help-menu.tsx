@@ -53,20 +53,20 @@ export function HelpMenu({
 
           <DropdownMenuItem asChild>
             <a
-              href="https://www.allweone.com/"
+              href="https://www.smartpresentations.ai/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center"
             >
               <ExternalLink className="mr-3 h-5 w-5" />
-              <span>Visit allweone.com</span>
+              <span>Visit smartpresentations.ai</span>
             </a>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
           <div className="px-2 py-2 text-xs text-muted-foreground">
-            ALLWEONE Presentation
+            Smart Presentations
           </div>
         </DropdownMenuContent>
       </DropdownMenu>

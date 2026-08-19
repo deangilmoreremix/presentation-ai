@@ -8,10 +8,10 @@ import { PlateElement } from "platejs/react";
 
 // Import StairItem and constants
 import { StairItem } from "./staircase-item";
-import { STAIR_ITEM_ELEMENT, STAIRCASE_ELEMENT } from "../lib";
+import { STAIR_ITEM, STAIRCASE_GROUP } from "../lib";
 
 export interface StaircaseElement extends TElement {
-  type: typeof STAIRCASE_ELEMENT;
+  type: typeof STAIRCASE_GROUP;
 }
 
 // Main staircase component with withRef pattern
@@ -32,9 +32,7 @@ export const StaircaseElement = withRef<any>(
           {childrenArray.map((child, index) => (
             <StairItem
               key={index}
-              index={index}
-              totalItems={totalItems}
-              element={items[index] as TElement}
+              {...({ index, totalItems, element: items[index] } as any)}
             >
               {child}
             </StairItem>
@@ -47,19 +45,19 @@ export const StaircaseElement = withRef<any>(
 
 // Create plugin for staircase
 export const StaircasePlugin = createPlatePlugin({
-  key: STAIRCASE_ELEMENT,
+  key: STAIRCASE_GROUP,
   node: {
     isElement: true,
-    type: STAIRCASE_ELEMENT,
+    type: STAIRCASE_GROUP,
     component: StaircaseElement,
   },
 });
 
 // Create plugin for stair item
 export const StairItemPlugin = createPlatePlugin({
-  key: STAIR_ITEM_ELEMENT,
+  key: STAIR_ITEM,
   node: {
     isElement: true,
-    type: STAIR_ITEM_ELEMENT,
+    type: STAIR_ITEM,
   },
 });

@@ -9,7 +9,7 @@ import {
   type ChartDataMode,
   type ChartDataType,
   type SeriesChartType,
-} from "@/components/notebook/presentation/editor/custom-elements/chart-data-editor-dialog";
+} from "@/components/presentation/editor/custom-elements/chart-data-editor-dialog";
 import {
   BOX_GROUP,
   COMPOSED_CHART_ELEMENT,
@@ -34,8 +34,8 @@ import {
   supportsShowLine,
   supportsSidedness,
   supportsVariant,
-} from "@/components/notebook/presentation/editor/lib";
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/lib";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import { type MyEditor } from "@/components/plate/editor-kit";
 import {
   CALLOUT_VARIANTS,

@@ -22,7 +22,7 @@ import { useEffect } from "react";
 import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import { Tweet } from "react-tweet";
 
-import { InfographicEmbedPlaceholder } from "@/components/notebook/presentation/editor/custom-elements/infographic-embed-placeholder";
+import { InfographicEmbedPlaceholder } from "@/components/presentation/editor/custom-elements/infographic-embed-placeholder";
 import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";
 import { Caption, CaptionTextarea } from "./caption";

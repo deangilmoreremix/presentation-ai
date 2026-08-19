@@ -49,7 +49,7 @@ export function ColorsStep({
             )}
           >
             <Heart className="h-4 w-4" />
-            ALLWEONE®
+            Smart Presentations®
           </button>
           <button
             onClick={() => setMode("customize")}

@@ -2,8 +2,8 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { ChartRenderer } from "@/components/notebook/presentation/editor/custom-elements/charts/ChartRenderer";
-import { DEFAULT_CHART_DATA } from "@/components/notebook/presentation/editor/lib";
+import { ChartRenderer } from "@/components/presentation/editor/custom-elements/charts/ChartRenderer";
+import { DEFAULT_CHART_DATA } from "@/components/presentation/editor/lib";
 
 const BASE_WIDTH = 400;
 const BASE_HEIGHT = 300;

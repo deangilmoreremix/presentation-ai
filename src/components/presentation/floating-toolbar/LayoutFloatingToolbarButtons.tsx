@@ -12,7 +12,7 @@ import {
   getLayoutChangeTargetEntry,
   LABEL_ELEMENT,
   PRESENTATION_TITLE_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import { TooltipProvider } from "@/components/ui/tooltip";
 // Sub-components
 import { AlignmentControl } from "./AlignmentControl";

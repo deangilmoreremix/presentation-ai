@@ -3,6 +3,7 @@
 
 import { Download, FileText, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,12 +43,30 @@ function startDownload(blob: Blob, fileName: string) {
   return downloadUrl;
 }
 
-export function ExportButton() {
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"pptx" | "pdf">("pptx");
+export function ExportButton({
+  open,
+  onOpenChange,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const exportResultRef = useRef<{ blob: Blob; fileName: string } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
+
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const isExportDialogOpen = isControlled ? open : internalOpen;
+
+  const setIsExportDialogOpen = (value: boolean) => {
+    if (isControlled) {
+      onOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
+
+  const [exportFormat, setExportFormat] = useState<"pptx" | "pdf">("pptx");
+  const { toast: radixToast } = useToast();
 
   const handleExport = async () => {
     try {
@@ -63,7 +82,7 @@ export function ExportButton() {
       }
 
       const formatLabel = exportFormat === "pdf" ? "PDF" : "PowerPoint";
-      const { update, dismiss } = toast({
+      const { update, dismiss } = radixToast({
         title: `Exporting to ${formatLabel}`,
         description: (
           <div className="flex items-center gap-2">
@@ -116,7 +135,7 @@ export function ExportButton() {
 
       dismiss();
 
-      toast({
+      radixToast({
         title: "Export Complete",
         description: (
           <p>
@@ -134,9 +153,11 @@ export function ExportButton() {
         duration: EXPORT_SUCCESS_TOAST_DURATION_MS,
       });
 
+      toast.success("📥 Export complete! Your file is downloading.");
+
       setIsExportDialogOpen(false);
     } catch (error) {
-      toast({
+      radixToast({
         title: "Export Failed",
         description:
           error instanceof Error

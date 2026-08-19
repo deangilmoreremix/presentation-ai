@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Settings2, Star } from "lucide-react";
 import type React from "react";
 import { useEffect, useState, useTransition, type KeyboardEvent } from "react";
+import { toast } from "sonner";
 
 import { toggleFavoriteTheme } from "@/app/_actions/presentation/theme-favorite-actions";
 import { toggleLikeTheme } from "@/app/_actions/presentation/theme-like-actions";
@@ -328,6 +329,7 @@ export function ThemeCard({
               themeId,
               isBuiltInPresentationTheme(themeId) ? undefined : theme,
             );
+          toast.success("Theme applied! Explore more in the theme panel.");
         }}
         onFocus={onFocus}
         onKeyDown={onKeyDown}

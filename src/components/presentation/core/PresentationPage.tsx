@@ -34,6 +34,7 @@ import { PresentingLoadingOverlay } from "../shared/PresentingLoadingOverlay";
 import { ThemeFontLoader } from "../shared/ThemeFontLoader";
 import { SlideSidebar } from "../sidebar/SlideSidebar";
 import { SlidesContainer } from "../slides/SlidesContainer";
+import { EditorTour } from "../../onboarding/EditorTour";
 import { PresentationCompletionFeedback } from "./PresentationCompletionFeedback";
 
 export default function PresentationPage({
@@ -74,6 +75,8 @@ export default function PresentationPage({
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(
     null,
   );
+  const sidebarTourRef = useRef<HTMLDivElement>(null);
+  const editPanelTourRef = useRef<HTMLDivElement>(null);
   const handleViewportRef = useCallback((node: HTMLDivElement | null) => {
     setViewportElement(node);
   }, []);
@@ -208,7 +211,7 @@ export default function PresentationPage({
           {themeData && <ThemeFontLoader themeData={themeData} />}
 
           <div className="grid h-full w-full min-w-0 lg:grid-cols-[auto_minmax(0,1fr)]">
-            <div className="relative z-10 hidden lg:flex">
+            <div ref={sidebarTourRef} className="relative z-10 hidden lg:flex">
               <SlideSidebar showSidebar={showSlideSidebar} />
             </div>
             <div
@@ -248,7 +251,9 @@ export default function PresentationPage({
               </div>
 
               {/* RightEditPanel shows buttons, hidden when any panel is open */}
-              {showEditPanels && <RightEditPanel />}
+              <div ref={editPanelTourRef}>
+                {showEditPanels && <RightEditPanel />}
+              </div>
 
               {/* Recording UI (not captured) */}
               {isPresenting && wantsToRecord && (
@@ -267,6 +272,13 @@ export default function PresentationPage({
       </TouchAwareDndProvider>
 
       {isPresentingLoading && <PresentingLoadingOverlay />}
+
+      {showEditPanels && (
+        <EditorTour
+          sidebarRef={sidebarTourRef}
+          editPanelRef={editPanelTourRef}
+        />
+      )}
     </ThemeBackground>
   );
 }

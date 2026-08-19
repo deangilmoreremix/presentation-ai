@@ -16,12 +16,12 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { CropModal } from "@/components/notebook/presentation/editor/custom-elements/image-editor/CropModal";
-import { EditControls } from "@/components/notebook/presentation/editor/custom-elements/image-editor/EditControls";
-import { GeneratedImagesGrid } from "@/components/notebook/presentation/editor/custom-elements/image-editor/GeneratedImagesGrid";
-import { UploadedImagesGrid } from "@/components/notebook/presentation/editor/custom-elements/image-editor/UploadedImagesGrid";
-import { getPresentationImageCropStyles } from "@/components/notebook/presentation/editor/custom-elements/presentation-image-layout";
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+import { CropModal } from "@/components/presentation/editor/custom-elements/image-editor/CropModal";
+import { EditControls } from "@/components/presentation/editor/custom-elements/image-editor/EditControls";
+import { GeneratedImagesGrid } from "@/components/presentation/editor/custom-elements/image-editor/GeneratedImagesGrid";
+import { UploadedImagesGrid } from "@/components/presentation/editor/custom-elements/image-editor/UploadedImagesGrid";
+import { getPresentationImageCropStyles } from "@/components/presentation/editor/custom-elements/presentation-image-layout";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import { type ImageCropSettings } from "@/components/notebook/presentation/utils/types";
 import { useUploadFile } from "@/components/plate/hooks/use-upload-file";
 import { SharedGenerateControls } from "@/components/presentation/shared/SharedGenerateControls";

@@ -8,7 +8,7 @@ import {
   CONTRIBUTOR_ELEMENT,
   LABEL_ELEMENT,
   PRESENTATION_TITLE_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import { ToolbarButton, ToolbarGroup } from "@/components/plate/ui/toolbar";
 import ColorPicker from "@/components/ui/color-picker";
 import { useToolbarContext } from "./ToolbarContext";

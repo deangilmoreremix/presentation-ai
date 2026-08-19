@@ -5,9 +5,21 @@ import {
   CaseSensitive,
   ChartNoAxesCombined,
   ChartPie,
+  ImageIcon,
+  LayoutGrid,
   Link as LinkIcon,
+  List,
+  Palette,
+  Play,
   Video,
 } from "lucide-react";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { HelpMenu } from "@/components/sidebar/help-menu";
 import { Button } from "@/components/ui/button";
@@ -22,6 +34,10 @@ export function RightEditPanel() {
   const setActiveRightPanel = usePresentationState(
     (s) => s.setActiveRightPanel,
   );
+  const isGridView = usePresentationState((s) => s.isGridView);
+  const setIsGridView = usePresentationState((s) => s.setIsGridView);
+  const isThemeCreatorOpen = usePresentationState((s) => s.isThemeCreatorOpen);
+  const setIsThemeCreatorOpen = usePresentationState((s) => s.setIsThemeCreatorOpen);
 
   return (
     <div className="fixed right-3 bottom-4 z-30 flex justify-end lg:sticky lg:top-0 lg:right-auto lg:bottom-auto lg:z-10 lg:h-[calc(100dvh-4rem)] lg:flex-col lg:justify-between lg:px-3 lg:pr-6">
@@ -30,6 +46,7 @@ export function RightEditPanel() {
       </div>
 
       <div className="sheet-container relative hidden w-full max-w-max items-center justify-center gap-1 rounded-2xl border border-border/70 bg-background/95 px-2 py-2 shadow-lg backdrop-blur lg:flex lg:flex-1 lg:items-center lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0 lg:shadow-none">
+        <TooltipProvider>
         <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/90 p-1 shadow-sm backdrop-blur-md lg:absolute lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:gap-3">
           <Button
             size="icon"
@@ -80,17 +97,66 @@ export function RightEditPanel() {
             size="icon"
             variant="ghost"
             className={RIGHT_PANEL_BUTTON_CLASSNAME}
+            onClick={() => setActiveRightPanel("background")}
+          >
+            <ImageIcon className="size-5" />
+          </Button>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className={RIGHT_PANEL_BUTTON_CLASSNAME}
+            onClick={() => setIsThemeCreatorOpen(true)}
+          >
+            <Palette className="size-5" />
+          </Button>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className={RIGHT_PANEL_BUTTON_CLASSNAME}
+            onClick={() => setIsGridView(!isGridView)}
+          >
+            {isGridView ? (
+              <LayoutGrid className="size-5" />
+            ) : (
+              <List className="size-5" />
+            )}
+          </Button>
+
+          <Button
+            size="icon"
+            variant="ghost"
+            className={RIGHT_PANEL_BUTTON_CLASSNAME}
             onClick={() => {
-              // enter present mode and open recording setup
               usePresentationState.getState().resetPresentingScaleLocks();
               usePresentationState.getState().setIsPresentingLoading(true);
               usePresentationState.getState().setIsPresenting(true);
-              usePresentationRecordingState.getState().setWantsToRecord(true);
             }}
           >
-            <Video className="size-5" />
+            <Play className="size-5" />
           </Button>
-        </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className={RIGHT_PANEL_BUTTON_CLASSNAME}
+                onClick={() => {
+                  usePresentationState.getState().resetPresentingScaleLocks();
+                  usePresentationState.getState().setIsPresentingLoading(true);
+                  usePresentationState.getState().setIsPresenting(true);
+                  usePresentationRecordingState.getState().setWantsToRecord(true);
+                }}
+              >
+                <Video className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Record presentation</TooltipContent>
+          </Tooltip>
+          </div>
+        </TooltipProvider>
         <div className="ml-1 flex items-center gap-1 rounded-2xl border border-border/70 bg-background/90 p-1 shadow-sm backdrop-blur-md lg:absolute lg:bottom-4 lg:left-1/2 lg:ml-0 lg:-translate-x-1/2 lg:flex-col">
           <ZoomControl />
           <HelpMenu hideKeyboardShortcutsOnMobile />

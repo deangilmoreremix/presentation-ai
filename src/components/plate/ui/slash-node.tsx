@@ -34,7 +34,7 @@ import {
 } from "platejs/react";
 import type * as React from "react";
 
-import { PRESENTATION_TITLE_ELEMENT } from "@/components/notebook/presentation/editor/lib";
+import { PRESENTATION_TITLE_ELEMENT } from "@/components/presentation/editor/lib";
 import {
   insertBlock,
   insertInlineElement,

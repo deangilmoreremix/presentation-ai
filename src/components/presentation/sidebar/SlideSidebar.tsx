@@ -4,8 +4,16 @@ import { GripVertical, PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import React, { useCallback, useLayoutEffect, useState } from "react";
 
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Resizable } from "@/components/ui/resizable";
 import { usePresentationSlides } from "@/hooks/presentation/usePresentationSlides";
+import { useSlideOperations } from "@/hooks/presentation/useSlideOperations";
 import { DEFAULT_PRESENTATION_SLIDE_ASPECT_RATIO } from "@/lib/presentation/aspect-ratio";
 import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";
@@ -13,6 +21,7 @@ import StaticPresentationEditor from "../../notebook/presentation/editor/present
 import { Button } from "../../ui/button";
 import { Skeleton } from "../../ui/skeleton";
 import { SlideThumbnail } from "./SlideThumbnail";
+import { Trash2, Copy, ArrowUpToLine, ArrowDownToLine, X } from "lucide-react";
 
 const SIDEBAR_WIDTH_STORAGE_KEY = "presentation-sidebar-width";
 const DEFAULT_SIDEBAR_WIDTH = 150;
@@ -32,8 +41,6 @@ function SlideSidebarBase({
   variant = "docked",
   className,
 }: SlideSidebarProps) {
-  // Only subscribe to slide IDs to prevent re-render when content changes
-  // shallow ensures array comparison is shallow (same values = no re-render)
   const slideIds = usePresentationState((s) =>
     s.slides.map((slide) => slide.id),
   );
@@ -47,14 +54,19 @@ function SlideSidebarBase({
   const isGeneratingPresentation = usePresentationState(
     (s) => s.isGeneratingPresentation,
   );
-  const effectiveCurrentSlideId =
+  const effectiveCurrentSlideId: string =
     typeof currentSlideIdProp === "string"
       ? currentSlideIdProp
-      : stateCurrentSlideId;
+      : (stateCurrentSlideId ?? "");
   const isSheetVariant = variant === "sheet";
 
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
+  const [selectedSlideIds, setSelectedSlideIds] = useState<Set<string>>(
+    new Set(),
+  );
   const { scrollToSlide } = usePresentationSlides();
+  const { deleteSelectedSlides, duplicateSelectedSlides, moveSelectedSlidesTo } =
+    useSlideOperations();
 
   // Load sidebar width from localStorage on mount
   useLayoutEffect(() => {
@@ -71,13 +83,53 @@ function SlideSidebarBase({
     }
   }, [isSheetVariant]);
 
+  const clearSelection = useCallback(() => {
+    setSelectedSlideIds(new Set());
+  }, []);
+
   const handleSlideClick = useCallback(
-    (slideId: string) => {
+    (slideId: string, event: React.MouseEvent) => {
+      const isCtrlOrCmd = event.metaKey || event.ctrlKey;
+      const isShift = event.shiftKey;
+
+      setSelectedSlideIds((prev) => {
+        const next = new Set(prev);
+
+        if (isShift && slideIds.length > 0) {
+          const currentIdx = slideIds.indexOf(effectiveCurrentSlideId);
+          const targetIdx = slideIds.indexOf(slideId);
+          if (currentIdx >= 0 && targetIdx >= 0) {
+            const [start, end] =
+              currentIdx < targetIdx
+                ? [currentIdx, targetIdx]
+                : [targetIdx, currentIdx];
+            for (let i = start; i <= end; i++) {
+              const slideId = slideIds[i];
+              if (slideId) {
+                next.add(slideId);
+              }
+            }
+          }
+          return next;
+        }
+
+        if (isCtrlOrCmd) {
+          if (next.has(slideId)) {
+            next.delete(slideId);
+          } else {
+            next.add(slideId);
+          }
+          return next;
+        }
+
+        return new Set([slideId]);
+      });
+
       setCurrentSlideId(slideId);
       scrollToSlide(slideId);
       onSlideClick?.(slideId);
     },
-    [onSlideClick, scrollToSlide, setCurrentSlideId],
+    [effectiveCurrentSlideId, onSlideClick, scrollToSlide, setCurrentSlideId, slideIds],
   );
 
   const handleResize = useCallback(
@@ -90,6 +142,29 @@ function SlideSidebarBase({
     },
     [],
   );
+
+  const handleBatchDelete = useCallback(() => {
+    if (selectedSlideIds.size === 0) return;
+    deleteSelectedSlides(Array.from(selectedSlideIds));
+    setSelectedSlideIds(new Set());
+  }, [deleteSelectedSlides, selectedSlideIds]);
+
+  const handleBatchDuplicate = useCallback(() => {
+    if (selectedSlideIds.size === 0) return;
+    duplicateSelectedSlides(Array.from(selectedSlideIds));
+  }, [duplicateSelectedSlides, selectedSlideIds]);
+
+  const handleBatchMoveToTop = useCallback(() => {
+    if (selectedSlideIds.size === 0) return;
+    moveSelectedSlidesTo(Array.from(selectedSlideIds), 0);
+  }, [moveSelectedSlidesTo, selectedSlideIds]);
+
+  const handleBatchMoveToBottom = useCallback(() => {
+    if (selectedSlideIds.size === 0) return;
+    moveSelectedSlidesTo(Array.from(selectedSlideIds), slideIds.length);
+  }, [moveSelectedSlidesTo, selectedSlideIds, slideIds.length]);
+
+  const selectedCount = selectedSlideIds.size;
 
   const slideList = (
     <div
@@ -115,6 +190,60 @@ function SlideSidebarBase({
             </Button>
           </div>
         )}
+        {selectedCount > 1 && (
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-3 py-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              {selectedCount} selected
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                onClick={handleBatchDuplicate}
+                title="Duplicate selected"
+              >
+                <Copy className="size-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                onClick={handleBatchMoveToTop}
+                title="Move to top"
+              >
+                <ArrowUpToLine className="size-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                onClick={handleBatchMoveToBottom}
+                title="Move to bottom"
+              >
+                <ArrowDownToLine className="size-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-7 text-destructive hover:text-destructive"
+                onClick={handleBatchDelete}
+                title="Delete selected"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="size-7"
+                onClick={clearSelection}
+                title="Clear selection"
+              >
+                <X className="size-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col space-y-4">
           {isGeneratingPresentation && slidesCount === 0 && (
             <div className="aspect-video w-full">
@@ -126,7 +255,8 @@ function SlideSidebarBase({
               key={slideId}
               index={index}
               isActive={effectiveCurrentSlideId === slideId}
-              onClick={handleSlideClick}
+              isSelected={selectedSlideIds.has(slideId)}
+              onClick={(id, event) => handleSlideClick(id, event)}
               slideId={slideId}
               containerWidth={isSheetVariant ? undefined : sidebarWidth - 32}
             />
@@ -277,13 +407,15 @@ const MemoPreviewItem = React.memo(
   function PreviewItem({
     index,
     isActive,
+    isSelected,
     onClick,
     slideId,
     containerWidth,
   }: {
     index: number;
     isActive: boolean;
-    onClick: (slideId: string) => void;
+    isSelected: boolean;
+    onClick: (slideId: string, event: React.MouseEvent) => void;
     slideId: string;
     containerWidth?: number;
   }) {
@@ -292,43 +424,85 @@ const MemoPreviewItem = React.memo(
       s.slides.find((slide) => slide.id === slideId),
     );
 
-    const handleClick = useCallback(() => onClick(slideId), [onClick, slideId]);
+    const {
+      addSlide,
+      deleteSlide,
+      moveSlide,
+    } = useSlideOperations();
 
-    if (!slide) return null;
+    const handleClick = useCallback(
+      (event: React.MouseEvent) => onClick(slideId, event),
+      [onClick, slideId],
+    );
 
     const effectiveContainerWidth =
       typeof containerWidth === "number"
         ? containerWidth -
-          ((slide.formatCategory ?? "presentation") === "social" ? 8 : 0)
+          ((slide?.formatCategory ?? "presentation") === "social" ? 8 : 0)
         : undefined;
 
+    const handleDuplicate = useCallback(() => {
+      if (!slide) return;
+      addSlide("after", slideId, slide);
+    }, [addSlide, slide, slideId]);
+
+    const handleDelete = useCallback(() => {
+      deleteSlide(slideId);
+    }, [deleteSlide, slideId]);
+
+    const handleMoveUp = useCallback(() => {
+      moveSlide(slideId, "up");
+    }, [moveSlide, slideId]);
+
+    const handleMoveDown = useCallback(() => {
+      moveSlide(slideId, "down");
+    }, [moveSlide, slideId]);
+
+    if (!slide) return null;
+
     return (
-      <SlideThumbnail
-        index={index} // For showing the slide number
-        isActive={isActive}
-        onClick={handleClick}
-        widthSize={(slide.width ?? "M") as "S" | "M" | "L"}
-        formatCategory={slide.formatCategory ?? "presentation"}
-        aspectRatio={
-          slide.aspectRatio ?? DEFAULT_PRESENTATION_SLIDE_ASPECT_RATIO
-        }
-        containerWidth={effectiveContainerWidth}
-      >
-        <StaticPresentationEditor
-          initialContent={slide}
-          className="border"
-          id={`preview-${slideId}`}
-        />
-      </SlideThumbnail>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <SlideThumbnail
+            index={index} // For showing the slide number
+            isActive={isActive}
+            isSelected={isSelected}
+            onClick={handleClick}
+            widthSize={(slide.width ?? "M") as "S" | "M" | "L"}
+            formatCategory={slide.formatCategory ?? "presentation"}
+            aspectRatio={
+              slide.aspectRatio ?? DEFAULT_PRESENTATION_SLIDE_ASPECT_RATIO
+            }
+            containerWidth={effectiveContainerWidth}
+          >
+            <StaticPresentationEditor
+              initialContent={slide}
+              className="border"
+              id={`preview-${slideId}`}
+            />
+          </SlideThumbnail>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handleDuplicate}>
+            Duplicate
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={handleMoveUp}>Move Up</ContextMenuItem>
+          <ContextMenuItem onClick={handleMoveDown}>Move Down</ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+            Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     );
   },
   (prev, next) => {
     if (prev.index !== next.index) return false;
     if (prev.isActive !== next.isActive) return false;
+    if (prev.isSelected !== next.isSelected) return false;
     if (prev.slideId !== next.slideId) return false;
     if (prev.containerWidth !== next.containerWidth) return false;
-    // Note: We don't need to compare slide anymore since each item fetches its own
-    // and React will re-render when the selector returns a new reference
     return true;
   },
 );

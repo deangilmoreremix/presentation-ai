@@ -14,14 +14,14 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
-import { InfographicDataEditorDialog } from "@/components/notebook/presentation/editor/custom-elements/infographic-data-editor-dialog";
+import { InfographicDataEditorDialog } from "@/components/presentation/editor/custom-elements/infographic-data-editor-dialog";
 import {
   getInfographicThemeColors,
   parseInfographicPalette,
   parseInfographicStylize,
   updateInfographicTheme,
-} from "@/components/notebook/presentation/editor/utils/infographic-utils";
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/utils/infographic-utils";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import { type PlateNode } from "@/components/notebook/presentation/utils/parser";
 import {
   DropdownMenu,

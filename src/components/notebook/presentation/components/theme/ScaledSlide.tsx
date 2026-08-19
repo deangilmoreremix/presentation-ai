@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { type testSlides } from "@/components/notebook/presentation/components/theme/create-theme/test-slide";
-import StaticPresentationEditor from "@/components/notebook/presentation/editor/presentation-editor-static";
+import StaticPresentationEditor from "@/components/presentation/editor/presentation-editor-static";
 
 interface ScaledSlideProps {
   slide: (typeof testSlides)[number];

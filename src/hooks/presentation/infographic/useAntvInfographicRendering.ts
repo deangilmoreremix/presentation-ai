@@ -9,18 +9,18 @@ import {
   type SetStateAction,
 } from "react";
 
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
-import { enforceInfographicCardBackground } from "@/components/notebook/presentation/editor/utils/infographic-card-background";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
+import { enforceInfographicCardBackground } from "@/components/presentation/editor/utils/infographic-card-background";
 import {
   applyInitialInfographicTitleLayout,
   hasInfographicTitleLayoutAttributes,
-} from "@/components/notebook/presentation/editor/utils/infographic-title-layout";
+} from "@/components/presentation/editor/utils/infographic-title-layout";
 import {
   applyColorModeToData,
   applyThemeToData,
   applyThemeToSyntax,
   type InfographicPaletteThemeColors,
-} from "@/components/notebook/presentation/editor/utils/infographic-utils";
+} from "@/components/presentation/editor/utils/infographic-utils";
 import { loadInfographicFonts } from "./infographic-font-loader";
 
 type RenderingParams = {

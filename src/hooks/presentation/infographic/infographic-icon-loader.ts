@@ -2,7 +2,7 @@ import { registerResourceLoader } from "@antv/infographic";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { resolvePresentationIcon } from "@/components/notebook/presentation/editor/custom-elements/presentation-icon-utils";
+import { resolvePresentationIcon } from "@/components/presentation/editor/custom-elements/presentation-icon-utils";
 
 type ResourceConfig = {
   source: string;

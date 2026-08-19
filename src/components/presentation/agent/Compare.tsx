@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import StaticPresentationEditor from "@/components/notebook/presentation/editor/presentation-editor-static";
+import StaticPresentationEditor from "@/components/presentation/editor/presentation-editor-static";
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { usePresentationState } from "@/states/presentation-state";
 import { SlideThumbnail } from "../sidebar/SlideThumbnail";

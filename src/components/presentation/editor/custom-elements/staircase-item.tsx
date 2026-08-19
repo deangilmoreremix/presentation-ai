@@ -1,144 +1,191 @@
 "use client";
 
-import React from "react";
-import { cn } from "@/components/plate/utils";
-import { type TElement } from "platejs";
-import { useDraggable, useDropLine } from "@platejs/dnd";
-import { GripVertical } from "lucide-react";
-import { useReadOnly } from "slate-react";
-import { usePluginOption } from "platejs/react";
-import { BlockSelectionPlugin } from "@platejs/selection/react";
-import { Button } from "@/components/plate/ui/button";
+import { NodeApi, PathApi } from "platejs";
+import { PlateElement, type PlateElementProps } from "platejs/react";
+import { useLayoutEffect, useRef, useState } from "react";
+
+import { IconPicker } from "@/components/ui/icon-picker";
+import { cn } from "@/lib/utils";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/plate/ui/tooltip";
-import { Portal } from "@radix-ui/react-tooltip";
-import { STAIR_ITEM_ELEMENT } from "../lib";
+  type TStairGroupElement,
+  type TStairItemElement,
+} from "../plugins/staircase-plugin";
+import { getAlignmentClasses } from "../utils";
+import { getPresentationAccentColor } from "./color-utils";
+import { getSiblingIndexContext } from "./sibling-index";
 
-// StairItem component for individual items in the staircase
-export const StairItem = ({
-  index,
-  totalItems,
-  element,
-  children,
-}: {
-  index: number;
-  totalItems: number;
-  element: TElement;
-  children: React.ReactNode;
-}) => {
-  const readOnly = useReadOnly();
-  const isSelectionAreaVisible = usePluginOption(BlockSelectionPlugin, "isSelectionAreaVisible");
+const STAIR_MIN_BLOCK_HEIGHT = 48;
 
-  // Add draggable functionality
-  const { isDragging, previewRef, handleRef } = useDraggable({
-    element,
-    orientation: "vertical",
-    canDropNode: ({ dragEntry, dropEntry }) => {
-      return (
-        dragEntry[0].type === STAIR_ITEM_ELEMENT &&
-        dropEntry[0].type === STAIR_ITEM_ELEMENT
+// StairItem component aligned with PyramidItem behavior
+export const StairItem = (props: PlateElementProps<TStairItemElement>) => {
+  // Derive parent stair element and totalChildren like pyramid
+  const { index, parentElement } = getSiblingIndexContext<TStairGroupElement>(
+    props.editor,
+    props.element,
+    props.path,
+  );
+  const fallbackParentPath = PathApi.parent(props.path);
+  const fallbackParentElement = NodeApi.get(
+    props.editor,
+    fallbackParentPath,
+  ) as TStairGroupElement | undefined;
+  const resolvedParentElement = parentElement ?? fallbackParentElement;
+
+  const totalItems = resolvedParentElement?.children?.length || 1;
+
+  // Refs and state for dynamic height
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [blockHeight, setBlockHeight] = useState(STAIR_MIN_BLOCK_HEIGHT);
+
+  // ResizeObserver to dynamically adjust height based on content height
+  useLayoutEffect(() => {
+    if (!contentRef.current) return;
+
+    const updateHeight = () => {
+      const contentHeight =
+        contentRef.current?.getBoundingClientRect().height ??
+        STAIR_MIN_BLOCK_HEIGHT;
+      const nextHeight = Math.max(
+        Math.ceil(contentHeight),
+        STAIR_MIN_BLOCK_HEIGHT,
       );
-    },
-  });
 
-  // Add drop line indicator
-  const { dropLine } = useDropLine({
-    id: element.id as string,
-    orientation: "vertical",
-  });
+      setBlockHeight((currentHeight) =>
+        Math.abs(currentHeight - nextHeight) > 0.5 ? nextHeight : currentHeight,
+      );
+    };
 
-  // Calculate width based on index and total items
-  const getWidth = () => {
-    const baseWidth = 70; // Base width for first step
-    const maxWidth = 220; // Maximum width for the last step
+    updateHeight();
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(contentRef.current);
 
-    // Calculate width increment based on total items
-    const increment = (maxWidth - baseWidth) / (totalItems - 1 || 1);
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    return baseWidth + index * increment;
+  // Calculate a width ramp similar to previous design, but driven by totalItems
+  const baseWidth = 70;
+  const maxWidth = 220;
+  const increment = (maxWidth - baseWidth) / (totalItems - 1 || 1);
+  const widthPx = baseWidth + index * increment;
+
+  const alignment =
+    props.element.alignment ?? resolvedParentElement?.alignment ?? "left";
+  const { icon } = props.element;
+  const markerColor = getPresentationAccentColor(
+    props.element,
+    resolvedParentElement,
+    "var(--presentation-smart-layout, var(--presentation-primary))",
+  );
+
+  const handleIconSelect = (iconName: string) => {
+    const itemPath = props.editor.api.findPath(props.element);
+    if (!itemPath) return;
+    props.editor.tf.setNodes({ icon: iconName }, { at: itemPath });
   };
 
-  return (
-    <div
-      ref={previewRef}
-      className={cn(
-        "group/stair-item relative mb-2 w-full",
-        isDragging && "opacity-50",
-        dropLine && "drop-target",
-      )}
-    >
-      {/* Drop target indicator lines */}
-      {!readOnly && !isSelectionAreaVisible && dropLine && (
-        <div
-          className={cn(
-            "absolute z-50 bg-primary/50",
-            dropLine === "top" && "inset-x-0 top-0 h-1",
-            dropLine === "bottom" && "inset-x-0 bottom-0 h-1",
-          )}
-        />
-      )}
+  const variant = resolvedParentElement?.variant;
+  const isInside = variant === "inside";
 
-      {/* Drag handle that appears on hover */}
-      {!readOnly && !isSelectionAreaVisible && (
+  // For inside variant, use percentage-based widths so they scale with container
+  const baseWidthPercent = 30;
+  const maxWidthPercent = 70;
+  const incrementPercent =
+    (maxWidthPercent - baseWidthPercent) / (totalItems - 1 || 1);
+  const widthPercent = baseWidthPercent + index * incrementPercent;
+
+  if (isInside) {
+    return (
+      <PlateElement
+        {...props}
+        className={cn("group/stair-item relative w-full")}
+      >
         <div
-          ref={handleRef}
           className={cn(
-            "absolute left-0 top-1/2 z-50 -translate-x-full -translate-y-1/2 pr-2",
-            "pointer-events-auto flex items-center",
-            "opacity-0 transition-opacity group-hover/stair-item:opacity-100",
+            "flex w-full border-b border-gray-700",
+            alignment === "right" && "justify-end",
+            alignment !== "right" && "justify-start",
           )}
         >
-          <StairItemDragHandle />
+          <div
+            data-shape="rect"
+            data-shape-text={String(index + 1)}
+            data-fill-color={markerColor}
+            data-text-color="var(--presentation-background)"
+            style={
+              {
+                width: `${widthPercent}%`,
+                backgroundColor: markerColor,
+                color: "var(--presentation-background)",
+                "--presentation-heading": "var(--presentation-card-background)",
+                "--presentation-text": "var(--presentation-card-background)",
+              } as React.CSSProperties
+            }
+            className="flex min-h-15 shrink-0 flex-col justify-center rounded-md px-4 py-3"
+          >
+            <div ref={contentRef} className="w-full font-normal">
+              {props.children}
+            </div>
+          </div>
         </div>
-      )}
+      </PlateElement>
+    );
+  }
 
-      {/* The stair item layout */}
-      <div className="flex gap-4">
-        {/* Square block with increasing width but fixed height */}
+  return (
+    <PlateElement {...props} className={cn("group/stair-item relative w-full")}>
+      <div
+        className={cn(
+          "flex items-center gap-4 border-b border-gray-700",
+          alignment === "right" && "flex-row-reverse",
+        )}
+      >
+        {/* Width-growing block with number */}
         <div
+          data-shape="rect"
+          data-shape-text={String(index + 1)}
+          data-fill-color={markerColor}
+          data-text-color="var(--presentation-background)"
           style={{
-            width: `${getWidth()}px`,
-            minHeight: "70px",
-            backgroundColor: "var(--presentation-primary)",
+            width: `${widthPx}px`,
+            height: `${blockHeight}px`,
+            backgroundColor: markerColor,
             color: "var(--presentation-background)",
           }}
-          className="flex flex-shrink-0 items-center justify-center rounded-md text-2xl font-bold"
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-md text-2xl font-bold",
+          )}
         >
-          {index + 1}
+          <IconPicker
+            defaultIcon={icon}
+            placeholder={
+              <span className="text-2xl font-bold">{index + 1}</span>
+            }
+            onIconSelect={(iconName) => handleIconSelect(iconName)}
+            onIconRemove={() => {
+              const itemPath = props.editor.api.findPath(props.element);
+              if (!itemPath) return;
+              props.editor.tf.setNodes({ icon: "" }, { at: itemPath });
+            }}
+            className="h-full w-full border-transparent bg-transparent shadow-none hover:bg-white/15"
+            size="lg"
+            style={{
+              borderColor: "transparent",
+              backgroundColor: "transparent",
+              color: "var(--presentation-background)",
+            }}
+          />
         </div>
 
-        {/* Content area */}
-        <div className="flex flex-1 items-center">{children}</div>
+        <div
+          ref={contentRef}
+          className={cn(
+            "min-w-0 flex-1 self-center",
+            getAlignmentClasses(alignment),
+          )}
+        >
+          {props.children}
+        </div>
       </div>
-    </div>
+    </PlateElement>
   );
 };
-
-// Drag handle component
-const StairItemDragHandle = React.memo(() => {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button size="icon" variant="ghost" className="h-5 px-1">
-            <GripVertical
-              className="size-4 text-muted-foreground"
-              onClick={(event) => {
-                event.stopPropagation();
-                event.preventDefault();
-              }}
-            />
-          </Button>
-        </TooltipTrigger>
-        <Portal>
-          <TooltipContent>Drag to move item</TooltipContent>
-        </Portal>
-      </Tooltip>
-    </TooltipProvider>
-  );
-});
-StairItemDragHandle.displayName = "StairItemDragHandle";

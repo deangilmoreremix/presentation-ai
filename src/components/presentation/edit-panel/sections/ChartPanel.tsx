@@ -13,7 +13,7 @@ import {
 } from "react";
 import { useDrag } from "react-dnd";
 
-import { updateDroppedElementAfterDrop } from "@/components/notebook/presentation/editor/dnd/utils/updateSiblingsForcefully";
+import { updateDroppedElementAfterDrop } from "@/components/presentation/editor/dnd/utils/updateSiblingsForcefully";
 import {
   getElementId,
   getPaletteMutableSignature,
@@ -21,7 +21,7 @@ import {
   replaceElementById,
   replaceFocusedEmptyParagraph,
   type PaletteDropTarget,
-} from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/utils/paletteDrop";
 import {
   type PlateSlide,
   type RootImage,

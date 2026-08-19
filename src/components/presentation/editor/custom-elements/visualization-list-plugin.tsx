@@ -35,9 +35,7 @@ const PyramidVisualization = ({
       {childrenArray.map((child, index) => (
         <PyramidItem
           key={index}
-          index={index}
-          totalItems={totalItems}
-          element={items[index] as TElement}
+          {...({ index, totalItems, element: items[index] } as any)}
         >
           {child}
         </PyramidItem>
@@ -59,7 +57,10 @@ const ArrowVisualization = ({
   return (
     <div className="my-4 mb-8 flex w-full flex-col overflow-visible">
       {childrenArray.map((child, index) => (
-        <ArrowItem key={index} index={index} element={items[index] as TElement}>
+        <ArrowItem
+          key={index}
+          {...({ index, element: items[index] } as any)}
+        >
           {child}
         </ArrowItem>
       ))}
@@ -87,8 +88,7 @@ const TimelineVisualization = ({
         {childrenArray.map((child, index) => (
           <TimelineItem
             key={index}
-            index={index}
-            element={items[index] as TElement}
+            {...({ index, element: items[index] } as any)}
           >
             {child}
           </TimelineItem>

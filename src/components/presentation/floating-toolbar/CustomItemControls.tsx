@@ -3,7 +3,7 @@
 import { Copy, Shapes, StepBack, StepForward, Trash2 } from "lucide-react";
 import { KEYS, nanoid, NodeApi, PathApi, type TElement } from "platejs";
 
-import { updateSiblingsForcefully } from "@/components/notebook/presentation/editor/dnd/utils/updateSiblingsForcefully";
+import { updateSiblingsForcefully } from "@/components/presentation/editor/dnd/utils/updateSiblingsForcefully";
 import {
   ARROW_LIST_ITEM,
   BOX_ITEM,
@@ -14,7 +14,7 @@ import {
   PYRAMID_ITEM,
   STAIR_ITEM,
   TIMELINE_ITEM,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import { ToolbarButton, ToolbarGroup } from "@/components/plate/ui/toolbar";
 import { IconPicker } from "@/components/ui/icon-picker";
 import { cn } from "@/lib/utils";

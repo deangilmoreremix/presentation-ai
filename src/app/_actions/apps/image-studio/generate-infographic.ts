@@ -11,8 +11,7 @@ import {
 } from "@/constants/image-models";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { logger } from "@/lib/observability/server/logger";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 
 type GenerateInfographicImageActionInput = {
   illustrationStyle?: string;
@@ -63,26 +62,13 @@ export async function generateInfographicImageAction({
   const actionName = "apps.image-studio.generateInfographicImageAction";
   const span = logger.startSpan(`notebook.server_action.${actionName}`, {
     attributes: {
-      "allweone.scope": "notebook",
-      "allweone.action.type": "server_action",
-      "allweone.action.name": actionName,
-      "allweone.server.image_generation.prompt.length": trimmedPrompt.length,
-      "allweone.server.image_generation.requested_model": model,
+      "smart.scope": "notebook",
+      "smart.action.type": "server_action",
+      "smart.action.name": actionName,
+      "smart.server.image_generation.prompt.length": trimmedPrompt.length,
+      "smart.server.image_generation.requested_model": model,
     },
   });
-
-  const currentUser = await getCurrentUser();
-
-  if (!currentUser?.id) {
-    span.annotate({
-      "allweone.server.image_generation.authorized": false,
-    });
-    span.end();
-    return {
-      success: false,
-      error: "You must be logged in to generate infographics",
-    };
-  }
 
   if (!trimmedPrompt) {
     span.end();
@@ -96,16 +82,16 @@ export async function generateInfographicImageAction({
   });
 
   try {
-    const actualModel = currentUser.isAdmin ? model : DEFAULT_IMAGE_MODEL;
+    const actualModel = DEFAULT_IMAGE_MODEL;
 
     span.annotate({
-      "allweone.server.image_generation.authorized": true,
-      "allweone.server.image_generation.admin": currentUser.isAdmin,
-      "allweone.server.image_generation.model": actualModel,
-      "allweone.server.image_generation.user_id": currentUser.id,
+      "smart.server.image_generation.authorized": true,
+      "smart.server.image_generation.admin": false,
+      "smart.server.image_generation.model": actualModel,
+      "smart.server.image_generation.user_id": await getClerkUserId(),
     });
-    span.event("allweone.server.image_generation.started", {
-      "allweone.server.image_generation.model": actualModel,
+    span.event("smart.server.image_generation.started", {
+      "smart.server.image_generation.model": actualModel,
     });
 
     const openai = await getOpenAIClient(apiKey);
@@ -132,8 +118,8 @@ export async function generateInfographicImageAction({
       throw new Error("Failed to generate infographic");
     }
 
-    span.event("allweone.server.image_generation.image_ready", {
-      "allweone.server.image_generation.source_url_available": true,
+    span.event("smart.server.image_generation.image_ready", {
+      "smart.server.image_generation.source_url_available": true,
     });
 
     const imageBuffer = Buffer.from(base64, "base64");
@@ -146,8 +132,8 @@ export async function generateInfographicImageAction({
       throw new Error("Failed to upload generated infographic");
     }
 
-    span.event("allweone.server.image_generation.upload_completed", {
-      "allweone.server.image_generation.uploaded": true,
+    span.event("smart.server.image_generation.upload_completed", {
+      "smart.server.image_generation.uploaded": true,
     });
 
     const supabase = await createClient();
@@ -160,15 +146,15 @@ export async function generateInfographicImageAction({
       .insert({
         url: permanentUrl,
         prompt: fullPrompt,
-        user_id: currentUser.id,
+        user_id: await getClerkUserId(),
       })
       .select("id, prompt, url")
       .single();
 
     if (insErr) throw insErr;
 
-    span.event("allweone.server.image_generation.completed", {
-      "allweone.server.image_generation.generated_image.id": generatedImage?.id,
+    span.event("smart.server.image_generation.completed", {
+      "smart.server.image_generation.generated_image.id": generatedImage?.id,
     });
 
     return { success: true, image: generatedImage };

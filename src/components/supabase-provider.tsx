@@ -5,10 +5,12 @@ import type { ReactNode } from "react";
 
 import { useAuth as useSupabaseAuth } from "@/provider/SupabaseAuthProvider";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
+const supabase = supabaseUrl && supabaseAnonKey
+  ? createBrowserClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 const ANONYMOUS_FALLBACK_USER = {
   id: "00000000-0000-0000-0000-000000000000",

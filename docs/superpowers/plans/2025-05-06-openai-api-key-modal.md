@@ -1367,7 +1367,7 @@ Decision: Add Settings item to `PresentationMenu` (existing dropdown with Folder
 
 Since `PresentationMenu` currently has: New Presentation, Rename, Duplicate, Undo/Redo, Page setup, Theme panel, Agent panel, All Presentations — none are user settings. Better to add a separate user menu or include in HelpMenu.
 
-Let's inspect HelpMenu more closely. It currently has "Keyboard shortcuts" and "Visit allweone.com". Add "Settings" item there.
+Let's inspect HelpMenu more closely. It currently has "Keyboard shortcuts" and "Visit smartpresentations.ai". Add "Settings" item there.
 
 - [ ] **Step 2: Write failing test (optional, if we're adding behavior we can manual test)**
 
@@ -1399,7 +1399,7 @@ Add import:
 import { Settings } from 'lucide-react';
 ```
 
-Add menu item before the separator before the ALLWEONE Presentation footer:
+Add menu item before the separator before the Smart Presentations footer:
 ```tsx
 <DropdownMenuItem asChild>
   <a
@@ -1412,7 +1412,7 @@ Add menu item before the separator before the ALLWEONE Presentation footer:
 </DropdownMenuItem>
 ```
 
-Full modified portion (after Visit allweone.com):
+Full modified portion (after Visit smartpresentations.ai):
 ```tsx
 <DropdownMenuSeparator />
 
@@ -1427,7 +1427,7 @@ Full modified portion (after Visit allweone.com):
 </DropdownMenuItem>
 
 <div className="px-2 py-2 text-xs text-muted-foreground">
-  ALLWEONE Presentation
+  Smart Presentations
 </div>
 ```
 

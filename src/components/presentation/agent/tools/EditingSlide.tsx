@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import PresentationEditorStaticView from "@/components/notebook/presentation/editor/presentation-editor-static";
+import PresentationEditorStaticView from "@/components/presentation/editor/presentation-editor-static";
 import { parseSlideXml } from "@/components/notebook/presentation/utils/parser";
 import { baseWidths } from "@/hooks/presentation/scaling";
 import { cn } from "@/lib/utils";

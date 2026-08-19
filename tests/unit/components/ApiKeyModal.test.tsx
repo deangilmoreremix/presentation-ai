@@ -139,7 +139,7 @@ describe("ApiKeyModal", () => {
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith(
         "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz",
-        "server" // default preferServerStorage = true
+        "client" // default preferServerStorage = false
       );
     });
   });
@@ -177,10 +177,10 @@ describe("ApiKeyModal", () => {
     });
   });
 
-  it("server storage checkbox is checked by default", () => {
+  it("server storage checkbox is unchecked by default", () => {
     render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
     const checkbox = screen.getByRole("checkbox", { name: /save encrypted on server/i });
-    expect(checkbox).toBeChecked();
+    expect(checkbox).not.toBeChecked();
   });
 
   it("unchecking server storage still allows save if format valid", async () => {
@@ -188,10 +188,11 @@ describe("ApiKeyModal", () => {
     const input = screen.getByPlaceholderText("sk-...");
     fireEvent.change(input, { target: { value: "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz" } });
 
-    // Uncheck server storage
-    const checkbox = screen.getByRole("checkbox", { name: /save encrypted on server/i });
-    fireEvent.click(checkbox);
-    expect(checkbox).not.toBeChecked();
+    // Check server storage (default is unchecked now)
+    const checkbox = screen.getByRole("checkbox", { name: /save encrypted on server/i }) as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    fireEvent.change(checkbox, { target: { checked: true } });
+    await waitFor(() => expect(checkbox.checked).toBe(true));
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();

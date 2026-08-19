@@ -15,11 +15,11 @@ import {
   type ChartDataMode,
   type ChartDataType,
   type SeriesChartType,
-} from "@/components/notebook/presentation/editor/custom-elements/chart-data-editor-dialog";
+} from "@/components/presentation/editor/custom-elements/chart-data-editor-dialog";
 import {
   sanitizeSankeyCycleData,
   type RemovedSankeyCycleLink,
-} from "@/components/notebook/presentation/editor/custom-elements/chart-utils";
+} from "@/components/presentation/editor/custom-elements/chart-utils";
 import {
   AREA_CHART_ELEMENT,
   areChartTypesCompatible,
@@ -52,8 +52,8 @@ import {
   SUNBURST_CHART_ELEMENT,
   TREEMAP_CHART_ELEMENT,
   WATERFALL_CHART_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
-import { PALETTE_DROP_MUTABLE_KEY } from "@/components/notebook/presentation/editor/utils/paletteDrop";
+} from "@/components/presentation/editor/lib";
+import { PALETTE_DROP_MUTABLE_KEY } from "@/components/presentation/editor/utils/paletteDrop";
 import { BlurInput } from "@/components/ui/blur-input";
 import { Button } from "@/components/ui/button";
 import {

@@ -20,7 +20,7 @@ export function ShareButton() {
     }
 
     await navigator.clipboard.writeText(shareUrl);
-    toast.success("Presentation link copied");
+    toast.success("🔗 Share link copied! Anyone with the link can view.");
   };
 
   return (

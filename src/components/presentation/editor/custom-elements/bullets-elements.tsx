@@ -8,10 +8,10 @@ import { PlateElement } from "platejs/react";
 
 // Import BulletItem and constants
 import { BulletItem } from "./bullet-item";
-import { BULLET_ELEMENT, BULLETS_ELEMENT } from "../lib";
+import { BULLET_ITEM, BULLET_GROUP } from "../lib";
 
 export interface BulletsElement extends TElement {
-  type: typeof BULLETS_ELEMENT;
+  type: typeof BULLET_GROUP;
 }
 
 // Main bullets component with withRef pattern
@@ -40,8 +40,7 @@ export const BulletsElement = withRef<any>(
           {childrenArray.map((child, index) => (
             <BulletItem
               key={index}
-              index={index}
-              element={items[index] as TElement}
+              {...({ index, element: items[index] } as any)}
             >
               {child}
             </BulletItem>
@@ -54,19 +53,19 @@ export const BulletsElement = withRef<any>(
 
 // Create plugin for bullets
 export const BulletsPlugin = createPlatePlugin({
-  key: BULLETS_ELEMENT,
+  key: BULLET_GROUP,
   node: {
     isElement: true,
-    type: BULLETS_ELEMENT,
+    type: BULLET_GROUP,
     component: BulletsElement,
   },
 });
 
 // Create plugin for bullet item
 export const BulletPlugin = createPlatePlugin({
-  key: BULLET_ELEMENT,
+  key: BULLET_ITEM,
   node: {
     isElement: true,
-    type: BULLET_ELEMENT,
+    type: BULLET_ITEM,
   },
 });

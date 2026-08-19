@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { type TElement } from "platejs";
 
-import { COLUMN_GROUP } from "@/components/notebook/presentation/editor/lib";
+import { COLUMN_GROUP } from "@/components/presentation/editor/lib";
 import { ToolbarButton, ToolbarGroup } from "@/components/plate/ui/toolbar";
 import { useToolbarContext } from "./ToolbarContext";
 

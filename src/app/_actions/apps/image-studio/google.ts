@@ -2,7 +2,6 @@
 
 import { type LayoutType } from "@/components/notebook/presentation/utils/parser";
 import { env } from "@/env";
-import { auth } from "@/server/auth";
 
 type GoogleImageSearchItem = {
   link?: string;
@@ -69,11 +68,6 @@ export async function searchGoogleImages(query: string): Promise<{
   error?: string;
 }> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "You must be logged in to get images" };
-    }
-
     if (!env.GOOGLE_CUSTOM_SEARCH_API_KEY || !env.SEARCH_ENGINE_CX) {
       return { success: false, error: "Google image search is not configured" };
     }
@@ -127,11 +121,6 @@ export async function getImageFromGoogle(
   _layoutType?: LayoutType,
 ): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "You must be logged in to get images" };
-    }
-
     const res = await searchGoogleImages(query);
     if (!res.success || !res.images || res.images.length === 0) {
       return { success: false, error: "No images found for this query" };

@@ -3,7 +3,7 @@
 import { Settings, Table2 } from "lucide-react";
 import * as React from "react";
 
-import { ChartDataEditorDialog } from "@/components/notebook/presentation/editor/custom-elements/chart-data-editor-dialog";
+import { ChartDataEditorDialog } from "@/components/presentation/editor/custom-elements/chart-data-editor-dialog";
 import {
   BAR_CHART_ELEMENT,
   BOX_PLOT_CHART_ELEMENT,
@@ -13,7 +13,7 @@ import {
   PYRAMID_CHART_ELEMENT,
   RADIAL_GAUGE_ELEMENT,
   RANGE_BAR_CHART_ELEMENT,
-} from "@/components/notebook/presentation/editor/lib";
+} from "@/components/presentation/editor/lib";
 import {
   DropdownMenu,
   DropdownMenuContent,

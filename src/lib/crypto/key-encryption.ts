@@ -42,7 +42,9 @@ export async function encryptApiKey(
 ): Promise<{ encrypted: string; iv: string }> {
   const masterKey = process.env.API_KEY_ENCRYPTION_MASTER_KEY;
   if (!masterKey) {
-    throw new Error('API_KEY_ENCRYPTION_MASTER_KEY environment variable is required');
+    throw new Error(
+      "API_KEY_ENCRYPTION_MASTER_KEY is not configured. Set this environment variable to enable encrypted server-side API key storage."
+    );
   }
 
   const kek = deriveKek(masterKey, userId);
@@ -71,7 +73,9 @@ export async function decryptApiKey(
 ): Promise<string> {
   const masterKey = process.env.API_KEY_ENCRYPTION_MASTER_KEY;
   if (!masterKey) {
-    throw new Error('API_KEY_ENCRYPTION_MASTER_KEY environment variable is required');
+    throw new Error(
+      "API_KEY_ENCRYPTION_MASTER_KEY is not configured. Set this environment variable to enable encrypted server-side API key storage."
+    );
   }
 
   const kek = deriveKek(masterKey, userId);

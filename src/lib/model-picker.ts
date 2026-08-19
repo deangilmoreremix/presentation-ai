@@ -4,7 +4,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 type ModelProvider = "openai" | "lmstudio";
 const modelLogger = createLogger("model-picker");
-const LM_STUDIO_BASE_URL = "http://localhost:1234";
+const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL ?? "http://localhost:1234";
 const LM_STUDIO_API_BASE_URL = `${LM_STUDIO_BASE_URL}/v1`;
 const LM_STUDIO_MODELS_URLS = [
   `${LM_STUDIO_API_BASE_URL}/models`,
@@ -64,7 +64,7 @@ function resolveModelSelection(
   };
 }
 
-async function fetchInstalledLMStudioModels(): Promise<Set<string>> {
+async function fetchInstalledLMStudioModels(): Promise<{ models: Set<string>; error?: string }> {
   let lastError: Error | null = null;
   let receivedResponse = false;
 
@@ -88,24 +88,34 @@ async function fetchInstalledLMStudioModels(): Promise<Set<string>> {
         count: modelIds.length,
       });
 
-      return new Set(modelIds);
+      return { models: new Set(modelIds) };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
     }
   }
 
   if (receivedResponse) {
-    return new Set();
+    return { models: new Set() };
   }
 
-  throw new Error(
+  const message =
     lastError?.message ??
-      "LM Studio is not available. Start LM Studio and try again.",
-  );
+      "LM Studio is not available. Start LM Studio and try again.";
+
+  modelLogger.warn("LM Studio model discovery failed", {
+    provider: "lmstudio",
+    error: message,
+  });
+
+  return { models: new Set(), error: message };
 }
 
 async function ensureLMStudioModelIsReady(modelId: string): Promise<void> {
-  const availableModels = await fetchInstalledLMStudioModels();
+  const { models: availableModels, error } = await fetchInstalledLMStudioModels();
+
+  if (error) {
+    throw new Error(error);
+  }
 
   if (availableModels.has(modelId)) {
     modelLogger.info("LM Studio model is available", {

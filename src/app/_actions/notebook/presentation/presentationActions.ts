@@ -6,10 +6,8 @@ import { type NotebookSelectedChunk } from "@/lib/notebook/attachments";
 import { type PresentationCustomization } from "@/lib/presentation/customization";
 import { getPresentationThumbnailUrl } from "@/lib/presentation/thumbnail";
 import { isPresentationAutoTheme } from "@/lib/presentation/theme-resolution";
-import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/supabase/server";
-import { canEditDocument, canReadDocument } from "@/server/share/authorization";
-import { normalizeShareEmail } from "@/server/share/utils";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
+import { canReadDocument, canEditDocument, getSessionIdentity } from "@/server/share/authorization";
 import { notFound } from "next/navigation";
 
 export type PresentationOwnerProfile = {
@@ -154,11 +152,6 @@ export async function createPresentation({
   customization?: PresentationCustomization;
   language?: string;
 }) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new Error("Unauthorized");
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
@@ -172,7 +165,7 @@ export async function createPresentation({
         type: "PRESENTATION",
         document_type: "presentation",
         title: title || "Untitled Presentation",
-        user_id: currentUser.id,
+        user_id: await getClerkUserId(),
         thumbnail_url: getPresentationThumbnailUrl(content.slides) ?? null,
       })
       .select("id")
@@ -252,6 +245,34 @@ export async function createBlankPresentation(
   });
 }
 
+/**
+ * Create a new presentation seeded with the slides from a template definition.
+ * `templateSlide` is an `Omit<PlateSlide, "id">` (see TemplateDefinition).
+ */
+export async function createPresentationFromTemplate({
+  template,
+  title,
+  theme = "mystique",
+  language = "en-US",
+}: {
+  template: Omit<PlateSlide, "id">;
+  title: string;
+  theme?: string;
+  language?: string;
+}) {
+  const slide: PlateSlide = {
+    ...template,
+    id: crypto.randomUUID(),
+  } as PlateSlide;
+
+  return createPresentation({
+    content: { slides: [slide] },
+    title,
+    theme,
+    language,
+  });
+}
+
 export async function updatePresentation({
   id,
   content,
@@ -283,25 +304,15 @@ export async function updatePresentation({
   language?: string;
   thumbnailUrl?: string | null;
 }) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new Error("Unauthorized");
-  }
-
-  const canEdit = await canEditDocument(id, {
-    userId: currentUser.id,
-    userEmail: normalizeShareEmail(currentUser.email),
-  });
-  if (!canEdit) {
-    return {
-      success: false,
-      message: "You do not have permission to edit this presentation",
-    };
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
+  }
+
+  const identity = await getSessionIdentity();
+  const canEdit = await canEditDocument(id, identity);
+  if (!canEdit) {
+    return { success: false, message: "Not authorized to update this presentation" };
   }
 
   try {
@@ -324,7 +335,7 @@ export async function updatePresentation({
           .from("base_documents")
           .update(docUpdate)
           .eq("id", id)
-          .eq("user_id", currentUser.id);
+          .eq("user_id", await getClerkUserId());
         if (docErr) {
           console.error(docErr);
           return { success: false, message: "Failed to update presentation" };
@@ -379,17 +390,6 @@ export async function getPresentationOwner(id: string): Promise<
   | { success: true; owner: PresentationOwnerProfile }
   | { success: false; message: string }
 > {
-  const currentUser = await getCurrentUser();
-  const canRead = await canReadDocument(id, {
-    userId: currentUser?.id ?? null,
-    userEmail: currentUser?.email
-      ? normalizeShareEmail(currentUser.email)
-      : null,
-  });
-  if (!canRead) {
-    return { success: false, message: "Unauthorized access" };
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
@@ -417,34 +417,18 @@ export async function getPresentationOwner(id: string): Promise<
 }
 
 export async function updatePresentationTitle(id: string, title: string) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new Error("Unauthorized");
-  }
-
-  const canEdit = await canEditDocument(id, {
-    userId: currentUser.id,
-    userEmail: normalizeShareEmail(currentUser.email),
-  });
-  if (!canEdit) {
-    return {
-      success: false,
-      message: "You do not have permission to edit this presentation",
-    };
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
   }
 
-  const { data: presentation, error } = await supabase
-    .from("base_documents")
-    .update({ title })
-    .eq("id", id)
-    .eq("user_id", currentUser.id)
-    .select("*, presentation:presentations(*)")
-    .maybeSingle<BaseDocumentWithPresentation>();
+    const { data: presentation, error } = await supabase
+      .from("base_documents")
+      .update({ title })
+      .eq("id", id)
+      .eq("user_id", await getClerkUserId())
+      .select("*, presentation:presentations(*)")
+      .maybeSingle<BaseDocumentWithPresentation>();
 
   if (error) {
     console.error(error);
@@ -465,11 +449,6 @@ export async function deletePresentation(id: string) {
 }
 
 export async function deletePresentations(ids: string[]) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new Error("Unauthorized");
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return {
@@ -483,7 +462,7 @@ export async function deletePresentations(ids: string[]) {
   const { data, error } = await supabase
     .from("base_documents")
     .delete()
-    .eq("user_id", currentUser.id)
+    .eq("user_id", await getClerkUserId())
     .in("id", ids)
     .select("id");
 
@@ -503,20 +482,17 @@ export async function deletePresentations(ids: string[]) {
 }
 
 export async function getPresentation(id: string) {
-  const currentUser = await getCurrentUser();
-  const canRead = await canReadDocument(id, {
-    userId: currentUser?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.email),
-  });
-  const canEdit = await canEditDocument(id, {
-    userId: currentUser?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.email),
-  });
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
   }
+
+  const identity = await getSessionIdentity();
+  const canRead = await canReadDocument(id, identity);
+  if (!canRead) {
+    return { success: false, message: "Not authorized to view this presentation" };
+  }
+  const canEdit = await canEditDocument(id, identity);
 
   try {
     const { data: presentation, error } = await supabase
@@ -527,12 +503,6 @@ export async function getPresentation(id: string) {
 
     if (error) throw error;
     if (!presentation) notFound();
-    if (!canRead) notFound();
-
-    // The Prisma version returned `favorites` when there was a session.
-    // We don't load favorites here to keep this query simple; callers that
-    // need the favorite flag should call a separate query. This matches the
-    // spec's "do not modify anything else" rule for files outside the 4.
 
     return {
       success: true,
@@ -546,15 +516,15 @@ export async function getPresentation(id: string) {
 }
 
 export async function getPresentationContent(id: string) {
-  const currentUser = await getCurrentUser();
-  const canRead = await canReadDocument(id, {
-    userId: currentUser?.id ?? null,
-    userEmail: normalizeShareEmail(currentUser?.email),
-  });
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
+  }
+
+  const identity = await getSessionIdentity();
+  const canRead = await canReadDocument(id, identity);
+  if (!canRead) {
+    return { success: false, message: "Not authorized to view this presentation" };
   }
 
   try {
@@ -567,9 +537,6 @@ export async function getPresentationContent(id: string) {
     if (error) throw error;
     if (!row) {
       return { success: false, message: "Presentation not found" };
-    }
-    if (!canRead) {
-      return { success: false, message: "Unauthorized access" };
     }
 
     return {
@@ -584,30 +551,17 @@ export async function getPresentationContent(id: string) {
   }
 }
 
-export async function updatePresentationTheme(id: string, theme: string) {
-  return updatePresentation({ id, theme });
-}
 
 export async function duplicatePresentation(id: string, newTitle?: string) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser) {
-    throw new Error("Unauthorized");
-  }
-
-  const canEdit = await canEditDocument(id, {
-    userId: currentUser.id,
-    userEmail: normalizeShareEmail(currentUser.email),
-  });
-  if (!canEdit) {
-    return {
-      success: false,
-      message: "You do not have permission to view this presentation",
-    };
-  }
-
   const supabase = await createClient();
   if (!supabase) {
     return { success: false, message: "Supabase is not configured" };
+  }
+
+  const identity = await getSessionIdentity();
+  const canEdit = await canEditDocument(id, identity);
+  if (!canEdit) {
+    return { success: false, message: "Not authorized to duplicate this presentation" };
   }
 
   try {
@@ -629,7 +583,7 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
         type: "PRESENTATION",
         document_type: "presentation",
         title: newTitle ?? `(Copy) ${original.title}`,
-        user_id: currentUser.id,
+        user_id: identity.userId,
         thumbnail_url: original.thumbnail_url,
       })
       .select("id")
@@ -661,5 +615,31 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
   } catch (error) {
     console.error(error);
     return { success: false, message: "Failed to duplicate presentation" };
+  }
+}
+
+export async function countUserPresentations() {
+  const supabase = await createClient();
+  if (!supabase) {
+    return { success: false, message: "Supabase is not configured", count: 0 };
+  }
+
+  try {
+    const userId = await getClerkUserId();
+    const { count, error } = await supabase
+      .from("base_documents")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "PRESENTATION")
+      .eq("user_id", userId);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      count: count ?? 0,
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to count presentations", count: 0 };
   }
 }

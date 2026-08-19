@@ -287,7 +287,7 @@ export function ThemeSelector({
         <div className={`px-4 ${hasUserThemes ? "pt-6" : "pt-3"}`}>
           {hasUserThemes && (
             <h3 className="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              ALLWEONE Themes
+              Smart Presentations Themes
             </h3>
           )}
           <div className="grid grid-cols-2 gap-3">

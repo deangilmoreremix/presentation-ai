@@ -1,6 +1,6 @@
 "use client";
 
-import StaticPresentationEditor from "@/components/notebook/presentation/editor/presentation-editor-static";
+import StaticPresentationEditor from "@/components/presentation/editor/presentation-editor-static";
 import { type PlateSlide } from "@/components/notebook/presentation/utils/parser";
 import { useSlideContentScaling } from "@/hooks/presentation/useSlideContentScaling";
 import { DEFAULT_PRESENTATION_SLIDE_ASPECT_RATIO } from "@/lib/presentation/aspect-ratio";

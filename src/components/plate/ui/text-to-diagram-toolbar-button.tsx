@@ -7,8 +7,8 @@ import { nanoid } from "platejs";
 import { useEditorRef } from "platejs/react";
 import { useCallback } from "react";
 
-import { ANTV_INFOGRAPHIC } from "@/components/notebook/presentation/editor/lib";
-import { type TAntvInfographicElement } from "@/components/notebook/presentation/editor/plugins/antv-infographic-plugin";
+import { ANTV_INFOGRAPHIC } from "@/components/presentation/editor/lib";
+import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 import { ToolbarButton } from "./toolbar";
 
 export function TextToDiagramToolbarButton() {
