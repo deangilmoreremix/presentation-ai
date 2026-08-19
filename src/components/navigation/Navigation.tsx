@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Settings, Image as ImageIcon, Presentation, Plus, Hash, Play, Users, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/react";
+import { KeyboardShortcutsModal } from "@/components/onboarding/KeyboardShortcutsModal";
+import { ProgressiveTip } from "@/components/onboarding/ProgressiveTip";
 
 const anchorNavLinks = [
   {
@@ -47,6 +50,52 @@ const navLinks = [
 export function Navigation() {
   const pathname = usePathname();
   const { isSignedIn } = useUser();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [hasSeenShortcuts, setHasSeenShortcuts] = useState(false);
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem(
+      "smart-presentations-onboarding-shortcuts-seen",
+    );
+    if (hasSeen === "true") {
+      setHasSeenShortcuts(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "?") return;
+
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      setShortcutsOpen(true);
+      localStorage.setItem(
+        "smart-presentations-onboarding-shortcuts-seen",
+        "true",
+      );
+      setHasSeenShortcuts(true);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleOpenShortcuts = () => {
+    setShortcutsOpen(true);
+    localStorage.setItem(
+      "smart-presentations-onboarding-shortcuts-seen",
+      "true",
+    );
+    setHasSeenShortcuts(true);
+  };
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -97,6 +146,31 @@ export function Navigation() {
                 </Button>
               ))}
 
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleOpenShortcuts()}
+                  className="size-8 rounded-full p-0 text-sm font-semibold"
+                  aria-label="Keyboard shortcuts"
+                >
+                  ?
+                </Button>
+                {!hasSeenShortcuts && (
+                  <ProgressiveTip
+                    id="keyboard-shortcuts"
+                    message="Press ? for keyboard shortcuts"
+                    onDismiss={() => {
+                      localStorage.setItem(
+                        "smart-presentations-onboarding-shortcuts-seen",
+                        "true",
+                      );
+                      setHasSeenShortcuts(true);
+                    }}
+                  />
+                )}
+              </div>
+
               <Button
                 variant={pathname === "/settings" ? "secondary" : "ghost"}
                 size="sm"
@@ -135,6 +209,11 @@ export function Navigation() {
           </div>
         </div>
       </div>
+
+      <KeyboardShortcutsModal
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+      />
     </nav>
   );
 }

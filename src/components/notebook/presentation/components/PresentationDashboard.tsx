@@ -47,6 +47,7 @@ import {
   PanelsTopLeft,
   Pencil,
   Plus,
+  Presentation,
   Search,
   Share2,
   SlidersHorizontal,
@@ -70,8 +71,13 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useInView } from "react-intersection-observer";
 import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { motion } from "motion/react";
+
+import { useTipRegistry } from "@/components/onboarding/TipProvider";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Credenza,
   CredenzaContent,
@@ -506,6 +512,7 @@ function PresentationProjectFilesSection({
   onActiveTabChange,
   showFavoritesOnly,
   onShowFavoritesOnlyChange,
+  isCreatingBlank,
 }: {
   files: PresentationFileItem[];
   isLoading?: boolean;
@@ -518,6 +525,7 @@ function PresentationProjectFilesSection({
   onActiveTabChange: (tab: LibraryTab) => void;
   showFavoritesOnly: boolean;
   onShowFavoritesOnlyChange: (showFavoritesOnly: boolean) => void;
+  isCreatingBlank?: boolean;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -1091,17 +1099,85 @@ function PresentationProjectFilesSection({
               </div>
             )
           ) : visibleFiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-              <div className="mb-4 rounded-full bg-muted p-4">
-                <Folder className="size-8 text-muted-foreground" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="relative flex flex-col items-center justify-center px-4 py-16 text-center"
+            >
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
+                <Folder className="size-64" />
               </div>
-              <p className="mb-2 text-sm font-medium text-foreground">
-                No presentations yet
-              </p>
-              <p className="mb-6 text-sm text-muted-foreground">
-                Create your first presentation to get started
-              </p>
-            </div>
+              <div className="relative z-10 w-full max-w-4xl">
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <Card className="border-border/60 bg-background/80 backdrop-blur-sm">
+                    <CardContent className="flex flex-col items-center gap-3 p-6">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Type className="size-5" />
+                      </div>
+                      <div className="text-sm font-semibold text-foreground">
+                        Describe
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Tell AI your topic
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60 bg-background/80 backdrop-blur-sm">
+                    <CardContent className="flex flex-col items-center gap-3 p-6">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <WandSparkles className="size-5" />
+                      </div>
+                      <div className="text-sm font-semibold text-foreground">
+                        Generate
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        AI builds your slides
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60 bg-background/80 backdrop-blur-sm">
+                    <CardContent className="flex flex-col items-center gap-3 p-6">
+                      <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Presentation className="size-5" />
+                      </div>
+                      <div className="text-sm font-semibold text-foreground">
+                        Present
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Edit, export, or present live
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                <Button
+                  size="lg"
+                  className="mb-4"
+                  onClick={onCreateNew}
+                  disabled={isCreatingBlank}
+                >
+                  Create Your First Presentation
+                </Button>
+                <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+                  <Link
+                    href="/templates"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Browse Templates
+                  </Link>
+                  <span className="text-muted-foreground/50">|</span>
+                  <Link
+                    href="/image-studio"
+                    className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    Try Image Studio
+                  </Link>
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  You can also generate a presentation from the homepage
+                </p>
+              </div>
+            </motion.div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10.5rem),1fr))] gap-3 p-3 sm:grid-cols-2 sm:gap-4 sm:p-4 lg:grid-cols-3 xl:grid-cols-4">
               {visibleFiles.map((file) => (
@@ -1457,6 +1533,20 @@ export function PresentationDashboard() {
     setOutputFormat("flow");
   }, [setOutputFormat]);
 
+  const { showTip } = useTipRegistry();
+  const firstCreationRef = useRef(false);
+  const dashboardTipShownRef = useRef(false);
+
+  // Show a tip after the user creates their first presentation
+  useEffect(() => {
+    if (firstCreationRef.current) return;
+    const timer = setTimeout(() => {
+      firstCreationRef.current = true;
+      showTip("dashboard-first-creation", "Tip: You can duplicate or delete presentations from the menu on each card.");
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [showTip]);
+
   const typeFilter =
     documentTypeFilter === ALL_PRESENTATION_DOCUMENT_TYPES
       ? undefined
@@ -1766,6 +1856,17 @@ export function PresentationDashboard() {
     onShare: () => handleShare(item.id),
     onExport: () => handleExport(item.id),
   }));
+
+  // Show a tip when the dashboard loads with existing presentations
+  useEffect(() => {
+    if (dashboardTipShownRef.current) return;
+    if (fileItems.length === 0) return;
+    dashboardTipShownRef.current = true;
+    const timer = setTimeout(() => {
+      showTip("dashboard-library", "Tip: Use the search bar or filters to quickly find your presentations.");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [fileItems.length, showTip]);
 
   const selectedLanguageLabel =
     LANGUAGE_OPTIONS.find((option) => option.value === language)?.label ??
@@ -2119,6 +2220,7 @@ export function PresentationDashboard() {
         onActiveTabChange={setLibraryTab}
         showFavoritesOnly={showFavoritesOnly}
         onShowFavoritesOnlyChange={setShowFavoritesOnly}
+        isCreatingBlank={isCreatingBlank}
       />
 
       {hasNextPage ? (

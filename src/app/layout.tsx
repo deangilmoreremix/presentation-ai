@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
+import { TipProvider } from "@/components/onboarding/TipProvider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
 import "@/styles/globals.css";
 import { type Metadata } from "next";
@@ -23,12 +24,14 @@ export default async function RootLayout({
     <ClerkProvider>
       <TanStackQueryProvider>
         <ThemeProvider>
-          <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.className} antialiased`}>
-              {children}
-              <GlobalGenerationManagers />
-            </body>
-          </html>
+          <TipProvider>
+            <html lang="en" suppressHydrationWarning>
+              <body className={`${inter.className} antialiased`}>
+                {children}
+                <GlobalGenerationManagers />
+              </body>
+            </html>
+          </TipProvider>
         </ThemeProvider>
       </TanStackQueryProvider>
     </ClerkProvider>

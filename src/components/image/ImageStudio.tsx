@@ -815,9 +815,9 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
                       <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
                     ) : (
                       <>
-                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                        <ImagePlus className="h-12 w-12 text-muted-foreground" />
                         <p className="mt-2 text-sm text-muted-foreground">
-                          Enter a prompt and click Generate to create images
+                          Your generated images will appear here. Start by entering a prompt above.
                         </p>
                       </>
                     )}

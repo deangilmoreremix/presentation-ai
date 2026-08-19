@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GripVertical, Bot, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,19 +18,19 @@ interface Step {
 const steps: Step[] = [
   {
     target: "sidebar",
-    icon: <GripVertical className="size-5" />,
-    title: "Browse and reorder your slides",
-    description: "Drag to rearrange your slides here.",
+    icon: <GripVertical className="size-4" />,
+    title: "Browse and reorder your slides here",
+    description: "Drag to rearrange.",
   },
   {
     target: "edit-panel",
-    icon: <Bot className="size-5" />,
+    icon: <Bot className="size-4" />,
     title: "Edit and enhance your content",
     description: "Edit themes, add charts, insert images, or chat with the AI Agent.",
   },
   {
     target: "toolbar",
-    icon: <Undo2 className="size-5" />,
+    icon: <Undo2 className="size-4" />,
     title: "Powerful controls at your fingertips",
     description: "Undo/redo, change theme, export to PPTX/PDF, or start presenting.",
   },
@@ -60,6 +60,7 @@ type TooltipPosition = {
   top: number;
   left: number;
   arrowPlacement: ArrowPlacement;
+  targetRect: DOMRect | null;
 };
 
 function computeTooltipPosition(
@@ -113,7 +114,7 @@ function computeTooltipPosition(
     }
   }
 
-  return { top, left, arrowPlacement };
+  return { top, left, arrowPlacement, targetRect };
 }
 
 interface EditorTourProps {
@@ -124,6 +125,8 @@ interface EditorTourProps {
 export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
   const { isVisible, currentStep, nextStep, dismiss } = useEditorTour();
   const [position, setPosition] = useState<TooltipPosition | null>(null);
+  const [tooltipSize, setTooltipSize] = useState({ width: 320, height: 180 });
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const measure = useCallback(() => {
     const step = steps[currentStep];
@@ -152,6 +155,7 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
           top: window.innerHeight / 2 - 90,
           left: 16,
           arrowPlacement: "right",
+          targetRect: null,
         });
         return;
       }
@@ -160,9 +164,17 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
           top: window.innerHeight / 2 - 90,
           left: window.innerWidth - 340,
           arrowPlacement: "left",
+          targetRect: null,
         });
         return;
       }
+      // Toolbar fallback: center-top of viewport
+      setPosition({
+        top: 80,
+        left: window.innerWidth / 2 - 160,
+        arrowPlacement: "bottom",
+        targetRect: null,
+      });
       return;
     }
 
@@ -170,6 +182,13 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
       computeTooltipPosition(rect, 320, 180, preferredArrow)
     );
   }, [currentStep, sidebarRef, editPanelRef]);
+
+  // Measure tooltip size after render
+  useEffect(() => {
+    if (!isVisible || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    setTooltipSize({ width: rect.width, height: rect.height });
+  }, [isVisible, currentStep]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -235,18 +254,48 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[1px]"
-        aria-hidden="true"
-      />
+      {/* Spotlight overlay with animated exit */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[1px]"
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
 
+      {/* Spotlight highlight around target element */}
+      <AnimatePresence>
+        {isVisible && position?.targetRect && (
+          <motion.div
+            key={`spotlight-${currentStep}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed z-[9997] rounded-lg border-2 border-primary/60 shadow-[0_0_0_4px_rgba(255,255,255,0.1)]"
+            style={{
+              top: position.targetRect.top - 4,
+              left: position.targetRect.left - 4,
+              width: position.targetRect.width + 8,
+              height: position.targetRect.height + 8,
+              pointerEvents: "none",
+            }}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Tour tooltip */}
       <AnimatePresence mode="wait">
         {position && (
           <motion.div
             key={currentStep}
+            ref={tooltipRef}
             data-tour-tooltip
             initial={{ opacity: 0, x: slideOffset.x, y: slideOffset.y }}
             animate={{ opacity: 1, x: 0, y: 0 }}
@@ -257,7 +306,8 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
               top: position.top,
               left: position.left,
               zIndex: 9999,
-              width: 320,
+              width: tooltipSize.width > 0 ? tooltipSize.width : 320,
+              maxWidth: "calc(100vw - 32px)",
             }}
             className="rounded-xl border bg-background p-5 shadow-2xl"
             role="dialog"
@@ -265,9 +315,10 @@ export function EditorTour({ sidebarRef, editPanelRef }: EditorTourProps) {
           >
             <TourArrow placement={position.arrowPlacement} />
 
+            {/* Numbered indicator + icon */}
             <div className="mb-3 flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                {step.icon}
+              <div className="flex size-8 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-primary">
+                <span className="text-xs font-semibold">{currentStep + 1}</span>
               </div>
               <span className="text-xs font-medium text-muted-foreground">
                 Step {currentStep + 1} of {steps.length}

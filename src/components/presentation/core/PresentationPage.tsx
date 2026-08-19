@@ -35,6 +35,7 @@ import { ThemeFontLoader } from "../shared/ThemeFontLoader";
 import { SlideSidebar } from "../sidebar/SlideSidebar";
 import { SlidesContainer } from "../slides/SlidesContainer";
 import { EditorTour } from "../../onboarding/EditorTour";
+import { EditorTips } from "../../onboarding/EditorTips";
 import { PresentationCompletionFeedback } from "./PresentationCompletionFeedback";
 
 export default function PresentationPage({
@@ -206,6 +207,7 @@ export default function PresentationPage({
 
   return (
     <ThemeBackground className="flex h-full w-full">
+      <EditorTips />
       <TouchAwareDndProvider>
         <PlateController>
           {themeData && <ThemeFontLoader themeData={themeData} />}
