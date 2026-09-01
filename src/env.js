@@ -19,6 +19,9 @@ export const env = createEnv({
     TOGETHER_AI_API_KEY: z.string().optional(),
     PINECONE_API_KEY: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
+    PIXABAY_API_KEY: z.string().optional(),
+    GIPHY_API_KEY: z.string().optional(),
+    PEXELS_API_KEY: z.string().optional(),
 
     // Google Custom Search
     GOOGLE_CUSTOM_SEARCH_API_KEY: z.string().optional(),
@@ -37,6 +40,9 @@ export const env = createEnv({
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     DATABASE_URL: process.env.DATABASE_URL,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
+    PIXABAY_API_KEY: process.env.PIXABAY_API_KEY,
+    GIPHY_API_KEY: process.env.GIPHY_API_KEY,
+    PEXELS_API_KEY: process.env.PEXELS_API_KEY,
     TAVILY_API_KEY: process.env.TAVILY_API_KEY,
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
