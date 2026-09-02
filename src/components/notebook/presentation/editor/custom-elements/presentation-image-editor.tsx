@@ -297,7 +297,7 @@ export const PresentationImageEditor = ({
               <div className="flex-none space-y-1 px-6 py-4">
                 <h3 className="leading-none font-medium">Search Images</h3>
                 <p className="text-sm text-muted-foreground">
-                  Find images from Unsplash or Pixabay.
+                  Find stock images.
                 </p>
               </div>
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden px-6 pb-6">

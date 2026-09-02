@@ -64,12 +64,14 @@ netlify deploy --prod
 In Netlify dashboard → Site settings → Build & Deploy → Environment:
 
 ```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional
 DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
-NEXTAUTH_SECRET="openssl rand -base64 32"
-NEXTAUTH_URL="https://your-site.netlify.app"
-GOOGLE_CLIENT_ID="..."
-GOOGLE_CLIENT_SECRET="..."
-OPENAI_API_KEY="..." # optional
+OPENAI_API_KEY="sk-..." # optional
+API_KEY_ENCRYPTION_MASTER_KEY="..."
 SKIP_ENV_VALIDATION=true
 ```
 
@@ -80,30 +82,35 @@ SKIP_ENV_VALIDATION=true
    netlify run pnpm db:push
    ```
 
-2. **Update NEXTAUTH_URL** to your actual Netlify URL if different
+2. **Configure Clerk:**
+   - Add your Netlify domain to Clerk Dashboard → Configure → Allowed origins
+   - Set redirect paths: sign-in `/auth/signin`, sign-up `/auth/signup`
 
 3. **Test the deployed site:**
    - Visit your Netlify URL
-   - Sign in with Google
+   - Sign in with Clerk (email or social auth)
    - Create a presentation
    - Export to PPTX and PDF
 
 ## Step 6: Custom Domain (Optional)
 
 1. Netlify dashboard → Domain management → Add custom domain
-2. Update NEXTAUTH_URL to match your custom domain
-3. Update Supabase auth redirect URLs
+2. Update Clerk Dashboard to include your custom domain in allowed origins
+3. Update Supabase auth settings if using Supabase auth providers
 
 ## Troubleshooting
 
-### Build Fails: "Prisma schema not found"
-Ensure `postinstall` script runs: `"postinstall": "prisma generate"`. Netlify runs this automatically.
+### Build Fails: "Module not found"
+Ensure all dependencies are installed. Run `pnpm install` locally and commit `pnpm-lock.yaml`.
 
 ### 404 on API Routes
 The `netlify.toml` redirect rule should handle this. Ensure `@netlify/plugin-nextjs` is installed.
 
 ### Database Connection Errors
 Check DATABASE_URL is correct and Supabase connection pool is configured.
+
+### Auth redirect loop
+Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly. Check Clerk Dashboard → Configure → Paths.
 
 ---
 

@@ -5,6 +5,8 @@ import {
   modelPicker,
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
+import { csrfGuard } from "@/lib/csrf";
+import { withTimeout } from "@/lib/request-timeout";
 import { toUIMessageStream } from "@ai-sdk/langchain";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
@@ -95,6 +97,9 @@ export async function POST(req: Request) {
   const routeLogger = createLogger("api:presentation-generate-image-slides");
 
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+
     routeLogger.info("Image slide generation request received", { requestId });
 
     const {
@@ -190,13 +195,18 @@ export async function POST(req: Request) {
       modelProvider,
       modelId: modelId || "gpt-4o-mini",
     });
-    const stream = await chain.stream({
-      TITLE: title,
-      PROMPT: userPrompt || "No specific prompt provided",
-      LANGUAGE: language,
-      OUTLINE_FORMATTED: formatOutlineForPrompt(outline),
-      TOTAL_SLIDES: totalSlides,
-    });
+    const stream = await withTimeout(
+      () =>
+        chain.stream({
+          TITLE: title,
+          PROMPT: userPrompt || "No specific prompt provided",
+          LANGUAGE: language,
+          OUTLINE_FORMATTED: formatOutlineForPrompt(outline),
+          TOTAL_SLIDES: totalSlides,
+        }),
+      300000,
+      "image_slide_generation",
+    );
 
     routeLogger.info("Image slide generation stream created", {
       requestId,
@@ -208,6 +218,14 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     routeLogger.error("Image slide generation failed", error, { requestId });
+
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { error: "Image slide generation timed out. Please try again." },
+        { status: 504 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to generate image slides" },
       { status: 500 },

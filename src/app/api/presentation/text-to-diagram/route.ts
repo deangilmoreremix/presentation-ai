@@ -2,7 +2,8 @@ import { toUIMessageStream } from "@ai-sdk/langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { consumeStream, createUIMessageStreamResponse } from "ai";
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { csrfGuard } from "@/lib/csrf";;
 
 import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";

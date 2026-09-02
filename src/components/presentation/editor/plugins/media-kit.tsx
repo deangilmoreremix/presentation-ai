@@ -17,7 +17,7 @@ import { FileElement } from "@/components/plate/ui/media-file-node";
 import { PlaceholderElement } from "@/components/plate/ui/media-placeholder-node";
 import { MediaUploadToast } from "@/components/plate/ui/media-upload-toast";
 import { VideoElement } from "@/components/plate/ui/media-video-node";
-import { PresentationImageElement } from "../custom-elements/presentation-image-element";
+import { PresentationImageElement } from "../native-elements/presentation-image-element";
 
 export const MediaKit = [
   ImagePlugin.configure({

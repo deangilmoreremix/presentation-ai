@@ -91,7 +91,7 @@ export function SharedGifSearchControls({
         <div className="relative flex-1">
           <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search GIFs on Giphy..."
+            placeholder="Search GIFs..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -189,21 +189,6 @@ export function SharedGifSearchControls({
                       <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
                     )}
                   </button>
-                  {/* Attribution Overlay */}
-                  <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                    <span className="pointer-events-auto">
-                      Powered by{" "}
-                      <a
-                        href="https://giphy.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline hover:text-gray-200"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        GIPHY
-                      </a>
-                    </span>
-                  </div>
                 </div>
               ))}
             </div>

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { csrfGuard } from "@/lib/csrf";
 
 export async function POST(request: Request) {
   try {
+    const csrfError = csrfGuard(request);
+    if (csrfError) return csrfError;
+
     const body = await request.json();
 
     return NextResponse.json(

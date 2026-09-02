@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { appLogger } from "@/lib/observability/logger";
 import { decryptApiKey, encryptApiKey, validateKeyFormat } from "@/lib/crypto/key-encryption";
-import { db } from "@/server/db";
+import { createClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
 
 /**
@@ -18,17 +18,31 @@ export async function GET(request: Request) {
     }
 
     try {
-      const user = await db.user.findUnique({
-        where: { id: userId },
-        select: { openaiApiKeyEncrypted: true, openaiApiKeyIv: true },
-      });
+      const supabase = await createClient();
+      if (!supabase) {
+        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
+      }
 
-      if (!user?.openaiApiKeyEncrypted || !user?.openaiApiKeyIv) {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("openai_api_key_encrypted, openai_api_key_iv")
+        .eq("id", userId)
+        .maybeSingle<{ openai_api_key_encrypted: string | null; openai_api_key_iv: string | null }>();
+
+      if (error) {
+        appLogger.error("Failed to fetch API key from database", { error });
+        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
+      }
+
+      const encrypted = user?.openai_api_key_encrypted ?? null;
+      const iv = user?.openai_api_key_iv ?? null;
+
+      if (!encrypted || !iv) {
         return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
       }
 
       try {
-        const decrypted = await decryptApiKey(user.openaiApiKeyEncrypted, userId, user.openaiApiKeyIv);
+        const decrypted = await decryptApiKey(encrypted, userId, iv);
         const maskedKey = decrypted.length >= 4 ? `sk-...${decrypted.slice(-4)}` : "sk-";
         const url = new URL(request.url);
         const revealRaw = url.searchParams.get("raw") === "true";
@@ -73,11 +87,25 @@ export async function POST(request: Request) {
 
     if (storage === "server" && userId) {
       try {
+        const supabase = await createClient();
+        if (!supabase) {
+          return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+        }
+
         const { encrypted, iv } = await encryptApiKey(key, userId);
-        await db.user.update({
-          where: { id: userId },
-          data: { openaiApiKeyEncrypted: encrypted, openaiApiKeyIv: iv },
-        });
+        const { error } = await supabase
+          .from("users")
+          .update({
+            openai_api_key_encrypted: encrypted,
+            openai_api_key_iv: iv,
+          })
+          .eq("id", userId);
+
+        if (error) {
+          appLogger.error("Failed to save API key to database", { error });
+          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        }
+
         appLogger.info("API key encrypted and saved", { userId });
         return NextResponse.json({ success: true });
       } catch (error) {
@@ -88,11 +116,28 @@ export async function POST(request: Request) {
 
     // Client storage or anonymous user: clear any server-side copy
     if (userId) {
-      await db.user.update({
-        where: { id: userId },
-        data: { openaiApiKeyEncrypted: null, openaiApiKeyIv: null },
-      });
-      appLogger.info("Client-only storage selected, server copy cleared", { userId });
+      try {
+        const supabase = await createClient();
+        if (!supabase) {
+          return NextResponse.json({ success: true });
+        }
+
+        const { error } = await supabase
+          .from("users")
+          .update({
+            openai_api_key_encrypted: null,
+            openai_api_key_iv: null,
+          })
+          .eq("id", userId);
+
+        if (error) {
+          appLogger.error("Failed to clear server API key", { error });
+        }
+
+        appLogger.info("Client-only storage selected, server copy cleared", { userId });
+      } catch (error) {
+        appLogger.error("Error clearing server API key", { error });
+      }
     }
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -112,10 +157,24 @@ export async function DELETE() {
 
     if (userId) {
       try {
-        await db.user.update({
-          where: { id: userId },
-          data: { openaiApiKeyEncrypted: null, openaiApiKeyIv: null },
-        });
+        const supabase = await createClient();
+        if (!supabase) {
+          return NextResponse.json({ success: true });
+        }
+
+        const { error } = await supabase
+          .from("users")
+          .update({
+            openai_api_key_encrypted: null,
+            openai_api_key_iv: null,
+          })
+          .eq("id", userId);
+
+        if (error) {
+          appLogger.error("Failed to delete API key from database", { error });
+          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+        }
+
         appLogger.info("API key deleted", { userId });
       } catch (error) {
         appLogger.error("Error deleting API key", { error });

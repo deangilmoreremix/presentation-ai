@@ -1,6 +1,8 @@
 "use client";
 
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
+import { getImageFromGoogle } from "@/app/_actions/apps/image-studio/google";
+import { getImageFromPexels } from "@/app/_actions/apps/image-studio/pexels";
 import { getImageFromPixabay } from "@/app/_actions/apps/image-studio/pixabay";
 import { getImageFromUnsplash } from "@/app/_actions/apps/image-studio/unsplash";
 import { updatePresentation } from "@/app/_actions/notebook/presentation/presentationActions";
@@ -882,6 +884,34 @@ export function PresentationGenerationManager() {
                     result = {
                       success: true,
                       image: { url: pixabayResult.imageUrl },
+                    };
+                  }
+                } else if (
+                  imageSource === "stock" &&
+                  stockImageProvider === "pexels"
+                ) {
+                  const pexelsResult = await getImageFromPexels(
+                    slide.rootImage!.query,
+                    slide.rootImage!.layoutType,
+                  );
+                  if (pexelsResult.success && pexelsResult.imageUrl) {
+                    result = {
+                      success: true,
+                      image: { url: pexelsResult.imageUrl },
+                    };
+                  }
+                } else if (
+                  imageSource === "stock" &&
+                  stockImageProvider === "google"
+                ) {
+                  const googleResult = await getImageFromGoogle(
+                    slide.rootImage!.query,
+                    slide.rootImage!.layoutType,
+                  );
+                  if (googleResult.success && googleResult.imageUrl) {
+                    result = {
+                      success: true,
+                      image: { url: googleResult.imageUrl },
                     };
                   }
                 } else {

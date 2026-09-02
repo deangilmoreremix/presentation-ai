@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
+import { csrfGuard } from "@/lib/csrf";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
@@ -12,6 +13,9 @@ import type {
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+    if (csrfError) return csrfError;
     const formData = await req.formData();
     const prompt = formData.get("prompt") as string;
     const imageFile = formData.get("image") as File | null;

@@ -22,13 +22,12 @@ const config = {
       },
     ],
   },
-  // Allow build to proceed despite type errors in stubbed DB layer
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  output: "standalone",
+  compress: true,
+  poweredByHeader: false,
   // Allow HMR / dev assets to load when accessing the dev server over the
-  // local network IP (e.g. 192.168.x.x) instead of localhost.
-  allowedDevOrigins: ["192.168.1.111", ".local"],
+  // local network IP instead of localhost.
+  allowedDevOrigins: [".local"],
 };
 
 export default config;

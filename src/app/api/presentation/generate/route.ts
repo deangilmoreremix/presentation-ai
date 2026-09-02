@@ -9,6 +9,8 @@ import {
   modelPicker,
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
+import { csrfGuard } from "@/lib/csrf";
+import { withTimeout } from "@/lib/request-timeout";
 import {
   buildPresentationPromptValues,
   presentationGenerationPromptTemplate,
@@ -27,6 +29,9 @@ export async function POST(req: Request) {
   const routeLogger = createLogger("api:presentation-generate");
 
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+
     routeLogger.info("Presentation generation request received", { requestId });
 
     const request = (await req.json()) as SlidesRequest;
@@ -139,11 +144,16 @@ export async function POST(req: Request) {
       modelId: modelId || "gpt-4o-mini",
     });
 
-    const stream = await chain.stream(
-      buildPresentationPromptValues({
-        ...request,
-        currentDate,
-      }),
+    const stream = await withTimeout(
+      () =>
+        chain.stream(
+          buildPresentationPromptValues({
+            ...request,
+            currentDate,
+          }),
+        ),
+      300000,
+      "presentation_generation",
     );
 
     routeLogger.info("Presentation generation stream created", {
@@ -155,6 +165,14 @@ export async function POST(req: Request) {
     return createUIMessageStreamResponse({ stream: toUIMessageStream(stream) });
   } catch (error) {
     routeLogger.error("Presentation generation failed", error, { requestId });
+
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { error: "Presentation generation timed out. Please try again." },
+        { status: 504 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to generate presentation slides" },
       { status: 500 },

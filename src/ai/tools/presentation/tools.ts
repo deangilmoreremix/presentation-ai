@@ -95,17 +95,17 @@ const replace_image = tool(
       imagePrompt: z
         .string()
         .describe(
-          "Image request for the replacement. Use a detailed descriptive prompt only when the selected image source is AI generation. For Unsplash, Pixabay, Google, web, or stock image search, use a short English keyword query with 2-5 concrete words, such as 'team collaboration' or 'solar panels roof'.",
+          "Image request for the replacement. Use a detailed descriptive prompt only when the selected image source is AI generation. For stock image search, use a short English keyword query with 2-5 concrete words, such as 'team collaboration' or 'solar panels roof'.",
         )
         .optional(),
       imageSource: z
         .enum(["ai", "stock", "gif"])
         .describe(
-          "How the imagePrompt should be resolved. Use 'stock' for Unsplash/Pixabay/Google/web image search, 'gif' for animated GIFs, and 'ai' for detailed generated-image prompts.",
+          "How the imagePrompt should be resolved. Use 'stock' for stock image search, 'gif' for animated GIFs, and 'ai' for detailed generated-image prompts.",
         )
         .optional(),
       stockImageProvider: z
-        .enum(["unsplash", "pixabay", "google"])
+        .enum(["unsplash", "pixabay", "google", "pexels"])
         .describe("Preferred stock provider when imageSource is 'stock'.")
         .optional(),
     }),
@@ -183,7 +183,7 @@ ${LAYOUT_REFERENCE}
 
 ${COMPONENT_INSTRUCTIONS}
 
-Use images deliberately. A direct child <IMG /> is the root slide image and must stay last. Use short English keyword queries for stock, web, Unsplash, Pixabay, Google, or GIF search. Use detailed visual prompts for AI image generation. Keep existing image urls exactly when the user did not request image regeneration.
+Use images deliberately. A direct child <IMG /> is the root slide image and must stay last. Use short English keyword queries for stock, web, or GIF search. Use detailed visual prompts for AI image generation. Keep existing image urls exactly when the user did not request image regeneration.
 
 Use icon attributes as search hints only. Each icon value must be exactly one broad lowercase English keyword with no spaces, punctuation, hyphens, underscores, or react-icons component names. Good examples: security, analytics, team, growth, upload, idea, automation, calendar, money, network, settings, document, message. Do not default to home unless the content is actually about home. For icon lists, use <ICONS variant="icon"> with DIV icon attributes, or <ICONS variant="image"> with DIV prompt attributes for generated item images. Use orientation="side" for visual beside text and orientation="top" for visual above text.
 

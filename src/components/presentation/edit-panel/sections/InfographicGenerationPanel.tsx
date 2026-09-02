@@ -7,7 +7,7 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
-import { useAuth } from "@/components/supabase-provider";
+import { useAuth } from "@/components/AppAuthProvider";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 

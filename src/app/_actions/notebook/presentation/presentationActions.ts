@@ -4,6 +4,7 @@ import { type PlateSlide } from "@/components/notebook/presentation/utils/parser
 import { type NotebookAgentToolCall } from "@/lib/notebook/agent-activity";
 import { type NotebookSelectedChunk } from "@/lib/notebook/attachments";
 import { type PresentationCustomization } from "@/lib/presentation/customization";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { getPresentationThumbnailUrl } from "@/lib/presentation/thumbnail";
 import { isPresentationAutoTheme } from "@/lib/presentation/theme-resolution";
 import { createClient, getClerkUserId } from "@/lib/supabase/server";
@@ -157,6 +158,9 @@ export async function createPresentation({
     return { success: false, message: "Supabase is not configured" };
   }
 
+  const sanitizedTitle = sanitizeHtml(title);
+  const sanitizedOutline = outline?.map((item) => sanitizeHtml(item)) ?? undefined;
+
   try {
     // Insert the base document, then the related presentation row.
     const { data: doc, error: docErr } = await supabase
@@ -164,7 +168,7 @@ export async function createPresentation({
       .insert({
         type: "PRESENTATION",
         document_type: "presentation",
-        title: title || "Untitled Presentation",
+        title: sanitizedTitle || "Untitled Presentation",
         user_id: await getClerkUserId(),
         thumbnail_url: getPresentationThumbnailUrl(content.slides) ?? null,
       })
@@ -186,7 +190,7 @@ export async function createPresentation({
         presentation_style: presentationStyle ?? null,
         customization: customization ?? null,
         language: language ?? null,
-        outline: outline ?? null,
+        outline: sanitizedOutline ?? null,
       })
       .select("*")
       .single();
@@ -309,6 +313,10 @@ export async function updatePresentation({
     return { success: false, message: "Supabase is not configured" };
   }
 
+  const sanitizedTitle = title ? sanitizeHtml(title) : undefined;
+  const sanitizedPrompt = prompt ? sanitizeHtml(prompt) : undefined;
+  const sanitizedOutline = outline?.map((item) => sanitizeHtml(item));
+
   const identity = await getSessionIdentity();
   const canEdit = await canEditDocument(id, identity);
   if (!canEdit) {
@@ -344,7 +352,7 @@ export async function updatePresentation({
     }
 
     const presUpdate: Record<string, unknown> = {};
-    if (prompt !== undefined) presUpdate.prompt = prompt;
+    if (sanitizedPrompt !== undefined) presUpdate.prompt = sanitizedPrompt;
     if (content !== undefined) presUpdate.content = content as unknown;
     if (shouldPersistTheme) presUpdate.theme = theme;
     if (imageSource !== undefined) presUpdate.image_source = imageSource;
@@ -353,7 +361,7 @@ export async function updatePresentation({
     }
     if (customization !== undefined) presUpdate.customization = customization;
     if (language !== undefined) presUpdate.language = language;
-    if (outline !== undefined) presUpdate.outline = outline;
+    if (sanitizedOutline !== undefined) presUpdate.outline = sanitizedOutline;
     if (searchResults !== undefined) presUpdate.search_results = searchResults;
     if (toolCalls !== undefined) presUpdate.tool_calls = toolCalls;
     if (selectedChunks !== undefined) {
@@ -422,9 +430,11 @@ export async function updatePresentationTitle(id: string, title: string) {
     return { success: false, message: "Supabase is not configured" };
   }
 
+  const sanitizedTitle = sanitizeHtml(title);
+
     const { data: presentation, error } = await supabase
       .from("base_documents")
-      .update({ title })
+      .update({ title: sanitizedTitle })
       .eq("id", id)
       .eq("user_id", await getClerkUserId())
       .select("*, presentation:presentations(*)")
@@ -564,6 +574,8 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
     return { success: false, message: "Not authorized to duplicate this presentation" };
   }
 
+  const sanitizedTitle = newTitle ? sanitizeHtml(newTitle) : undefined;
+
   try {
     const { data: original, error: origErr } = await supabase
       .from("base_documents")
@@ -582,7 +594,7 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
       .insert({
         type: "PRESENTATION",
         document_type: "presentation",
-        title: newTitle ?? `(Copy) ${original.title}`,
+        title: sanitizedTitle ?? `(Copy) ${sanitizeHtml(original.title)}`,
         user_id: identity.userId,
         thumbnail_url: original.thumbnail_url,
       })

@@ -62,8 +62,8 @@ An AI-powered smart presentation application that transforms your ideas into stu
 | ------------------ | ------------------------------------- |
 | **Framework**      | Next.js, React, TypeScript            |
 | **Styling**        | Tailwind CSS                          |
-| **Database**       | Supabase (PostgreSQL) with Prisma ORM |
-| **AI Integration** | OpenAI API (GPT-4, DALL-E) |
+| **Database**       | Supabase (PostgreSQL)                 |
+| **AI Integration** | OpenAI API (GPT-4o, DALL-E) |
 | **Authentication** | Clerk                                 |
 | **UI Components**  | Radix UI                              |
 | **Text Editor**    | Plate Editor                          |
@@ -134,7 +134,7 @@ UPLOADTHING_TOKEN=""
 
 ### Database Setup
 
-Initialize the database schema using Prisma
+Initialize the database schema using Supabase migrations:
 
 ```bash
 pnpm db:push

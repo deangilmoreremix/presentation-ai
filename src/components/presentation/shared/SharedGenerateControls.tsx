@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Check, Loader2, Sparkles } from "lucide-react";
-import { useAuth } from "@/components/supabase-provider";
+import { useAuth } from "@/components/AppAuthProvider";
 import { useEffect, useMemo, useState } from "react";
 
 import { type Image as GeneratedImage } from "@/app/_actions/apps/image-studio/fetch";

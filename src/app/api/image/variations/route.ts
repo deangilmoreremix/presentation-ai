@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
+import { csrfGuard } from "@/lib/csrf";;
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
@@ -6,6 +7,9 @@ import type { ImageModel } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+    if (csrfError) return csrfError;
     const formData = await req.formData();
     const imageFile = formData.get("image") as File | null;
     const model = (formData.get("model") as ImageModel) || "dall-e-2";

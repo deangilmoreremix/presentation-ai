@@ -14,7 +14,7 @@
 
 1. Go to https://netlify.com and sign up (free)
 2. Click "Add new site" → "Import an existing project"
-3. Connect your GitHub repository: `deangilmoreremix/smart-presentations`
+3. Connect your GitHub repository
 4. Configure build settings:
    - **Build command:** `pnpm build`
    - **Publish directory:** `.next/standalone`
@@ -27,11 +27,14 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | Your Supabase PostgreSQL connection string |
-| `NEXTAUTH_SECRET` | Generate with: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | **Your Netlify site URL** (e.g., `https://your-site.netlify.app`) - set this AFTER you get your Netlify URL |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Your Clerk publishable key |
+| `CLERK_SECRET_KEY` | Your Clerk secret key |
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your Supabase publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (optional) |
+| `DATABASE_URL` | Your Supabase PostgreSQL connection string |
+| `OPENAI_API_KEY` | Your OpenAI API key (if you have one) |
+| `API_KEY_ENCRYPTION_MASTER_KEY` | Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 | `SKIP_ENV_VALIDATION` | `true` |
 
 **To get your Supabase credentials:**
@@ -40,25 +43,19 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 3. Go to **Settings → Database** for `DATABASE_URL`
 4. Go to **Settings → API** for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-**Optional (for AI features):**
-| Variable | Value |
-|----------|-------|
-| `OPENAI_API_KEY` | Your OpenAI API key (if you have one) |
+**To get your Clerk credentials:**
+1. Go to https://dashboard.clerk.com
+2. Create a new application
+3. Copy your **Publishable key** and **Secret key**
 
-**Note:** `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are NOT needed if you use Supabase Auth. Configure Google OAuth in Supabase dashboard instead.
+### 3. Configure Clerk Application
 
-### 3. Enable Google OAuth in Supabase (Optional but Recommended)
-
-1. Go to Supabase dashboard → **Authentication** → **Providers**
-2. Click **Google**
-3. Toggle **Enable** to ON
-4. You'll need to create a Google Cloud OAuth app:
-   - Go to https://console.cloud.google.com/apis/credentials
-   - Create OAuth 2.0 Client ID (Web application)
-   - Add authorized redirect URI: `https://YOUR-PROJECT-ID.supabase.co/auth/v1/callback/google`
-   - Copy Client ID and Client Secret
-   - Paste into Supabase Google provider settings
-5. Save
+1. Go to Clerk Dashboard → **Configure** → **Paths**
+   - Sign-in URL: `/auth/signin`
+   - Sign-up URL: `/auth/signup`
+   - After sign-in redirect: `/presentation`
+2. Add your Netlify domain to **Allowed origins** in Clerk Dashboard
+3. (Optional) Enable social providers in Clerk Dashboard → **User & Authentication** → **Social connections**
 
 ### 4. Deploy Your Site
 
@@ -86,21 +83,13 @@ pnpm db:push
 **Option C: Via GitHub Actions CI/CD** (if configured)
 The `.github/workflows/ci-cd.yml` already includes a database migration step.
 
-### 6. Update NEXTAUTH_URL
-
-After you get your Netlify site URL (e.g., `https://smart-presentations.netlify.app`):
-
-1. Go to Netlify dashboard → Site settings → Build & Deploy → Environment
-2. Update `NEXTAUTH_URL` to your actual Netlify URL
-3. Redeploy the site (or trigger a new build)
-
-### 7. Verify Deployment
+### 6. Verify Deployment
 
 Visit your Netlify URL and check:
 
 - [ ] Homepage loads and redirects to `/presentation`
 - [ ] Sign-in page accessible at `/auth/signin`
-- [ ] Sign-in with Google works (if configured)
+- [ ] Sign-in with Clerk works (email or social auth)
 - [ ] Can create a new presentation
 - [ ] Real-time generation starts
 - [ ] Can export to PPTX
@@ -113,13 +102,12 @@ Visit your Netlify URL and check:
 
 | File | Purpose |
 |------|---------|
-| `NETLIFY_DEPLOYMENT.md` | Detailed Netlify-specific deployment guide |
-| `DEPLOYMENT_GUIDE.md` | General deployment guide (Netlify vs Vercel comparison) |
-| `PRODUCTION_READY.md` | Full feature checklist and project status |
+| `DEPLOYMENT_GUIDE.md` | General deployment guide |
+| `PRODUCTION_READY.md` | Feature checklist and project status |
 | `README.md` | Project overview and quick start |
-| `netlify.toml` (you need to create) | Build configuration for Netlify |
 | `.github/workflows/ci-cd.yml` | Automated testing and deployment |
 | `Dockerfile` + `docker-compose.yml` | Alternative Docker deployment |
+| `netlify.toml` | Netlify-specific configuration |
 
 ---
 
@@ -183,34 +171,29 @@ This plugin automatically handles Next.js routing and serverless functions.
 
 1. **Database migration must run** before using the app. Tables won't exist until you run `pnpm db:push`.
 
-2. **Environment variables must be set** in Netlify dashboard. The build will fail without `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`.
+2. **Environment variables must be set** in Netlify dashboard. The build will fail without `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY`.
 
-3. **NEXTAUTH_URL must match** your Netlify site URL exactly (including https://). If it doesn't match, Google OAuth will fail.
+3. **Clerk domains must be configured** in Clerk Dashboard to include your Netlify domain.
 
-4. **Google OAuth redirect URIs** must include both:
-    - `https://your-site.netlify.app/api/auth/callback/google`
-    - `https://YOUR-PROJECT-ID.supabase.co/auth/v1/callback/google` (for Supabase)
-
-5. **First deployment may take 10-15 minutes** due to:
+4. **First deployment may take 10-15 minutes** due to:
    - Installing dependencies
-   - Building Prisma client
    - Compiling TypeScript
    - Bundling for standalone output
 
-6. **Cold starts on Netlify free tier** ~2-5 seconds. Consider upgrading to Pro for faster builds and always-on functions if needed.
+5. **Cold starts on Netlify free tier** ~2-5 seconds. Consider upgrading to Pro for faster builds and always-on functions if needed.
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Build fails with "Prisma schema not found"
-**Solution:** Ensure `postinstall` script exists in `package.json`: `"postinstall": "prisma generate"`
+### Build fails with "Cannot find module"
+**Solution:** Ensure all dependencies are listed correctly in `package.json`. Avoid Node.js native modules not compatible with serverless.
 
 ### Runtime error: "DATABASE_URL not set"
 **Solution:** Add `DATABASE_URL` in Netlify environment variables.
 
 ### Auth redirect loop
-**Solution:** Verify `NEXTAUTH_URL` matches your Netlify URL exactly. Also check callback URLs in Google Cloud Console.
+**Solution:** Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly. Also check that your domain is in Clerk's allowed origins.
 
 ### 404 on API routes
 **Solution:** Ensure `netlify.toml` has the redirect rule and `@netlify/plugin-nextjs` is installed.

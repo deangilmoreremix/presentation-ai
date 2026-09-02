@@ -96,38 +96,37 @@ export async function getClerkUserId(): Promise<string> {
 }
 
 export async function getCurrentUser(): Promise<CurrentUser> {
-  const supabase = await createClient();
+  const _supabase = await createClient();
   const { userId } = await auth();
 
   if (!userId) {
     return {
       id: ANONYMOUS_USER_ID,
-      email: "anonymous@local",
+      email: null,
       role: "USER",
-      hasAccess: true,
+      hasAccess: false,
       isAdmin: false,
     };
   }
 
-  type UsersRow = {
-    id: string;
-    has_access: boolean | null;
-    role: string | null;
-  };
-
-  let dbUser: UsersRow | null = null;
-  if (supabase) {
-    const { data } = await supabase
-      .from("users")
-      .select("id, has_access, role")
-      .eq("id", userId)
-      .maybeSingle<UsersRow>();
-    dbUser = data;
+  // Prefer Clerk publicMetadata as the source of truth for authz.
+  let clerkPublicMetadata: Record<string, unknown> = {};
+  try {
+    const clerkUser = await currentUser();
+    clerkPublicMetadata = (clerkUser?.publicMetadata as Record<string, unknown>) ?? {};
+  } catch {
+    // Clerk user fetch unavailable; fall back to Supabase cache/defaults below.
   }
 
-  const role = dbUser?.role ?? "USER";
-  const hasAccess = dbUser?.has_access ?? false;
+  const roleFromMetadata = typeof clerkPublicMetadata.role === "string"
+    ? clerkPublicMetadata.role
+    : null;
+  const hasAccessFromMetadata = typeof clerkPublicMetadata.hasAccess === "boolean"
+    ? clerkPublicMetadata.hasAccess
+    : null;
 
+  // Optional cache: keep Supabase users table in sync, but do not use it
+  // as the source of truth for authz decisions.
   let email: string | null = null;
   try {
     const clerkUser = await currentUser();
@@ -135,6 +134,9 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   } catch {
     // Clerk user fetch unavailable; keep email as null
   }
+
+  const role = roleFromMetadata ?? "USER";
+  const hasAccess = hasAccessFromMetadata ?? false;
 
   return {
     id: userId,

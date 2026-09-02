@@ -1,7 +1,7 @@
 "use client";
 
 import { Frown, Meh, Plus, RotateCcw, Smile } from "lucide-react";
-import { useAuth } from "@/components/supabase-provider";
+import { useAuth } from "@/components/AppAuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 

@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getApiKey } from "@/lib/key-storage";
-import { useAuth } from "@/components/supabase-provider";
+import { useAuth } from "@/components/AppAuthProvider";
 import {
   type ImageModel,
   type GptImageSize,

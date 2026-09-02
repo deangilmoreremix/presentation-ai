@@ -1,7 +1,7 @@
 "use client";
 
 import { Clapperboard, Image, Wand2 } from "lucide-react";
-import { useAuth } from "@/provider/SupabaseAuthProvider";
+import { useAuth } from "@/provider/ClerkAuthProvider";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -106,8 +106,9 @@ export function ImageSourceSelector({
               <Image size={10} />
               Stock & Web Images
             </SelectLabel>
-            <SelectItem value="stock-unsplash">Unsplash</SelectItem>
-            <SelectItem value="stock-pixabay">Pixabay</SelectItem>
+            <SelectItem value="stock-unsplash">Stock Photos</SelectItem>
+            <SelectItem value="stock-pixabay">Free Images</SelectItem>
+            <SelectItem value="stock-pexels">Pexels</SelectItem>
             <SelectItem value="stock-google">Web Search</SelectItem>
           </SelectGroup>
           <SelectGroup>
@@ -115,14 +116,7 @@ export function ImageSourceSelector({
               <Clapperboard size={10} />
               Animated
             </SelectLabel>
-            <SelectItem value="gif">GIFs from Giphy</SelectItem>
-          </SelectGroup>
-          <SelectGroup>
-            <SelectLabel className="flex items-center gap-1 text-primary/80">
-              <Clapperboard size={10} />
-              Animated
-            </SelectLabel>
-            <SelectItem value="gif">GIFs from Giphy</SelectItem>
+            <SelectItem value="gif">Animated GIFs</SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>

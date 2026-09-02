@@ -23,8 +23,8 @@ import {
   H4Element,
   H5Element,
   H6Element,
-} from "../custom-elements/presentation-heading-element";
-import { PresentationParagraphElement } from "../custom-elements/presentation-paragraph-element";
+} from "../native-elements/presentation-heading-element";
+import { PresentationParagraphElement } from "../native-elements/presentation-paragraph-element";
 import PresentationTitleElement from "../custom-elements/presentation-title";
 import {
   CONTRIBUTOR_ELEMENT,

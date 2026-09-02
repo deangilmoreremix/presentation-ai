@@ -15,7 +15,7 @@ import {
 import { CodeLeaf } from "@/components/plate/ui/code-node";
 import { HighlightLeaf } from "@/components/plate/ui/highlight-node";
 import { KbdLeaf } from "@/components/plate/ui/kbd-node";
-import { PresentationLeafElement } from "../custom-elements/presentation-leaf-element";
+import { PresentationLeafElement } from "../native-elements/presentation-leaf-element";
 export const BasicMarksKit = [
   BoldPlugin.withComponent(PresentationLeafElement),
   ItalicPlugin.withComponent(PresentationLeafElement),

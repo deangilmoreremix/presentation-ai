@@ -62,8 +62,10 @@ describe("getCurrentUser", () => {
 
     const result = await getCurrentUser();
     expect(result.id).toBe(ANONYMOUS_USER_ID);
-    expect(result.email).toBe("anonymous@local");
+    expect(result.email).toBeNull();
     expect(result.role).toBe("USER");
+    expect(result.hasAccess).toBe(false);
+    expect(result.isAdmin).toBe(false);
   });
 
   it("returns user from Clerk when authenticated", async () => {
@@ -81,12 +83,14 @@ describe("getCurrentUser", () => {
     vi.mocked(auth).mockResolvedValue({ userId: "clerk-user-id", sessionId: "s1" } as any);
     vi.mocked(currentUser).mockResolvedValue({
       primaryEmailAddress: { emailAddress: "admin@example.com" },
+      publicMetadata: { role: "ADMIN", hasAccess: true },
     } as any);
 
     const result = await getCurrentUser();
     expect(result.id).toBe("clerk-user-id");
     expect(result.email).toBe("admin@example.com");
     expect(result.role).toBe("ADMIN");
+    expect(result.hasAccess).toBe(true);
     expect(result.isAdmin).toBe(true);
   });
 
@@ -101,10 +105,12 @@ describe("getCurrentUser", () => {
     vi.mocked(auth).mockResolvedValue({ userId: "clerk-user-id", sessionId: "s1" } as any);
     vi.mocked(currentUser).mockResolvedValue({
       primaryEmailAddress: { emailAddress: "user@example.com" },
+      publicMetadata: { role: "USER", hasAccess: false },
     } as any);
 
     const result = await getCurrentUser();
     expect(result.role).toBe("USER");
+    expect(result.hasAccess).toBe(false);
     expect(result.isAdmin).toBe(false);
   });
 
@@ -121,6 +127,9 @@ describe("getCurrentUser", () => {
 
     const result = await getCurrentUser();
     expect(result.id).toBe(ANONYMOUS_USER_ID);
-    expect(result.email).toBe("anonymous@local");
+    expect(result.email).toBeNull();
+    expect(result.role).toBe("USER");
+    expect(result.hasAccess).toBe(false);
+    expect(result.isAdmin).toBe(false);
   });
 });

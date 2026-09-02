@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Settings, Image as ImageIcon, Presentation, Plus, Hash, Play, Users, LayoutGrid } from "lucide-react";
+import { Sparkles, Settings, Image as ImageIcon, Presentation, Plus, Hash, Play, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/react";
@@ -21,11 +21,6 @@ const anchorNavLinks = [
     href: "/#demo",
     label: "Demo",
     icon: Play,
-  },
-  {
-    href: "/#community",
-    label: "Community",
-    icon: Users,
   },
 ];
 

@@ -9,6 +9,8 @@ import {
   modelPicker,
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
+import { csrfGuard } from "@/lib/csrf";
+import { withTimeout } from "@/lib/request-timeout";
 import { logger } from "@/lib/observability/server/logger";
 import { toBaseMessages, toUIMessageStream } from "@ai-sdk/langchain";
 import {
@@ -188,6 +190,9 @@ export async function POST(req: Request) {
   });
 
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+
     routeLogger.info("Outline request received", { requestId });
 
     const request = (await req.json()) as OutlineRequest;
@@ -325,13 +330,18 @@ export async function POST(req: Request) {
       numberOfCards,
       webSearch,
     });
-    const stream = await agent.stream(
-      {
-        messages: await toBaseMessages(messages),
-      },
-      {
-        streamMode: ["values", "messages"],
-      },
+    const stream = await withTimeout(
+      async () =>
+        await agent.stream(
+          {
+            messages: await toBaseMessages(messages),
+          },
+          {
+            streamMode: ["values", "messages"],
+          },
+        ),
+      300000,
+      "outline_generation",
     );
 
     routeLogger.info("Presentation outline stream created", {
@@ -348,6 +358,14 @@ export async function POST(req: Request) {
       requestId,
     });
     span.error(error);
+
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { error: "Outline generation timed out. Please try again." },
+        { status: 504 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to generate outline" },
       { status: 500 },

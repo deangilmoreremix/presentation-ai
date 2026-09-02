@@ -4,13 +4,27 @@
 
 ### Core Infrastructure
 
-- [x] Restored `src/proxy.ts` with full auth middleware and rate limiting
-- [x] Fixed `src/app/layout.tsx` with proper provider setup (NextAuth, TanStack Query, Theme)
-- [x] Added `src/components/providers.tsx` for clean provider composition
-- [x] Configured Supabase environment variables in `.env`
-- [x] Made `DATABASE_URL` optional in `src/env.js` for graceful degradation
+- [x] Restored `src/middleware.ts` with Clerk auth middleware, rate limiting, and security headers
+- [x] Fixed `src/app/layout.tsx` with proper provider setup (Clerk, TanStack Query, Theme, ErrorBoundary)
+- [x] Added `src/components/app-error-boundary.tsx` for graceful error handling
+- [x] Configured Clerk and Supabase environment variables in `.env`
 - [x] Fixed all TypeScript compilation errors
-- [x] Added missing `globals.css` import
+- [x] Removed Prisma stubs and unused dependencies
+
+### Security Hardening
+
+- [x] **CSRF Protection** (`src/lib/csrf.ts`)
+  - Origin/referrer validation on all mutation API routes
+  - Applied to 15+ mutation endpoints
+- [x] **Request Timeouts** (`src/lib/request-timeout.ts`)
+  - 300s timeout on AI generation endpoints
+  - Returns 504 on timeout instead of hanging
+- [x] **Input Sanitization** (`src/lib/sanitize.ts`)
+  - HTML stripping for user-generated content
+  - Applied to presentation titles, outlines, and prompts
+- [x] **Security Headers** in middleware
+  - X-Content-Type-Options, X-Frame-Options, X-XSS-Protection
+  - Referrer-Policy, Permissions-Policy, HSTS in production
 
 ### New Features Added
 
@@ -19,17 +33,16 @@
   - Integrated into ExportButton with format toggle
   - Maintains slide dimensions (10" x 5.625" landscape)
 - [x] **Rate Limiting** (`src/lib/rate-limit.ts`)
-  - In-memory rate limiter with per-IP and per-user tracking
+  - In-memory rate limiter with per-IP tracking
   - Stricter limits for AI generation endpoints (5/min) vs general API (30/min)
-  - Integrated into `src/proxy.ts` for all routes
+  - Integrated into `src/middleware.ts` for all routes
 - [x] **Health Check Endpoint** (`src/app/api/health/route.ts`)
-
   - Returns app status, uptime, version, database connectivity
   - Used for monitoring and deployment health checks
-
 - [x] **Error Boundary** (`src/components/ui/error-boundary.tsx`)
   - Client-side error catching with user-friendly fallback UI
   - Development mode shows error details stack trace
+  - Sentry integration in production
 
 ### Testing Infrastructure
 
@@ -38,27 +51,29 @@
   - Multi-browser support (Chromium, Firefox, WebKit)
   - Mobile viewport tests
 - [x] Playwright configuration with CI-ready setup
+- [x] Vitest unit test configuration
+- [x] GitHub Actions CI/CD pipeline with test jobs
 
 ### DevOps & Deployment
 
 - [x] GitHub Actions CI/CD pipeline (`.github/workflows/ci-cd.yml`)
-  - Type checking, linting, build verification
+  - Type checking, linting, unit tests, E2E tests, build verification
   - Automatic Vercel deployment on main branch pushes
+  - Database migration step in deploy job
 - [x] Docker configuration
   - Multi-stage Dockerfile for production images
   - Docker Compose with PostgreSQL for local development
 - [x] Next.js production optimizations
   - Standalone output mode
   - Compress enabled, poweredByHeader disabled
-  - Optimized package imports
+  - Bundle analyzer integration
 
 ### Database
 
-- [x] Added indexes to `BaseDocument` for performance:
-  - `userId`, `userId+createdAt`, `isPublic`, `type`
-- [x] Added indexes to `Presentation`:
-  - `theme`, `imageSource`, `language`
-- [x] Updated Prisma schema compatible with Supabase
+- [x] Supabase migrations for all schema changes
+- [x] Row Level Security (RLS) policies for data protection
+- [x] Anonymous user support with per-visitor isolation
+- [x] User asset storage for generated images and favorites
 
 ## 📊 Current Application Status
 
@@ -66,27 +81,29 @@
 
 **Verified Routes:**
 
-- `GET /` → 307 redirect to `/presentation`
+- `GET /` → accessible
 - `GET /api/health` → `{"status":"healthy","database":"connected"}`
 - `GET /presentation` → 307 redirect to `/auth/signin` (when not authenticated)
+- `POST /api/*` → CSRF protected, rate limited
 
 **Build Status:** ⚠️ Build process (`pnpm build`) runs out of memory in this constrained environment (needs >4GB RAM). The codebase compiles without TypeScript errors; build succeeds on systems with adequate memory.
 
 **TypeScript:** ✅ 0 errors (`npx tsc --noEmit` clean)
 
-**Lint:** ✅ 7 warnings (mostly benign `any` types), no errors
+**Lint:** ✅ Clean on changed files
 
 ## 🎯 Features Ready for Production
 
-1. **Authentication** – NextAuth with Google OAuth, session management
-2. **AI Generation** – OpenAI DALL-E integration for content and images
-3. **Rich Text Editor** – Plate.js-based editor with full formatting
-4. **Multiple Themes** – 40+ built-in themes, custom theme creation
-5. **Slide Management** – Add, edit, delete, reorder slides
-6. **Export** – PowerPoint (.pptx) and PDF export with images
-7. **Rate Limiting** – Protects API from abuse
-8. **Health Monitoring** – /api/health endpoint for uptime checks
-9. **Error Handling** – Global error boundary for graceful failures
+1. **Authentication** – Clerk with email/password and social providers
+2. **Authorization** – Role-based access via Clerk publicMetadata
+3. **AI Generation** – OpenAI DALL-E integration for content and images
+4. **Rich Text Editor** – Plate.js-based editor with full formatting
+5. **Multiple Themes** – 40+ built-in themes, custom theme creation
+6. **Slide Management** – Add, edit, delete, reorder slides
+7. **Export** – PowerPoint (.pptx) and PDF export with images
+8. **Rate Limiting** – Protects API from abuse
+9. **Health Monitoring** – /api/health endpoint for uptime checks
+10. **Error Handling** – Global error boundary with Sentry integration
 
 ## 📋 Remaining Tasks (Optional Polish)
 
@@ -101,33 +118,39 @@
 
 ## 🚀 Deployment Instructions
 
-### With Supabase (Recommended)
+### With Supabase + Clerk (Recommended)
 
 1. **Create Supabase Project**
 
    - Go to https://supabase.com, create new project
    - Note: Project ID, anon key, service role key, database URL
 
-2. **Set Environment Variables**
+2. **Create Clerk Application**
+
+   - Go to https://dashboard.clerk.com, create new application
+   - Copy publishable key and secret key
+
+3. **Set Environment Variables**
 
    ```env
-   DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
+   # Clerk
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+   CLERK_SECRET_KEY="sk_test_..."
+   
+   # Supabase
    NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
-
-   NEXTAUTH_SECRET=$(openssl rand -base64 32)
-   NEXTAUTH_URL="https://your-app.vercel.app"
-
-   GOOGLE_CLIENT_ID="..."
-   GOOGLE_CLIENT_SECRET="..."
-
-    OPENAI_API_KEY="..."  # optional
+   SUPABASE_SERVICE_ROLE_KEY="eyJ..."
+   
+   # Database
+   DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
+   
+   # AI
+   OPENAI_API_KEY="sk-your-key-here"
+   
+   # Encryption
+   API_KEY_ENCRYPTION_MASTER_KEY="..."
    ```
-
-3. **Enable Google OAuth in Supabase**
-
-   - Supabase Console → Authentication → Providers → Google
-   - Enable and provide Client ID/Secret from Google Cloud Console
 
 4. **Deploy to Vercel**
 
@@ -138,9 +161,16 @@
    Or connect GitHub repo for automatic deployments.
 
 5. **Run Database Migrations**
+
    ```bash
    pnpm db:push
    ```
+
+6. **Configure Clerk**
+
+   - Add your production domain to Clerk Dashboard
+   - Configure redirect URLs
+   - Enable email/password or social providers
 
 ### With Docker
 
@@ -188,8 +218,13 @@ pnpm test:report
 ```
 src/
 ├── app/                    # Next.js App Router
-│   ├── api/health/        # Health check endpoint
-│   ├── auth/signin/       # Sign in page
+│   ├── api/
+│   │   ├── health/        # Health check endpoint
+│   │   ├── webhooks/      # Clerk webhook endpoints
+│   │   └── ...
+│   ├── auth/
+│   │   ├── signin/        # Clerk sign-in page
+│   │   └── signout/       # Sign-out page
 │   ├── presentation/      # Main editor page
 │   └── layout.tsx         # Root layout with providers
 ├── components/
@@ -197,16 +232,20 @@ src/
 │   ├── presentation/
 │   │   ├── buttons/ExportButton.tsx
 │   │   └── export/           # PPTX/PDF export logic
+│   ├── AppAuthProvider.tsx    # Client auth provider (Clerk)
 │   └── ui/                    # Reusable UI components
 ├── lib/
 │   ├── presentation/themes.ts  # Theme definitions (40+)
-│   └── rate-limit.ts           # Rate limiting utility
+│   ├── rate-limit.ts           # Rate limiting utility
+│   ├── csrf.ts                 # CSRF protection
+│   ├── sanitize.ts             # Input sanitization
+│   └── observability/          # Logging and tracing
 ├── states/
 │   └── presentation-state.ts   # Zustand presentation store
-├── proxy.ts              # Auth + rate limiting middleware
-├── env.js                # Environment validation
+├── middleware.ts               # Clerk auth + rate limiting + security headers
+├── env.js                      # Environment validation
 └── server/
-    └── auth.ts           # NextAuth configuration
+    └── auth.ts                 # Server-side auth wrapper
 ```
 
 ## 🔧 Troubleshooting
@@ -223,6 +262,12 @@ src/
 - Ensure Supabase project is active and not paused
 - Check connection limits on Supabase plan
 
+**Auth issues:**
+
+- Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set
+- Check Clerk Dashboard → Configure → Paths are set correctly
+- Ensure your domain is in Clerk's allowed origins
+
 **Export fails:**
 
 - Ensure all slides are visible on page (ExportButton scans DOM)
@@ -232,7 +277,7 @@ src/
 **Rate limit exceeded:**
 
 - Default: 30 API requests/minute, 5 AI-generation/minute
-- Adjust in `src/proxy.ts` if needed for your use case
+- Adjust in `src/middleware.ts` if needed for your use case
 
 ## 📄 License
 

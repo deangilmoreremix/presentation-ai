@@ -11,6 +11,10 @@ import {
   searchPixabayImages,
 } from "@/app/_actions/apps/image-studio/pixabay";
 import {
+  getTrendingPexelsImages,
+  searchPexelsImages,
+} from "@/app/_actions/apps/image-studio/pexels";
+import {
   getTrendingUnsplashImages,
   searchUnsplashImages,
   triggerUnsplashDownload,
@@ -49,9 +53,10 @@ type SearchResultImage = {
 };
 
 const PROVIDER_LABELS: Record<PresentationStockImageProvider, string> = {
-  unsplash: "Unsplash",
-  pixabay: "Pixabay",
+  unsplash: "Stock Photos",
+  pixabay: "Free Images",
   google: "Web Search",
+  pexels: "Pexels",
 };
 
 export function SharedImageSearchControls({
@@ -70,6 +75,7 @@ export function SharedImageSearchControls({
     mode = "unsplash",
     unsplashQuery = "",
     pixabayQuery = "",
+    pexelsQuery = "",
     googleQuery = "",
   } = imageSearchState;
 
@@ -83,6 +89,7 @@ export function SharedImageSearchControls({
     setImageSearchState({
       unsplashQuery: trimmedInitialQuery,
       pixabayQuery: trimmedInitialQuery,
+      pexelsQuery: trimmedInitialQuery,
       googleQuery: trimmedInitialQuery,
     });
   }, [initialQuery, initialQueryKey, setImageSearchState]);
@@ -178,26 +185,68 @@ export function SharedImageSearchControls({
     refetchOnWindowFocus: false,
   });
 
+  const pexelsQ = useQuery({
+    queryKey: ["presentation-image", "pexels", pexelsQuery],
+    queryFn: async () => {
+      const trimmedQuery = pexelsQuery.trim();
+      if (!trimmedQuery) {
+        const res = disableTrendingFallback
+          ? null
+          : await getTrendingPexelsImages();
+        return res?.success && res.images
+          ? res.images.map((i) => ({
+              id: i.id,
+              url: i.url,
+              thumb: i.thumb,
+              title: i.title,
+              author: i.author,
+              link: i.link,
+            }))
+          : [];
+      }
+
+      const res = await searchPexelsImages(trimmedQuery, 20, 1);
+      return res.success && res.images
+        ? res.images.map((i) => ({
+            id: i.id,
+            url: i.url,
+            thumb: i.thumb,
+            title: i.title,
+            author: i.author,
+            link: i.link,
+          }))
+        : [];
+    },
+    enabled: mode === "pexels",
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+
   const activeQuery =
     mode === "unsplash"
       ? unsplashQuery
       : mode === "pixabay"
         ? pixabayQuery
-        : googleQuery;
+        : mode === "pexels"
+          ? pexelsQuery
+          : googleQuery;
 
   const activeResults =
     mode === "unsplash"
       ? unsplashQ.data
       : mode === "pixabay"
         ? pixabayQ.data
-        : googleQ.data;
+        : mode === "pexels"
+          ? pexelsQ.data
+          : googleQ.data;
 
   const isFetching =
-    unsplashQ.isFetching || pixabayQ.isFetching || googleQ.isFetching;
+    unsplashQ.isFetching || pixabayQ.isFetching || pexelsQ.isFetching || googleQ.isFetching;
 
   const handleSearch = () => {
     if (mode === "unsplash") void unsplashQ.refetch();
     else if (mode === "pixabay") void pixabayQ.refetch();
+    else if (mode === "pexels") void pexelsQ.refetch();
     else void googleQ.refetch();
   };
 
@@ -208,6 +257,9 @@ export function SharedImageSearchControls({
     }
     if (mode === "pixabay") {
       setImageSearchState({ pixabayQuery: "" });
+    }
+    if (mode === "pexels") {
+      setImageSearchState({ pexelsQuery: "" });
     }
   };
 
@@ -226,12 +278,15 @@ export function SharedImageSearchControls({
         }
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="unsplash">
-            Unsplash
+            Stock Photos
           </TabsTrigger>
           <TabsTrigger value="pixabay">
-            Pixabay
+            Free Images
+          </TabsTrigger>
+          <TabsTrigger value="pexels">
+            Pexels
           </TabsTrigger>
           <TabsTrigger value="google">
             Web
@@ -247,8 +302,10 @@ export function SharedImageSearchControls({
               mode === "unsplash"
                 ? "Search high-res photos..."
                 : mode === "pixabay"
-                  ? "Search Pixabay Images..."
-                  : "Search live web images..."
+                  ? "Search free images..."
+                  : mode === "pexels"
+                    ? "Search Pexels..."
+                    : "Search live web images..."
             }
             value={activeQuery}
             onChange={(e) =>
@@ -256,7 +313,9 @@ export function SharedImageSearchControls({
                 ? setImageSearchState({ unsplashQuery: e.target.value })
                 : mode === "pixabay"
                   ? setImageSearchState({ pixabayQuery: e.target.value })
-                  : setImageSearchState({ googleQuery: e.target.value })
+                  : mode === "pexels"
+                    ? setImageSearchState({ pexelsQuery: e.target.value })
+                    : setImageSearchState({ googleQuery: e.target.value })
             }
             onKeyDown={handleKeyDown}
             className="pl-9"
@@ -266,7 +325,7 @@ export function SharedImageSearchControls({
           Search
         </Button>
         {!disableTrendingFallback &&
-          (mode === "unsplash" || mode === "pixabay") &&
+          (mode === "unsplash" || mode === "pixabay" || mode === "pexels") &&
           activeQuery && (
             <Button
               variant="outline"
@@ -280,7 +339,7 @@ export function SharedImageSearchControls({
       </div>
 
       {!disableTrendingFallback &&
-        (mode === "unsplash" || mode === "pixabay") && (
+        (mode === "unsplash" || mode === "pixabay" || mode === "pexels") && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {activeQuery.trim() ? (
               <span>
@@ -352,98 +411,105 @@ export function SharedImageSearchControls({
                             {selectedUrl === r.url && (
                               <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
                             )}
-                          </button>
-                          <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                            <span className="pointer-events-auto">
-                              Photo by{" "}
-                              <a
-                                href={`https://unsplash.com/@${r.username}?utm_source=your_app_name&utm_medium=referral`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline hover:text-gray-200"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {r.author}
-                              </a>{" "}
-                              on{" "}
-                              <a
-                                href={`${r.link || "https://unsplash.com"}?utm_source=your_app_name&utm_medium=referral`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline hover:text-gray-200"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                Unsplash
-                              </a>
-                            </span>
-                          </div>
-                        </div>
+                           </button>
+                         </div>
                       ),
                     )}
                   </div>
                 )}
 
-              {mode === "pixabay" &&
-                Array.isArray(pixabayQ.data) &&
-                pixabayQ.data.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {pixabayQ.data.map(
-                      (r: {
-                        url: string;
-                        thumb?: string;
-                        title?: string;
-                        author?: string;
-                        link?: string;
-                      }) => (
-                        <div key={r.url} className="group relative">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUrl(r.url);
-                              onImageSelect(r.url, "pixabay");
-                            }}
-                            className={cn(
-                              "aspect-square w-full overflow-hidden rounded-md border transition-all hover:scale-[1.02] focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:outline-none",
-                              selectedUrl === r.url
-                                ? "border-primary ring-2 ring-primary ring-offset-1"
-                                : "border-transparent hover:border-primary/50",
-                            )}
-                            title={r.title}
-                          >
-                            <Image
-                              unoptimized
-                              width={400}
-                              height={300}
-                              src={r.thumb || r.url}
-                              alt={r.title || "pixabay image"}
-                              className="size-full object-cover transition-opacity group-hover:opacity-90"
-                              loading="lazy"
-                            />
-                            {selectedUrl === r.url && (
-                              <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
-                            )}
-                          </button>
-                          {r.author && (
-                            <div className="pointer-events-none absolute right-0 bottom-0 left-0 bg-black/60 p-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                              <span className="pointer-events-auto">
-                                Photo by {r.author} on{" "}
-                                <a
-                                  href={r.link || "https://pixabay.com"}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="underline hover:text-gray-200"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Pixabay
-                                </a>
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ),
-                    )}
-                  </div>
-                )}
+               {mode === "pixabay" &&
+                 Array.isArray(pixabayQ.data) &&
+                 pixabayQ.data.length > 0 && (
+                   <div className="grid grid-cols-3 gap-2">
+                     {pixabayQ.data.map(
+                       (r: {
+                         url: string;
+                         thumb?: string;
+                         title?: string;
+                         author?: string;
+                         link?: string;
+                       }) => (
+                         <div key={r.url} className="group relative">
+                           <button
+                             type="button"
+                             onClick={() => {
+                               setSelectedUrl(r.url);
+                               onImageSelect(r.url, "pixabay");
+                             }}
+                             className={cn(
+                               "aspect-square w-full overflow-hidden rounded-md border transition-all hover:scale-[1.02] focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:outline-none",
+                               selectedUrl === r.url
+                                 ? "border-primary ring-2 ring-primary ring-offset-1"
+                                 : "border-transparent hover:border-primary/50",
+                             )}
+                             title={r.title}
+                           >
+                             <Image
+                               unoptimized
+                               width={400}
+                               height={300}
+                               src={r.thumb || r.url}
+                               alt={r.title || "pixabay image"}
+                               className="size-full object-cover transition-opacity group-hover:opacity-90"
+                               loading="lazy"
+                             />
+                             {selectedUrl === r.url && (
+                               <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
+                             )}
+                            </button>
+                          </div>
+                       ),
+                     )}
+                   </div>
+                 )}
+
+               {mode === "pexels" &&
+                 Array.isArray(pexelsQ.data) &&
+                 pexelsQ.data.length > 0 && (
+                   <div className="grid grid-cols-3 gap-2">
+                     {pexelsQ.data.map(
+                       (r: {
+                         id: number;
+                         url: string;
+                         thumb?: string;
+                         title?: string;
+                         author?: string;
+                         link?: string;
+                       }) => (
+                         <div key={r.id ?? r.url} className="group relative">
+                           <button
+                             type="button"
+                             onClick={() => {
+                               setSelectedUrl(r.url);
+                               onImageSelect(r.url, "pexels");
+                             }}
+                             className={cn(
+                               "aspect-square w-full overflow-hidden rounded-md border transition-all hover:scale-[1.02] focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:outline-none",
+                               selectedUrl === r.url
+                                 ? "border-primary ring-2 ring-primary ring-offset-1"
+                                 : "border-transparent hover:border-primary/50",
+                             )}
+                             title={r.title}
+                           >
+                             <Image
+                               unoptimized
+                               width={400}
+                               height={300}
+                               src={r.thumb || r.url}
+                               alt={r.title || "pexels image"}
+                               className="size-full object-cover transition-opacity group-hover:opacity-90"
+                               loading="lazy"
+                             />
+                             {selectedUrl === r.url && (
+                               <div className="absolute inset-0 rounded-md ring-2 ring-primary ring-inset" />
+                             )}
+                            </button>
+                          </div>
+                       ),
+                     )}
+                   </div>
+                 )}
 
               {mode === "google" &&
                 Array.isArray(googleQ.data) &&

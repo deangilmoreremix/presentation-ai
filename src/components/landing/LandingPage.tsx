@@ -162,8 +162,8 @@ const featureGroups = [
       },
       {
         icon: Globe,
-        title: "Unsplash + Pixabay",
-        description: "Search stock photos from Unsplash and Pixabay. Track downloads and persist gallery to your account.",
+        title: "Stock Image Search",
+        description: "Search stock photos from multiple sources. Track downloads and persist gallery to your account.",
       },
       {
         icon: Settings2,
@@ -195,7 +195,7 @@ const featureGroups = [
       {
         icon: Heart,
         title: "Theme Favorites & Likes",
-        description: "Browse public themes, favorite the ones you love, like the best community creations, build your library.",
+        description: "Browse public themes, favorite the ones you love, like the best shared creations, build your library.",
       },
       {
         icon: Type,
@@ -712,28 +712,8 @@ export default function LandingPage() {
               <div className="text-center">
                 <Play className="h-20 w-20 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-medium text-muted-foreground">Demo video placeholder</p>
-                <p className="text-sm text-muted-foreground">YouTube embed would go here</p>
+                <p className="text-sm text-muted-foreground">Video embed would go here</p>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Community CTA */}
-      <section className="py-20 px-4 border-t" id="community">
-        <div className="container mx-auto text-center">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Join our Community</h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Share your presentations, get inspired by others, and stay updated on the latest AI features.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Button size="lg" variant="outline" asChild>
-                <Link href="https://discord.gg/232cdU5Z" target="_blank">
-                  <ExternalLink className="h-5 w-5 mr-2" />
-                  Join Discord
-                </Link>
-              </Button>
             </div>
           </div>
         </div>
@@ -866,9 +846,6 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-              <Link href="https://discord.gg/232cdU5Z" target="_blank" className="hover:text-foreground">
-                Discord
-              </Link>
               <Link href="/presentation" className="hover:text-foreground">
                 Get Started
               </Link>

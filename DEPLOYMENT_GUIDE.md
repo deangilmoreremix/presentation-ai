@@ -29,75 +29,61 @@ This guide covers deploying Smart Presentations to production with Supabase and 
 
 ⚠️ **Important:** Use the password shown in Supabase, not your actual database password. Supabase generates a secure password for you.
 
-### 1.3 (Optional) Enable Google OAuth in Supabase
+### 1.3 Clerk Authentication Setup
 
-If you want users to sign in with Google:
+1. Go to https://dashboard.clerk.com and create an account
+2. Create a new application
+3. Copy your **Publishable Key** and **Secret Key**
+4. Configure your Clerk application:
+   - Add your production domain to **Allowed origins**
+   - Configure redirect URLs to match your app
+   - Enable email/password sign-in (or social providers as needed)
 
-1. Go to **Authentication** → **Providers**
-2. Click on **Google**
-3. Toggle "Enable" to ON
-4. Copy the **Client ID** and **Client Secret** from Google Cloud Console
-   - Go to https://console.cloud.google.com/apis/credentials
-   - Create OAuth 2.0 Client ID (Web application)
-   - Add authorized redirect URI: `https://[YOUR-PROJECT-ID].supabase.co/auth/v1/callback`
-   - Save the credentials
-5. Paste into Supabase Google provider settings
-6. Save
-
-### 1.4 Run Database Migration
+### 1.4 Run Database Migrations
 
 ```bash
 # Install dependencies if not already
 pnpm install
 
-# Push Prisma schema to Supabase
+# Push Supabase migrations to your database
 pnpm db:push
 ```
 
 This creates all necessary tables:
 
-- `Account`, `User`, `Session` (for NextAuth)
-- `BaseDocument`, `Presentation`
-- `PresentationTheme`, `FavoritePresentationTheme`, `PresentationThemeLike`
-- `FontPair`, `GeneratedImage`, `FavoriteDocument`
+- `base_documents`, `presentations`
+- `presentation_themes`, `favorite_presentation_themes`, `presentation_theme_likes`
+- `font_pairs`, `generated_images`, `favorite_documents`
+- `users` (for Clerk user sync and role-based access)
 
 ## Step 2: Environment Variables Configuration
 
 Create a `.env` file (or set in your hosting platform):
 
 ```env
+# ── Clerk Authentication ────────────────────────────────────────────
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
+CLERK_WEBHOOK_SECRET="whsec_..."  # Optional: for webhook verification
+
+# ── Supabase ────────────────────────────────────────────────────────
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional: for server-side admin access
+
 # ── Database ────────────────────────────────────────────────────────
 DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
 
-# ── Supabase (for client-side auth if needed) ───────────────────────
-NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
-
-# ── NextAuth Configuration ─────────────────────────────────────────
-NEXTAUTH_SECRET="$(openssl rand -base64 32)"   # Generate secure random string
-NEXTAUTH_URL="https://your-app.vercel.app"     # Your production URL
-
-# ── Google OAuth (if using) ────────────────────────────────────────
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# ── AI Providers (optional but recommended) ─────────────────────────
+# ── AI Providers ────────────────────────────────────────────────────
 OPENAI_API_KEY="sk-your-openai-key"
 
+# ── Encryption ──────────────────────────────────────────────────────
+API_KEY_ENCRYPTION_MASTER_KEY="..."  # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
 # ── Optional Services ───────────────────────────────────────────────
-UNSPLASH_ACCESS_KEY="your-unsplash-key"     # For stock images
-TAVILY_API_KEY="your-tavily-key"            # For web search
-# UPLOADTHING_TOKEN not needed unless using UploadThing for file uploads
-```
-
-**Generate NEXTAUTH_SECRET:**
-
-```bash
-# On Unix/macOS:
-openssl rand -base64 32
-
-# On Windows (PowerShell):
-[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+UNSPLASH_ACCESS_KEY="your-unsplash-key"
+TAVILY_API_KEY="your-tavily-key"
+UPLOADTHING_TOKEN="your-uploadthing-token"
 ```
 
 ## Step 3: Local Testing (Before Deploy)
@@ -118,7 +104,7 @@ pnpm dev
 
 # 5. Test manually:
 #    - Visit http://localhost:3000
-#    - Click "Sign in with Google"
+#    - Sign in with Clerk (email or social auth)
 #    - Create a presentation
 #    - Export as PPTX and PDF
 ```
@@ -176,25 +162,60 @@ Supabase has connection limits. To avoid exceeding limits:
 3. Enable **Prepare transactions** (helps with performance)
 4. Copy the new connection string and update `DATABASE_URL` if changed
 
-### 5.2 Set Up Auth Callback URLs
+### 5.2 Set Up Clerk Application
 
-In Supabase → Authentication → URL Configuration:
+In Clerk Dashboard → **Configure** → **Paths**:
 
+- **Sign-in URL**: `/auth/signin`
+- **Sign-up URL**: `/auth/signup`
+- **After sign-in redirect**: `/presentation`
+- **After sign-up redirect**: `/presentation`
+
+Also configure:
+
+1. **Social providers** (optional): Enable Google, GitHub, etc. in Clerk Dashboard → **User & Authentication** → **Social connections**
+2. **Email verification**: Configure in Clerk Dashboard → **User & Authentication** → **Email**
+3. **Webhooks** (optional): Set up webhook endpoint to sync Clerk user data to Supabase
+   - Webhook URL: `https://your-app.vercel.app/api/webhooks/clerk`
+   - Events: `user.created`, `user.updated`
+
+### 5.3 Clerk Webhook Verification (Optional but Recommended)
+
+If you set up Clerk webhooks for user sync, add signature verification:
+
+```typescript
+// src/app/api/webhooks/clerk/route.ts
+import { Webhook } from "svix";
+import { NextResponse } from "next/server";
+
+export async function POST(request: Request) {
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+  
+  if (!webhookSecret) {
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+  }
+
+  const svix = new Webhook(webhookSecret);
+  
+  try {
+    const payload = await request.text();
+    const headers = {
+      "svix-id": request.headers.get("svix-id") || "",
+      "svix-timestamp": request.headers.get("svix-timestamp") || "",
+      "svix-signature": request.headers.get("svix-signature") || "",
+    };
+
+    const event = svix.verify(payload, headers);
+    
+    // Handle webhook event
+    // Sync user data to Supabase users table
+    
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
+  }
+}
 ```
-Site URL: https://your-app.vercel.app
-Redirect URLs: https://your-app.vercel.app/auth/callback/*
-```
-
-### 5.3 Google OAuth (if using)
-
-In Google Cloud Console → Credentials:
-
-1. Edit your OAuth 2.0 client
-2. Add authorized redirect URI:
-   ```
-   https://YOUR-PROJECT-ID.supabase.co/auth/v1/callback
-   ```
-3. Save
 
 ## Step 6: Deploy to Other Platforms
 
@@ -229,12 +250,14 @@ docker build -t smart-presentations .
 # Run with environment variables
 docker run -d \
   -p 3000:3000 \
+  -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="..." \
+  -e CLERK_SECRET_KEY="..." \
+  -e NEXT_PUBLIC_SUPABASE_URL="..." \
+  -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="..." \
+  -e SUPABASE_SERVICE_ROLE_KEY="..." \
   -e DATABASE_URL="..." \
-  -e NEXTAUTH_SECRET="..." \
-  -e NEXTAUTH_URL="..." \
-  -e GOOGLE_CLIENT_ID="..." \
-  -e GOOGLE_CLIENT_SECRET="..." \
   -e OPENAI_API_KEY="..." \
+  -e API_KEY_ENCRYPTION_MASTER_KEY="..." \
   smart-presentations
 ```
 
@@ -335,9 +358,9 @@ Adjust based on your plan limits and user behavior.
 
 Add Redis for:
 
-- Session storage (NextAuth)
 - API response caching
 - Rate limit counters across instances
+- Session caching (Clerk handles sessions internally)
 
 ## Step 9: Security Checklist
 
@@ -345,14 +368,15 @@ Before going live:
 
 - [x] HTTPS enforced (Vercel provides automatically)
 - [x] Environment variables secured (not in client bundle)
-- [x] Rate limiting enabled (Done in proxy.ts)
+- [x] Rate limiting enabled
 - [x] Database connections use SSL (Supabase enforces)
-- [x] NextAuth uses secure cookies (default)
-- [x] CSRF protection (NextAuth provides)
+- [x] Clerk sessions use secure cookies (default)
+- [x] CSRF protection on mutation routes
 - [ ] Add Content Security Policy headers
 - [ ] Set up HSTS headers
 - [ ] Enable audit logging in Supabase
 - [ ] Regularly rotate API keys
+- [ ] Configure Clerk webhook signature verification (if using webhooks)
 
 ## Step 10: Custom Domain (Optional)
 
@@ -360,7 +384,8 @@ Before going live:
 2. Add your domain (e.g., `presentations.yourcompany.com`)
 3. Follow DNS configuration instructions (update DNS records)
 4. Wait for SSL certificate (automatic via Let's Encrypt)
-5. Update `NEXTAUTH_URL` to use your custom domain
+5. Update your Clerk application domains to include the custom domain
+6. Update `NEXT_PUBLIC_APP_URL` environment variable
 
 ## Step 11: CI/CD Pipeline (GitHub Actions)
 
@@ -400,13 +425,17 @@ To use:
 
 **Problem:** Getting caught in redirect loop between `/` → `/presentation` → `/auth/signin` → `/`
 
-**Solution:** This typically means NEXTAUTH_URL is not set correctly. Ensure it matches your production domain exactly (including https://).
+**Solution:** This typically means Clerk session is not being properly maintained. Ensure:
+
+1. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly
+2. Clerk middleware is configured in `src/middleware.ts`
+3. Your domain is added to Clerk's allowed origins
 
 ### Rate Limits Too Aggressive
 
 **Problem:** Legitimate users getting 429 errors.
 
-**Solution:** Adjust limits in `src/proxy.ts`:
+**Solution:** Adjust limits in `src/middleware.ts`:
 
 ```typescript
 maxRequests: isAIGeneration ? 10 : 50, // increase as needed

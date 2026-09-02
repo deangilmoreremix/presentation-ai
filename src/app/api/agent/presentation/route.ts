@@ -7,6 +7,7 @@ import {
 } from "ai";
 import { env } from "@/env";
 import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
+import { csrfGuard } from "@/lib/csrf";
 
 const CLIENT_TOOLS = new Set([
   "edit_slide_properties",
@@ -94,7 +95,7 @@ const TOOLS = [
         },
         stockImageProvider: {
           type: "string",
-          enum: ["unsplash", "pixabay", "google"],
+          enum: ["unsplash", "pixabay", "google", "pexels"],
           description: "Preferred stock provider when imageSource is 'stock'.",
         },
       },
@@ -340,6 +341,9 @@ function buildInput(messages: UIMessage[]): Array<Record<string, unknown>> {
 
 export async function POST(req: Request) {
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+    if (csrfError) return csrfError;
     const body = (await req.json()) as {
       id?: string;
       messages?: UIMessage[];

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { getApiKey } from "@/lib/key-storage";
-import { useAuth } from "@/components/supabase-provider";
+import { useAuth } from "@/components/AppAuthProvider";
 import { searchUnsplashImages } from "@/app/_actions/apps/image-studio/unsplash";
 import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
 import { generateInfographicImageAction } from "@/app/_actions/apps/image-studio/generate-infographic";
@@ -962,8 +962,8 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="unsplash">Unsplash</SelectItem>
-                    <SelectItem value="google">Google Images</SelectItem>
+                    <SelectItem value="unsplash">Stock Photos</SelectItem>
+                    <SelectItem value="google">Web Search</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
@@ -1020,7 +1020,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
                 <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed">
                   <Search className="h-10 w-10 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Search for stock images from Unsplash or Google
+                     Search stock images
                   </p>
                 </div>
               )}

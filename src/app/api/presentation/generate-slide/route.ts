@@ -1,6 +1,8 @@
 import { createUIMessageStreamResponse } from "ai";
 import { assertModelIsConfigured, modelPicker } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
+import { csrfGuard } from "@/lib/csrf";
+import { withTimeout } from "@/lib/request-timeout";
 import { toUIMessageStream } from "@ai-sdk/langchain";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
@@ -204,6 +206,9 @@ export async function POST(req: Request) {
   const routeLogger = createLogger("api:presentation-generate-slide");
 
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+
     routeLogger.info("Single slide generation request received", { requestId });
 
     const {
@@ -283,8 +288,11 @@ export async function POST(req: Request) {
       requestId,
       slideType: isImageSlide ? "image" : "standard",
     });
-    // @ts-expect-error types are incorrectly inferred
-    const stream = await chain.stream(input);
+    const stream = await withTimeout(
+      () => chain.stream(input as unknown as Parameters<typeof chain.stream>[0]),
+      300000,
+      "single_slide_generation",
+    );
 
     routeLogger.info("Single slide generation stream created", {
       requestId,
@@ -295,6 +303,14 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     routeLogger.error("Single slide generation failed", error, { requestId });
+
+    if (error instanceof Error && error.name === "TimeoutError") {
+      return NextResponse.json(
+        { error: "Slide generation timed out. Please try again." },
+        { status: 504 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to generate slide" },
       { status: 500 },

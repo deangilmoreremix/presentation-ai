@@ -1,8 +1,12 @@
 import { search_tool } from "@/ai/tools/search";
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
+import { csrfGuard } from "@/lib/csrf";;
 
 export async function POST(req: Request) {
   try {
+    const csrfError = csrfGuard(req);
+    if (csrfError) return csrfError;
+    if (csrfError) return csrfError;
     const { query } = (await req.json()) as {
       query?: string;
     };
