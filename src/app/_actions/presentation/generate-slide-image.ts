@@ -5,15 +5,15 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { UTFile } from "uploadthing/server";
 import {
-  OPENAI_IMAGE_MODEL,
   OPENAI_RESPONSES_MODEL,
+  type ImageModelList,
 } from "@/constants/image-models";
 
-const DEFAULT_SLIDE_IMAGE_MODEL = "openai/gpt-image-2";
+const DEFAULT_SLIDE_IMAGE_MODEL = "openai/gpt-image-2.5";
 
 export async function generateSlideImageAction(
   prompt: string,
-  _imageModel: string = DEFAULT_SLIDE_IMAGE_MODEL,
+  imageModel: ImageModelList = DEFAULT_SLIDE_IMAGE_MODEL,
   apiKey?: string,
 ) {
   const currentUser = await getCurrentUser();
@@ -37,7 +37,7 @@ export async function generateSlideImageAction(
       tools: [
         {
           type: "image_generation",
-          model: OPENAI_IMAGE_MODEL,
+          model: imageModel.replace("openai/", ""),
           size: "1536x1024",
           background: "opaque",
         },

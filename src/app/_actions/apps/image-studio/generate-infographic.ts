@@ -102,7 +102,7 @@ export async function generateInfographicImageAction({
       tools: [
         {
           type: "image_generation",
-          model: OPENAI_IMAGE_MODEL,
+          model: actualModel.replace("openai/", ""),
           size: "1536x1024",
           background: "opaque",
         },

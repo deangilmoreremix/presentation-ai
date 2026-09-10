@@ -52,6 +52,7 @@ async function generateOpenAIImage(
   userId: string,
   aspectRatio: ImageAspectRatio,
   apiKey?: string,
+  model: ImageModelList = DEFAULT_IMAGE_MODEL,
 ) {
     const openai = await getOpenAIClient(apiKey);
 
@@ -61,9 +62,9 @@ async function generateOpenAIImage(
     tools: [
       {
         type: "image_generation",
-        model: OPENAI_IMAGE_MODEL,
+        model: model.replace("openai/", ""),
         size: getGptImageSize(aspectRatio),
-        // gpt-image-2 doesn't support transparent backgrounds; default to opaque.
+        // gpt-image-2.5 doesn't support transparent backgrounds; default to opaque.
         background: "opaque",
       },
     ],
@@ -90,12 +91,12 @@ async function generateOpenAIImage(
 
 export async function generateImageAction(
   prompt: string,
-  _model: ImageModelList = DEFAULT_IMAGE_MODEL,
+  model: ImageModelList = DEFAULT_IMAGE_MODEL,
   aspectRatio: ImageAspectRatio = "16:9",
   apiKey?: string,
 ) {
   try {
-    return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, apiKey);
+    return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, apiKey, model);
   } catch (error) {
     console.error("Error generating image:", error);
     return {
