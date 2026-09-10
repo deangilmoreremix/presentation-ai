@@ -19,6 +19,7 @@ interface AppAuthContextValue {
   email: string | null;
   name: string | null;
   isAdmin: boolean;
+  hasAccess: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -38,6 +39,7 @@ export function useAuth(): AppAuthContextValue {
   const email = user?.email ?? null;
   const name = user?.email ? (user.email.split("@")[0] as string) : null;
   const isAdmin = user?.isAdmin ?? false;
+  const hasAccess = user?.hasAccess ?? false;
   const isAuthenticated = !!user;
 
   return {
@@ -47,6 +49,7 @@ export function useAuth(): AppAuthContextValue {
     email: email ?? null,
     name: name ?? null,
     isAdmin,
+    hasAccess,
     isLoading,
     isAuthenticated,
   };

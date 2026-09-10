@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { useAuth as useSupabaseAuth } from "@/provider/SupabaseAuthProvider";
 

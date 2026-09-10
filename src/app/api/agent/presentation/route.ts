@@ -357,6 +357,15 @@ export async function POST(req: Request) {
     const openai = apiKey ? new OpenAI({ apiKey }) : null;
     const input = buildInput(messages);
 
+    // TODO(migration-015): persist agent chat to public.presentation_messages.
+    // When wiring this, insert one row per user message from `messages` here
+    // (or just the latest user turn), and insert the assistant message at
+    // the end of the `execute` callback once the stream completes (use
+    // `writer.onFinish` or a `try/finally` around the stream). See
+    // supabase/migrations/015_presentation_messages.sql for the schema and
+    // src/app/_actions/presentation/getPresentationMessages.ts for the read
+    // side. The current behavior is intentional (no-op) until you wire it.
+
     const stream = createUIMessageStream({
       execute: async ({ writer }: { writer: UIMessageStreamWriter }) => {
         try {

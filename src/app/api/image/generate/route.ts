@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
-import type {
-  ImageModel,
-  GptImageSize,
-  ImageQuality,
-  OutputFormat,
-  ImageBackground,
+import {
+  type ImageModel,
+  type GptImageSize,
+  type ImageQuality,
+  type OutputFormat,
+  type ImageBackground,
 } from "@/lib/image/types";
 
 const ALLOWED_MODELS: ImageModel[] = [
+  "gpt-image-2.5",
   "gpt-image-2",
   "gpt-image-1",
   "gpt-image-1-mini",
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       prompt,
-      model = "gpt-image-2",
+      model = "gpt-image-2.5",
       size = "1024x1024",
       quality,
       outputFormat,

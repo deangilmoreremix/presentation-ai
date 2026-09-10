@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 import { csrfGuard } from "@/lib/csrf";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
-import OpenAI from "openai";
-import type {
-  ImageModel,
-  GptImageSize,
-  ImageQuality,
-  OutputFormat,
+import type OpenAI from "openai";
+import {
+  type ImageModel,
+  type GptImageSize,
+  type ImageQuality,
+  type OutputFormat,
 } from "@/lib/image/types";
 
 export async function POST(req: NextRequest) {
