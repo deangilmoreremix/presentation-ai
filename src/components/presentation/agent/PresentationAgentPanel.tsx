@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send, Square, X } from "lucide-react";
+import { Bot, Send, Square, TrashIcon, X } from "lucide-react";
 import { useChat, type UIMessage } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useClearPresentationChat } from "@/hooks/presentation/useClearPresentationChat";
 import { usePresentationState } from "@/states/presentation-state";
 import { executeToolCall } from "@/hooks/presentation/agentTools";
 import {
@@ -41,6 +42,7 @@ export function PresentationAgentPanel() {
     stop,
     status,
     addToolResult,
+    setMessages,
   } = useChat<UIMessage>({
     transport: new DefaultChatTransport({
       api: "/api/agent/presentation",
@@ -58,6 +60,8 @@ export function PresentationAgentPanel() {
       },
     }),
   });
+
+  const { clearChat, isPending: isClearing } = useClearPresentationChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -120,6 +124,22 @@ export function PresentationAgentPanel() {
     }
   };
 
+  const handleClearChat = () => {
+    if (messages.length === 0 || isStreaming || isClearing) return;
+    const confirmed = window.confirm(
+      "Clear the agent chat for this presentation? This cannot be undone.",
+    );
+    if (!confirmed) return;
+    if (currentPresentationId) {
+      clearChat(currentPresentationId, {
+        onSuccess: () => setMessages([]),
+      });
+    } else {
+      // No active presentation id — clear local state directly.
+      setMessages([]);
+    }
+  };
+
   return (
     <div className="flex h-full w-[26rem] flex-col border-l bg-background">
       <div className="flex items-center justify-between border-b p-3">
@@ -127,14 +147,29 @@ export function PresentationAgentPanel() {
           <Bot className="h-4 w-4" />
           <h2 className="text-sm font-semibold tracking-wide">Agent</h2>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setActiveRightPanel(null)}
-          className="h-8 w-8 hover:bg-muted"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClearChat}
+              disabled={isStreaming || isClearing}
+              aria-label="Clear chat"
+              title="Clear chat"
+              className="h-8 w-8 hover:bg-muted"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setActiveRightPanel(null)}
+            className="h-8 w-8 hover:bg-muted"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">

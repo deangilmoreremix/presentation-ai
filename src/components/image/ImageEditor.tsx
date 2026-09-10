@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,7 @@ import {
 } from "@/lib/image/types";
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2", "dall-e-2"];
 
 // Sizes
 const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];

@@ -29,13 +29,13 @@ import { searchUnsplashImages } from "@/app/_actions/apps/image-studio/unsplash"
 import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
 import { generateInfographicImageAction } from "@/app/_actions/apps/image-studio/generate-infographic";
 import { fetchGeneratedImages } from "@/app/_actions/apps/image-studio/fetch";
-import type {
-  ImageModel,
-  GptImageSize,
-  ImageQuality,
-  OutputFormat,
-  ImageBackground,
-  ImageCategory,
+import {
+  type ImageModel,
+  type GptImageSize,
+  type ImageQuality,
+  type OutputFormat,
+  type ImageBackground,
+  type ImageCategory,
 } from "@/lib/image/types";
 
 // Category definitions with labels
@@ -58,7 +58,7 @@ const CATEGORIES: { id: ImageCategory; label: string; icon: string }[] = [
 ];
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5", "gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
 
 // Sizes
 const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];

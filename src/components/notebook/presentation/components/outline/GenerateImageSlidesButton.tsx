@@ -13,6 +13,12 @@ const OpenAILogo = () => (
 
 const MODELS = [
   {
+    id: "openai/gpt-image-2.5",
+    name: "GPT Image 2.5",
+    provider: "OpenAI",
+    logo: <OpenAILogo />,
+  },
+  {
     id: "openai/gpt-image-2",
     name: "GPT Image 2",
     provider: "OpenAI",

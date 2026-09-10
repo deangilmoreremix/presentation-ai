@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import type React from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { Image, useMediaState } from "@platejs/media/react";
 import { ResizableProvider } from "@platejs/resizable";
