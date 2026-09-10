@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   "/auth/signout(.*)",
   "/api/health(.*)",
   "/api/webhooks/clerk(.*)",
+  "/api/webhooks/stripe(.*)",
 ]);
 
 /**
@@ -35,6 +36,8 @@ const RATE_LIMITS: Record<string, { windowMs: number; maxRequests: number }> = {
   "/api/user/api-key": { windowMs: 60 * 1000, maxRequests: 15 },
   "/api/uploadthing(.*)": { windowMs: 60 * 1000, maxRequests: 10 },
   "/api/webhooks/clerk": { windowMs: 60 * 1000, maxRequests: 20 },
+  "/api/webhooks/stripe": { windowMs: 60 * 1000, maxRequests: 60 },
+  "/api/billing/checkout": { windowMs: 60 * 1000, maxRequests: 10 },
 };
 
 const DEFAULT_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };
