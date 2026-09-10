@@ -1,19 +1,19 @@
 /**
- * OpenAI-only image generation.
- * gpt-image-2 is invoked through the Responses API image_generation tool
- * (gpt-image-2 is the image model behind the tool; the `model` field of the
+ * OpenAI image generation.
+ * gpt-image-2.5 is invoked through the Responses API image_generation tool
+ * (gpt-image-2.5 is the image model behind the tool; the `model` field of the
  * Responses request must be a text-capable mainline model).
  */
 
 /** The image model used behind the Responses API image_generation tool. */
-export const OPENAI_IMAGE_MODEL = "gpt-image-2" as const;
+export const OPENAI_IMAGE_MODEL = "gpt-image-2.5" as const;
 
 /** Mainline text model used to drive the Responses API image_generation tool. */
 export const OPENAI_RESPONSES_MODEL = "gpt-5" as const;
 
-export type ImageModelList = "openai/gpt-image-2";
+export type ImageModelList = "openai/gpt-image-2.5" | "openai/gpt-image-2";
 
-export const DEFAULT_IMAGE_MODEL: ImageModelList = "openai/gpt-image-2";
+export const DEFAULT_IMAGE_MODEL: ImageModelList = "openai/gpt-image-2.5";
 
 export type ImageModelOption = {
   value: ImageModelList;
@@ -22,6 +22,10 @@ export type ImageModelOption = {
 };
 
 const IMAGE_MODELS: ImageModelOption[] = [
+  {
+    value: "openai/gpt-image-2.5",
+    label: "GPT Image 2.5",
+  },
   {
     value: "openai/gpt-image-2",
     label: "GPT Image 2",

@@ -428,14 +428,14 @@ To use:
 **Solution:** This typically means Clerk session is not being properly maintained. Ensure:
 
 1. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly
-2. Clerk middleware is configured in `src/middleware.ts`
+2. Clerk middleware is configured in `src/proxy.ts`
 3. Your domain is added to Clerk's allowed origins
 
 ### Rate Limits Too Aggressive
 
 **Problem:** Legitimate users getting 429 errors.
 
-**Solution:** Adjust limits in `src/middleware.ts`:
+**Solution:** Adjust limits in `src/proxy.ts`:
 
 ```typescript
 maxRequests: isAIGeneration ? 10 : 50, // increase as needed

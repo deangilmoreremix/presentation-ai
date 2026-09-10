@@ -10,7 +10,7 @@
     "lint:fix": "biome lint --write src tests",
     "check": "biome check src tests",
     "check:fix": "biome check --write src tests",
-    "start": "next start",
+    "start": "node .next/standalone/server.js",
     "type": "tsc --noEmit",
     "test": "playwright test",
     "test:ui": "playwright test --ui",

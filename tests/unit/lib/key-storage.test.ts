@@ -22,9 +22,9 @@ describe("key-storage", () => {
       removeItem: (key: string) => { delete storage[key]; },
       clear: () => { Object.keys(storage).forEach(k => delete storage[k]); },
     };
-    // @ts-ignore – override global
+    // @ts-expect-error – override global
     global.localStorage = mockLocalStorage as Storage;
-    // @ts-ignore – mock window
+    // @ts-expect-error – mock window
     global.window = {};
   });
 

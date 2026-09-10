@@ -3,8 +3,9 @@
  * Supports all OpenAI image models and the Responses API
  */
 
-// Image Models - OpenAI image models (gpt-image-2 is used via the Responses API)
+// Image Models - OpenAI image models (gpt-image-2.5 is used via the Responses API)
 export type ImageModel =
+  | "gpt-image-2.5"
   | "gpt-image-2"
   | "gpt-image-1"
   | "gpt-image-1-mini"
@@ -132,7 +133,7 @@ export interface ImageTemplate {
 
 // Default values
 export const DEFAULT_IMAGE_SIZE: ImageSize = "1024x1024";
-export const DEFAULT_IMAGE_MODEL: ImageModel = "gpt-image-2";
+export const DEFAULT_IMAGE_MODEL: ImageModel = "gpt-image-2.5";
 export const DEFAULT_IMAGE_QUALITY: ImageQuality = "high";
 export const DEFAULT_OUTPUT_FORMAT: OutputFormat = "png";
 export const DEFAULT_N = 1;

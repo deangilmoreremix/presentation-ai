@@ -4,7 +4,7 @@
 
 ### Core Infrastructure
 
-- [x] Restored `src/middleware.ts` with Clerk auth middleware, rate limiting, and security headers
+- [x] `src/proxy.ts` with Clerk auth middleware, rate limiting, and security headers (renamed from `src/middleware.ts` to silence the Next.js 16 deprecation warning)
 - [x] Fixed `src/app/layout.tsx` with proper provider setup (Clerk, TanStack Query, Theme, ErrorBoundary)
 - [x] Added `src/components/app-error-boundary.tsx` for graceful error handling
 - [x] Configured Clerk and Supabase environment variables in `.env`
@@ -35,7 +35,7 @@
 - [x] **Rate Limiting** (`src/lib/rate-limit.ts`)
   - In-memory rate limiter with per-IP tracking
   - Stricter limits for AI generation endpoints (5/min) vs general API (30/min)
-  - Integrated into `src/middleware.ts` for all routes
+  - Integrated into `src/proxy.ts` for all routes
 - [x] **Health Check Endpoint** (`src/app/api/health/route.ts`)
   - Returns app status, uptime, version, database connectivity
   - Used for monitoring and deployment health checks
@@ -277,7 +277,7 @@ src/
 **Rate limit exceeded:**
 
 - Default: 30 API requests/minute, 5 AI-generation/minute
-- Adjust in `src/middleware.ts` if needed for your use case
+- Adjust in `src/proxy.ts` if needed for your use case
 
 ## 📄 License
 

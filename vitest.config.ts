@@ -16,6 +16,14 @@ export default defineConfig({
       'tests/integration/api/user/api-key.test.ts',
       'tests/**/*.spec.{ts,tsx}',
     ],
+    // Serialize test files: the `key-encryption` suite uses CPU-bound
+    // `scryptSync` which, under default file parallelism, starves other
+    // forks and causes "Timeout waiting for worker" / test timeouts.
+    // Running files sequentially keeps the suite reliable and, in practice,
+    // faster end-to-end (the whole suite finishes well under a minute).
+    fileParallelism: false,
+    // Generous per-test timeout to absorb slow jsdom bootstrap and scrypt.
+    testTimeout: 30000,
   },
   resolve: {
     alias: {

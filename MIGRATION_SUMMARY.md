@@ -11,7 +11,7 @@
   - `src/provider/ClerkAuthProvider.tsx` - client auth context
   - `src/components/AppAuthProvider.tsx` - app-level auth wrapper
   - `src/server/auth.ts` - server-side auth wrapper
-  - `src/middleware.ts` - Clerk middleware with route protection
+  - `src/proxy.ts` - Clerk middleware with route protection (Next.js 16 renamed `middleware.ts` → `proxy.ts`)
 
 ### Data: Supabase
 - **Client:** `@supabase/ssr` (server) + `@supabase/supabase-js` (browser)

@@ -3,7 +3,7 @@
  * Pre-defined prompts for the 15 image categories
  */
 
-import type { ImageTemplate, ImageCategory, ImageGenerationParams } from "./types";
+import { type ImageTemplate, type ImageCategory, type ImageGenerationParams } from "./types";
 
 export const IMAGE_TEMPLATES: Record<ImageCategory, ImageTemplate[]> = {
   core: [
