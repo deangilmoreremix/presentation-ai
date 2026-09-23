@@ -38,12 +38,6 @@ export const env = createEnv({
 
     // UploadThing
     UPLOADTHING_TOKEN: z.string().optional(),
-
-    // Stripe (server). Optional so the rest of the app builds and runs
-    // without billing configured. Set these in production to enable the
-    // /api/billing/checkout and /api/webhooks/stripe routes.
-    STRIPE_SECRET_KEY: z.string().optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().optional(),
   },
 
   client: {
@@ -76,8 +70,6 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

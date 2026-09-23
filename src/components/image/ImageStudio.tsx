@@ -21,6 +21,7 @@ import {
   Search,
   ImagePlus,
   Sparkles,
+  Settings2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { getApiKey } from "@/lib/key-storage";
@@ -29,6 +30,7 @@ import { searchUnsplashImages } from "@/app/_actions/apps/image-studio/unsplash"
 import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
 import { generateInfographicImageAction } from "@/app/_actions/apps/image-studio/generate-infographic";
 import { fetchGeneratedImages } from "@/app/_actions/apps/image-studio/fetch";
+import { ImageGenerationModal } from "./ImageGenerationModal";
 import {
   type ImageModel,
   type GptImageSize,
@@ -58,13 +60,16 @@ const CATEGORIES: { id: ImageCategory; label: string; icon: string }[] = [
 ];
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5", "gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2.5", "gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "dall-e-3", "dall-e-2"];
 
 // Sizes
-const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
+const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "2048x2048", "2048x1152", "3840x2160", "2160x3840", "auto"];
 
 // Qualities
-const IMAGE_QUALITIES: ImageQuality[] = ["low", "medium", "high", "auto"];
+const IMAGE_QUALITIES: ImageQuality[] = ["auto", "low", "medium", "high", "xhigh", "max"];
+
+// Backgrounds
+const IMAGE_BACKGROUNDS: ImageBackground[] = ["auto", "opaque", "transparent"];
 
 // Formats
 const OUTPUT_FORMATS: OutputFormat[] = ["png", "jpeg", "webp"];
@@ -77,7 +82,7 @@ const CATEGORY_PRESETS: Record<
   core: {
     prefix: "A stunning, highly detailed digital artwork depicting",
     suffix: ", cinematic lighting, vibrant colors, award-winning quality",
-    model: "gpt-image-2",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -86,7 +91,7 @@ const CATEGORY_PRESETS: Record<
   marketing: {
     prefix: "Professional marketing ad visual for a modern brand showing",
     suffix: ", bold typography space at top, eye-catching, commercial photography style",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1536x1024",
     quality: "high",
     format: "png",
@@ -95,7 +100,7 @@ const CATEGORY_PRESETS: Record<
   branding: {
     prefix: "Elegant brand identity logo concept featuring",
     suffix: ", minimal design, vector-quality, white background, professional",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -104,7 +109,7 @@ const CATEGORY_PRESETS: Record<
   product: {
     prefix: "Clean product photography of",
     suffix: ", studio lighting, white background, ecommerce style, sharp focus",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -113,7 +118,7 @@ const CATEGORY_PRESETS: Record<
   content: {
     prefix: "Eye-catching social media content graphic of",
     suffix: ", modern aesthetic, engaging composition, high contrast",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -122,7 +127,7 @@ const CATEGORY_PRESETS: Record<
   editing: {
     prefix: "Expert photo edit of",
     suffix: ", seamless retouching, natural lighting, professional post-processing",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -131,7 +136,7 @@ const CATEGORY_PRESETS: Record<
   composition: {
     prefix: "Artfully composed scene with",
     suffix: ", balanced layout, depth of field, harmonious color palette",
-    model: "gpt-image-2",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -140,7 +145,7 @@ const CATEGORY_PRESETS: Record<
   consistency: {
     prefix: "Consistent style image of",
     suffix: ", same visual language, coherent design system, reproducible look",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -149,7 +154,7 @@ const CATEGORY_PRESETS: Record<
   "ui-ux": {
     prefix: "Modern UI/UX interface mockup featuring",
     suffix: ", clean design system, accessible colors, Figma-quality render",
-    model: "gpt-image-2",
+    model: "gpt-image-2.5-sunburst",
     size: "1536x1024",
     quality: "high",
     format: "png",
@@ -158,7 +163,7 @@ const CATEGORY_PRESETS: Record<
   educational: {
     prefix: "Clear educational infographic explaining",
     suffix: ", labeled diagram, instructional layout, accessible design",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -167,7 +172,7 @@ const CATEGORY_PRESETS: Record<
   storytelling: {
     prefix: "Dramatic storybook illustration of",
     suffix: ", evocative atmosphere, narrative composition, painterly style",
-    model: "gpt-image-2",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1024",
     quality: "high",
     format: "png",
@@ -176,7 +181,7 @@ const CATEGORY_PRESETS: Record<
   "real-estate": {
     prefix: "Luxury real estate photograph of",
     suffix: ", professional architectural photography, golden hour lighting, wide angle",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1536x1024",
     quality: "high",
     format: "jpeg",
@@ -185,7 +190,7 @@ const CATEGORY_PRESETS: Record<
   fashion: {
     prefix: "High-fashion editorial photograph of",
     suffix: ", dramatic studio lighting, editorial composition, Vogue-quality",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1024x1536",
     quality: "high",
     format: "png",
@@ -194,7 +199,7 @@ const CATEGORY_PRESETS: Record<
   automation: {
     prefix: "Automated workflow diagram showing",
     suffix: ", clean flowchart style, technical illustration, SaaS aesthetic",
-    model: "gpt-image-1",
+    model: "gpt-image-2.5-sunburst",
     size: "1536x1024",
     quality: "medium",
     format: "png",
@@ -203,7 +208,7 @@ const CATEGORY_PRESETS: Record<
   "saas-products": {
     prefix: "SaaS product dashboard UI showing",
     suffix: ", clean modern interface, data visualization, startup-quality design",
-    model: "gpt-image-2",
+    model: "gpt-image-2.5-sunburst",
     size: "1536x1024",
     quality: "high",
     format: "png",
@@ -270,10 +275,12 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
 
   const [infographicPrompt, setInfographicPrompt] = useState("");
   const [infographicLayout, setInfographicLayout] = useState("Timeline");
-  const [infographicModel, setInfographicModel] = useState<string>("gpt-image-2");
+  const [infographicModel, setInfographicModel] = useState<string>("gpt-image-2.5-sunburst");
   const [infographicGenerating, setInfographicGenerating] = useState(false);
   const [infographicResult, setInfographicResult] = useState<string | null>(null);
   const [infographicError, setInfographicError] = useState<string | null>(null);
+
+  const [showAdvancedModal, setShowAdvancedModal] = useState(false);
 
   // Session history accumulates across generations
   const [history, setHistory] = useState<SessionImage[]>([]);
@@ -738,20 +745,31 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
               />
             </div>
 
-            <Button
-              onClick={handleGenerate}
-              disabled={!prompt.trim() || isGenerating || !user}
-              className="w-full"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                "Generate Image"
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleGenerate}
+                disabled={!prompt.trim() || isGenerating || !user}
+                className="flex-1"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  "Generate Image"
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAdvancedModal(true)}
+                disabled={!user}
+                className="px-3"
+                title="Open advanced image generation studio"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
           </CardContent>
@@ -1139,6 +1157,16 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           </Card>
         )}
       </div>
+
+      <ImageGenerationModal
+        open={showAdvancedModal}
+        onOpenChange={setShowAdvancedModal}
+        onImageSelect={(url, prompt) => {
+          setGeneratedImages((prev) => [url, ...prev]);
+          addToHistory([url], prompt);
+          setShowAdvancedModal(false);
+        }}
+      />
     </div>
   );
 }

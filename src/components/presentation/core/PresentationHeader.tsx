@@ -63,7 +63,8 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
   }, [searchParams]);
 
   const isLoggedOut = isLoaded && !user;
-  const showBrand = isLoggedOut;
+  const brandingRemoved = usePresentationState((s) => s.brandingRemoved);
+  const showBrand = isLoggedOut && !brandingRemoved;
 
   // Update title when it changes in the state
   useEffect(() => {
@@ -89,15 +90,17 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
             </Button>
           </Link>
 
-          <motion.div
-            initial={false}
-            layout="position"
-            transition={{ duration: 1 }}
-          >
-            <Link href="/" className="h-max">
-              <SmartPresentationsLogo className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></SmartPresentationsLogo>
-            </Link>
-          </motion.div>
+          {!brandingRemoved && (
+            <motion.div
+              initial={false}
+              layout="position"
+              transition={{ duration: 1 }}
+            >
+              <Link href="/" className="h-max">
+                <SmartPresentationsLogo className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></SmartPresentationsLogo>
+              </Link>
+            </motion.div>
+          )}
         </div>
 
         {/* <SideBarDropdown /> */}

@@ -30,6 +30,14 @@ import { useNotesState } from "@/states/notes-state";
 
 const MODEL_OPTIONS = [
   {
+    label: "GPT Image 2.5 Sunburst",
+    value: "openai/gpt-image-2.5-sunburst",
+  },
+  {
+    label: "GPT Image 2.5 Flare",
+    value: "openai/gpt-image-2.5-flare",
+  },
+  {
     label: "GPT Image 2.5",
     value: "openai/gpt-image-2.5",
   },
@@ -51,7 +59,7 @@ function GenerateImageDialogContent({
   const editor = useEditorRef();
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<ImageModelList>(
-    "openai/gpt-image-2.5",
+    "openai/gpt-image-2.5-sunburst",
   );
 
   const generateImage = async () => {

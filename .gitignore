@@ -38,6 +38,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# deno
+deno.lock
+
+# playwright
+playwright-report/
 next-env.d.ts
 
 # Local Netlify folder

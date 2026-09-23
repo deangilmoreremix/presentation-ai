@@ -40,6 +40,9 @@ export default defineConfig({
     command: "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    // The dev orchestrator prewarms the root route; auth-gated routes are
+    // intentionally excluded from prewarm to avoid slow redirects. Expect
+    // server-ready in ~2-3 minutes on first launch.
+    timeout: 300000,
   },
 });

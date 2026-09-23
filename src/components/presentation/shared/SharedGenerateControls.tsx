@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, Loader2, Sparkles, Settings2 } from "lucide-react";
 import { useAuth } from "@/components/AppAuthProvider";
 import { useEffect, useMemo, useState } from "react";
 
@@ -38,6 +38,7 @@ interface SharedGenerateControlsProps {
   initialPrompt?: string;
   className?: string;
   onImagesGenerated?: (images: GeneratedImage[]) => void;
+  onAdvancedClick?: () => void;
   // showGallery prop removed as requested
 }
 
@@ -92,6 +93,7 @@ export function SharedGenerateControls({
   initialPrompt = "",
   className,
   onImagesGenerated,
+  onAdvancedClick,
 }: SharedGenerateControlsProps) {
   const { session } = useAuth();
   const imageModels = useMemo(
@@ -404,6 +406,17 @@ export function SharedGenerateControls({
           </div>
         </div>
       </div>
+
+      {onAdvancedClick && (
+        <Button
+          variant="outline"
+          onClick={onAdvancedClick}
+          className="w-full gap-2"
+        >
+          <Settings2 className="h-4 w-4" />
+          Advanced Image Studio
+        </Button>
+      )}
     </div>
   );
 }

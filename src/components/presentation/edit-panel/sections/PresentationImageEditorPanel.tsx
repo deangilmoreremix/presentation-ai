@@ -8,6 +8,7 @@ import {
   Loader2,
   Scissors,
   Search,
+  Settings2,
   Sparkles,
   Upload,
   X,
@@ -27,6 +28,7 @@ import { useUploadFile } from "@/components/plate/hooks/use-upload-file";
 import { SharedGenerateControls } from "@/components/presentation/shared/SharedGenerateControls";
 import { SharedGifSearchControls } from "@/components/presentation/shared/SharedGifSearchControls";
 import { SharedImageSearchControls } from "@/components/presentation/shared/SharedImageSearchControls";
+import { ImageGenerationModal } from "@/components/image/ImageGenerationModal";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -119,6 +121,7 @@ export function PresentationImageEditorPanel() {
       ? currentElementState.element
       : presentationImageEditorElement;
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [showAdvancedImageModal, setShowAdvancedImageModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const currentImageUrl =
@@ -290,11 +293,22 @@ export function PresentationImageEditorPanel() {
       case "generate":
         return (
           <div className="flex h-full flex-col">
-            <div className="flex-none space-y-1 px-6 py-4">
-              <h3 className="leading-none font-medium">Generate Image</h3>
-              <p className="text-sm text-muted-foreground">
-                Create unique images using AI.
-              </p>
+            <div className="flex items-center justify-between px-6 py-4">
+              <div className="space-y-1">
+                <h3 className="leading-none font-medium">Generate Image</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create unique images using AI.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdvancedImageModal(true)}
+                className="gap-2"
+              >
+                <Settings2 className="h-4 w-4" />
+                Advanced
+              </Button>
             </div>
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 pb-6">
               {renderCurrentImagePreview()}
@@ -500,6 +514,17 @@ export function PresentationImageEditorPanel() {
           }}
         />
       ) : null}
+
+      <ImageGenerationModal
+        open={showAdvancedImageModal}
+        onOpenChange={setShowAdvancedImageModal}
+        onImageSelect={(url, prompt) => {
+          handleImageSelect(url, prompt, "generate");
+          setShowAdvancedImageModal(false);
+        }}
+        initialPrompt={currentImageQuery}
+        initialMode="generate"
+      />
     </div>
   );
 }

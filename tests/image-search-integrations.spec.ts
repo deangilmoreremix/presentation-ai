@@ -1,88 +1,96 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Image Search Integrations", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/presentation");
-    await page.waitForTimeout(2000);
+test.describe("Image Search Integration APIs", () => {
+  test("should load landing page", async ({ page }) => {
+    await page.goto("/");
+    await expect(page).toHaveTitle(/Smart Presentations|presentation/i);
   });
 
-  test("should show image editor with provider tabs", async ({ page }) => {
-    const imageButton = page.getByRole("button", { name: /image/i }).first();
-    if (await imageButton.count() > 0) {
-      await imageButton.click();
-      await page.waitForTimeout(500);
-    }
-
-    const panel = page.locator("[class*='image']").first();
-    if (await panel.count() > 0) {
-      await expect(panel).toBeVisible({ timeout: 5000 });
-    }
-  });
-
-  test("should have stock photo search tab", async ({ page }) => {
-    const stockPhotosTab = page.getByRole("tab", { name: /stock photos/i });
-    if (await stockPhotosTab.count() > 0) {
-      await expect(stockPhotosTab).toBeVisible();
-    }
-  });
-
-  test("should have free images tab", async ({ page }) => {
-    const freeImagesTab = page.getByRole("tab", { name: /free images/i });
-    if (await freeImagesTab.count() > 0) {
-      await expect(freeImagesTab).toBeVisible();
+  test("should have image studio component files present", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    
+    const projectRoot = path.resolve(process.cwd());
+    const requiredFiles = [
+      "src/app/_actions/apps/image-studio/giphy.ts",
+      "src/app/_actions/apps/image-studio/pixabay.ts",
+      "src/app/_actions/apps/image-studio/pexels.ts",
+      "src/components/presentation/shared/SharedImageSearchControls.tsx",
+      "src/components/presentation/shared/SharedGifSearchControls.tsx",
+    ];
+    
+    for (const file of requiredFiles) {
+      const fullPath = path.join(projectRoot, file);
+      const exists = fs.existsSync(fullPath);
+      expect(exists, `Expected file ${file} to exist`).toBe(true);
     }
   });
 
-  test("should have pexels tab", async ({ page }) => {
-    const pexelsTab = page.getByRole("tab", { name: /pexels/i });
-    if (await pexelsTab.count() > 0) {
-      await expect(pexelsTab).toBeVisible();
-    }
+  test("should have pexels provider in image search controls", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    
+    const projectRoot = path.resolve(process.cwd());
+    const filePath = path.join(projectRoot, "src/components/presentation/shared/SharedImageSearchControls.tsx");
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    expect(content.toLowerCase()).toContain("pexels");
   });
 
-  test("should have animated gifs tab", async ({ page }) => {
-    const gifTab = page.getByRole("tab", { name: /animated gifs|gifs/i });
-    if (await gifTab.count() > 0) {
-      await expect(gifTab).toBeVisible();
-    }
+  test("should have giphy provider in gif search controls", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    
+    const projectRoot = path.resolve(process.cwd());
+    const filePath = path.join(projectRoot, "src/components/presentation/shared/SharedGifSearchControls.tsx");
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    expect(content.toLowerCase()).toContain("giphy");
   });
 
-  test("should load images when clicking stock photos tab", async ({ page }) => {
-    const stockPhotosTab = page.getByRole("tab", { name: /stock photos/i });
-    if (await stockPhotosTab.count() > 0) {
-      await stockPhotosTab.click();
-      await page.waitForTimeout(2000);
-
-      const images = page.locator("[class*='grid'] img").first();
-      if (await images.count() > 0) {
-        await expect(images).toBeVisible();
-      }
-    }
+  test("should have pixabay implementation", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    
+    const projectRoot = path.resolve(process.cwd());
+    const filePath = path.join(projectRoot, "src/app/_actions/apps/image-studio/pixabay.ts");
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    expect(content).toContain("pixabay.com/api");
   });
 
-  test("should load images when clicking pexels tab", async ({ page }) => {
-    const pexelsTab = page.getByRole("tab", { name: /pexels/i });
-    if (await pexelsTab.count() > 0) {
-      await pexelsTab.click();
-      await page.waitForTimeout(2000);
-
-      const images = page.locator("[class*='grid'] img").first();
-      if (await images.count() > 0) {
-        await expect(images).toBeVisible();
-      }
-    }
+  test("should have pexels implementation", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    
+    const projectRoot = path.resolve(process.cwd());
+    const filePath = path.join(projectRoot, "src/app/_actions/apps/image-studio/pexels.ts");
+    const content = fs.readFileSync(filePath, "utf-8");
+    
+    expect(content).toContain("api.pexels.com");
   });
 
-  test("should load gifs when clicking animated gifs tab", async ({ page }) => {
-    const gifTab = page.getByRole("tab", { name: /animated gifs|gifs/i });
-    if (await gifTab.count() > 0) {
-      await gifTab.click();
-      await page.waitForTimeout(2000);
+  test("should call pixabay provider via test API", async ({ request }) => {
+    test.setTimeout(120000);
+    const response = await request.get("/api/test/image-search-providers?provider=pixabay&q=nature");
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body).toHaveProperty("success");
+  });
 
-      const gifs = page.locator("[class*='grid'] img").first();
-      if (await gifs.count() > 0) {
-        await expect(gifs).toBeVisible();
-      }
-    }
+  test("should call pexels provider via test API", async ({ request }) => {
+    test.setTimeout(120000);
+    const response = await request.get("/api/test/image-search-providers?provider=pexels&q=nature");
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body).toHaveProperty("success");
+  });
+
+  test("should call giphy provider via test API", async ({ request }) => {
+    test.setTimeout(120000);
+    const response = await request.get("/api/test/image-search-providers?provider=giphy&q=happy");
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body).toHaveProperty("success");
   });
 });

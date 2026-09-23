@@ -91,11 +91,6 @@ export function SubscriptionModal({
                   className="w-full"
                   variant={plan.popular ? "default" : "outline"}
                   size="lg"
-                  // TODO: wire to POST /api/billing/checkout with { priceId }.
-                  // Disabled until checkout is implemented; the route
-                  // stub at src/app/api/billing/checkout/route.ts returns
-                  // 501 with a clear error. Remove the disabled prop when
-                  // implementing.
                   disabled
                 >
                   Get Started

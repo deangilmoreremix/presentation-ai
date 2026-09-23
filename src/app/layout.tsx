@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import { TipProvider } from "@/components/onboarding/TipProvider";
@@ -22,21 +23,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <TanStackQueryProvider>
-        <ThemeProvider>
-          <TipProvider>
-            <AppErrorBoundary>
-              <html lang="en" suppressHydrationWarning>
-                <body className={`${inter.className} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
+        <ClerkProvider appearance={{ theme: shadcn }}>
+          <TanStackQueryProvider>
+            <ThemeProvider>
+              <TipProvider>
+                <AppErrorBoundary>
                   {children}
                   <GlobalGenerationManagers />
-                </body>
-              </html>
-            </AppErrorBoundary>
-          </TipProvider>
-        </ThemeProvider>
-      </TanStackQueryProvider>
-    </ClerkProvider>
+                </AppErrorBoundary>
+              </TipProvider>
+            </ThemeProvider>
+          </TanStackQueryProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

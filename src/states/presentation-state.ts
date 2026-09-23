@@ -123,6 +123,10 @@ interface PresentationState {
   contentVersion: number;
   isGridView: boolean;
   isSheetOpen: boolean;
+  brandingRemoved: boolean;
+  setBrandingRemoved: (removed: boolean) => void;
+  animationsEnabled: boolean;
+  setAnimationsEnabled: (enabled: boolean) => void;
   numSlides: number;
 
   theme: Themes | string;
@@ -195,6 +199,37 @@ interface PresentationState {
   // Each job also stores the owning presentation id so late async image results
   // cannot be applied to a different deck that reuses the same generated slide id.
   rootImageGeneration: Record<string, PresentationImageGenerationJob>;
+
+  // Image generation history for multi-turn refinement
+  imageGenerationHistory: Record<string, any[]>;
+  setImageGenerationHistory: (key: string, entries: any[]) => void;
+  addImageGenerationHistoryEntry: (key: string, entry: any) => void;
+  clearImageGenerationHistory: (key: string) => void;
+
+  // Current image generation session
+  currentImageGenerationSession: any | null;
+  setCurrentImageGenerationSession: (session: any | null) => void;
+
+  // Image generation A/B testing
+  imageABTests: any[];
+  setImageABTests: (tests: any[]) => void;
+  addImageABTest: (test: any) => void;
+
+  // Streaming state
+  isStreamingImage: boolean;
+  setIsStreamingImage: (streaming: boolean) => void;
+  imageStreamProgress: number;
+  setImageStreamProgress: (progress: number) => void;
+
+  // Mask editor state
+  imageMaskData: any | null;
+  setImageMaskData: (mask: any | null) => void;
+
+  // Reference images for edits
+  imageReferenceImages: any[];
+  setImageReferenceImages: (images: any[]) => void;
+  addImageReferenceImage: (image: any) => void;
+  removeImageReferenceImage: (id: string) => void;
 
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (update: boolean) => void;
@@ -529,6 +564,8 @@ export const usePresentationState = create<PresentationState>()(
       contentVersion: 0,
       isGridView: true,
       isSheetOpen: false,
+      brandingRemoved: false,
+      animationsEnabled: false,
       shouldShowExitHeader: false,
       setShouldShowExitHeader: (update) =>
         set({ shouldShowExitHeader: update }),
@@ -561,6 +598,13 @@ export const usePresentationState = create<PresentationState>()(
       scenario: "auto",
       slides: [], // Now holds the new slide object structure
       rootImageGeneration: {},
+      imageGenerationHistory: {},
+      currentImageGenerationSession: null,
+      imageABTests: [],
+      isStreamingImage: false,
+      imageStreamProgress: 0,
+      imageMaskData: null,
+      imageReferenceImages: [],
       savingStatus: "idle",
       isPresenting: false,
       isPresentingLoading: false,
@@ -1046,6 +1090,8 @@ export const usePresentationState = create<PresentationState>()(
       setContentVersion: (contentVersion) => set({ contentVersion }),
       setIsGridView: (isGrid) => set({ isGridView: isGrid }),
       setIsSheetOpen: (isOpen) => set({ isSheetOpen: isOpen }),
+      setBrandingRemoved: (removed) => set({ brandingRemoved: removed }),
+      setAnimationsEnabled: (enabled) => set({ animationsEnabled: enabled }),
       setNumSlides: (num) => set({ numSlides: num }),
       setLanguage: (lang) => set({ language: lang }),
       setModelProvider: (provider) => set({ modelProvider: provider }),
@@ -1095,6 +1141,41 @@ export const usePresentationState = create<PresentationState>()(
       setImageSource: (source) => set({ imageSource: source }),
       setStockImageProvider: (provider) =>
         set({ stockImageProvider: provider }),
+      setImageGenerationHistory: (key, entries) =>
+        set((state) => ({
+          imageGenerationHistory: { ...state.imageGenerationHistory, [key]: entries },
+        })),
+      addImageGenerationHistoryEntry: (key, entry) =>
+        set((state) => ({
+          imageGenerationHistory: {
+            ...state.imageGenerationHistory,
+            [key]: [...(state.imageGenerationHistory[key] || []), entry],
+          },
+        })),
+      clearImageGenerationHistory: (key) =>
+        set((state) => {
+          const { [key]: _removed, ...rest } = state.imageGenerationHistory;
+          return { imageGenerationHistory: rest } as Partial<PresentationState>;
+        }),
+      setCurrentImageGenerationSession: (session) =>
+        set({ currentImageGenerationSession: session }),
+      setImageABTests: (tests) => set({ imageABTests: tests }),
+      addImageABTest: (test) =>
+        set((state) => ({
+          imageABTests: [...state.imageABTests, test],
+        })),
+      setIsStreamingImage: (streaming) => set({ isStreamingImage: streaming }),
+      setImageStreamProgress: (progress) => set({ imageStreamProgress: progress }),
+      setImageMaskData: (mask) => set({ imageMaskData: mask }),
+      setImageReferenceImages: (images) => set({ imageReferenceImages: images }),
+      addImageReferenceImage: (image) =>
+        set((state) => ({
+          imageReferenceImages: [...state.imageReferenceImages, image],
+        })),
+      removeImageReferenceImage: (id) =>
+        set((state) => ({
+          imageReferenceImages: state.imageReferenceImages.filter((img) => img.id !== id),
+        })),
       setPresentationStyle: (style) => set({ presentationStyle: style }),
       setGenerationAspectRatio: (generationAspectRatio) =>
         set({ generationAspectRatio }),

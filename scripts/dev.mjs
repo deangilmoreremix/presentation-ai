@@ -9,10 +9,6 @@ const BASE = process.env.PREWARM_BASE || "http://localhost:3000";
 
 const ROUTES = [
   "/",
-  "/presentation",
-  "/presentation/create",
-  "/image-studio",
-  "/settings",
 ];
 
 const next = spawn("pnpm", ["next", "dev", ...process.argv.slice(2)], {
