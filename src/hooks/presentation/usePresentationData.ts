@@ -61,6 +61,7 @@ export function usePresentationData(id: string, forcedReadOnly = false) {
   const theme = usePresentationState((s) => s.theme);
   const setCurrentSlideId = usePresentationState((s) => s.setCurrentSlideId);
   const setIsReadOnly = usePresentationState((s) => s.setIsReadOnly);
+  const setEditorMode = usePresentationState((s) => s.setEditorMode);
   const clearHistory = usePresentationHistoryState((s) => s.clearHistory);
   // Track the theme value as it exists in the database to avoid redundant saves on hydration
   const dbThemeRef = useRef<string | null>(null);
@@ -273,6 +274,13 @@ export function usePresentationData(id: string, forcedReadOnly = false) {
         setLanguage(presentationData.presentation.language);
       }
 
+      // Hydrate editor mode from persisted presentation metadata.
+      // Legacy decks without editor_mode default to flow.
+      const persistedEditorMode =
+        ((presentationData.presentation as unknown as { editorMode?: string })
+          ?.editorMode ?? "flow") as "flow" | "design";
+      setEditorMode(persistedEditorMode);
+
       clearHistory();
     }
   }, [
@@ -297,6 +305,7 @@ export function usePresentationData(id: string, forcedReadOnly = false) {
     setAudience,
     setScenario,
     setIsReadOnly,
+    setEditorMode,
     clearHistory,
     forcedReadOnly,
     resolvedTheme,

@@ -120,6 +120,7 @@ interface PresentationState {
   currentPresentationUpdatedAt: string | null;
   currentPresentationOwnerId: string | null;
   outputFormat: "flow" | "html";
+  editorMode: "flow" | "design";
   contentVersion: number;
   isGridView: boolean;
   isSheetOpen: boolean;
@@ -277,6 +278,7 @@ interface PresentationState {
   setCurrentPresentationOwnerId: (ownerId: string | null) => void;
   setCurrentPresentationUpdatedAt: (updatedAt: Date | string | null) => void;
   setOutputFormat: (outputFormat: "flow" | "html") => void;
+  setEditorMode: (editorMode: "flow" | "design") => void;
   setContentVersion: (version: number) => void;
   setIsGridView: (isGrid: boolean) => void;
   setIsSheetOpen: (isOpen: boolean) => void;
@@ -561,6 +563,7 @@ export const usePresentationState = create<PresentationState>()(
       currentPresentationUpdatedAt: null,
       currentPresentationOwnerId: null,
       outputFormat: "flow",
+      editorMode: "flow",
       contentVersion: 0,
       isGridView: true,
       isSheetOpen: false,
@@ -1087,6 +1090,10 @@ export const usePresentationState = create<PresentationState>()(
         set((state) =>
           state.outputFormat === outputFormat ? state : { outputFormat },
         ),
+      setEditorMode: (editorMode) =>
+        set((state) =>
+          state.editorMode === editorMode ? state : { editorMode },
+        ),
       setContentVersion: (contentVersion) => set({ contentVersion }),
       setIsGridView: (isGrid) => set({ isGridView: isGrid }),
       setIsSheetOpen: (isOpen) => set({ isSheetOpen: isOpen }),
@@ -1397,6 +1404,7 @@ export const usePresentationState = create<PresentationState>()(
           completedGenerationPresentationId: null,
           pendingCreateRequest: null,
           outputFormat: "flow",
+          editorMode: "flow",
 
           // Reset UI state
           activeRightPanel: null,
@@ -1462,6 +1470,7 @@ export const usePresentationState = create<PresentationState>()(
         customThemeData: state.customThemeData,
         themeDataByTheme: state.themeDataByTheme,
         generatedThemeData: state.generatedThemeData,
+        editorMode: state.editorMode,
         extractorRagIds: state.extractorRagIds,
         generationAspectRatio: state.generationAspectRatio,
         imageSearchResults: state.imageSearchResults,

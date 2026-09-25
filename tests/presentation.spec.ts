@@ -26,6 +26,15 @@ test.describe("Presentation Creation Flow", () => {
     const themeSelector = page.getByText(/select theme|choose theme/i);
     await expect(themeSelector.first()).toBeVisible();
   });
+
+  test("should show visible Flow editor mode indicator", async ({ page }) => {
+    await expect(page.getByText("Flow")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("should show separate Aspect Ratio control from Flow", async ({ page }) => {
+    const aspectRatioControl = page.getByText("Aspect Ratio");
+    await expect(aspectRatioControl).toBeVisible({ timeout: 10000 });
+  });
 });
 
 test.describe("Presentation Editor", () => {
