@@ -96,7 +96,7 @@ async function globalSetup() {
             },
           ]);
 
-          await page.goto("/presentation");
+  await page.goto("/presentation", { timeout: 120000 });
           await page.waitForURL((url) => url.href.includes("/presentation"), { timeout: 30000 });
           await page.waitForTimeout(2000);
           await context.storageState({ path: authFile });
@@ -112,34 +112,43 @@ async function globalSetup() {
     console.error("API auth error:", error);
   }
 
-  // Fallback: UI automation
-  await page.goto("/auth/signin");
+  // Fallback: use Clerk client-side API from the sign-in page
+  await page.goto("/sign-in");
   await page.waitForTimeout(3000);
 
-  try {
-    await page.getByPlaceholder(/email/i).fill(testEmail);
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForSelector('input[type="password"]', { timeout: 10000 });
-    await page.getByPlaceholder(/password/i).fill(testPassword);
-    await page.getByRole("button", { name: /continue/i }).click();
-    await page.waitForTimeout(2000);
+  // Wait for Clerk to be available
+  await page.waitForFunction(() => typeof window.Clerk !== "undefined", { timeout: 15000 });
 
-    if (page.url().includes("/client-trust")) {
-      console.log("On client-trust, forcing navigation");
-      await page.evaluate(() => {
-        window.location.href = "/presentation";
+  const signInResult = await page.evaluate(async ({ email, password }) => {
+    try {
+      const clerk = window.Clerk;
+      const result = await clerk.client.signIn.create({
+        identifier: email,
+        password: password,
       });
+      return { success: true, status: result.status, sessionId: result.createdSessionId };
+    } catch (error) {
+      return { success: false, error: error?.message ?? String(error) };
     }
+  }, { email: testEmail, password: testPassword });
 
+  console.log("Clerk client sign-in result:", JSON.stringify(signInResult));
+
+  if (signInResult.success && signInResult.status === "complete" && signInResult.sessionId) {
+    await page.evaluate(async (sessionId) => {
+      const clerk = window.Clerk;
+      await clerk.updateSession(() => sessionId);
+    }, signInResult.sessionId);
+
+    await page.waitForTimeout(2000);
     await page.waitForURL((url) => url.href.includes("/presentation"), { timeout: 30000 });
     await page.waitForTimeout(2000);
     await context.storageState({ path: authFile });
-  } catch (uiError) {
-    console.error("UI auth failed:", uiError);
-    throw uiError;
+    await browser.close();
+    return;
   }
 
-  await browser.close();
+  throw new Error(`Unable to complete authenticated Playwright setup. Last sign-in result: ${JSON.stringify(signInResult)}`);
 }
 
 export default globalSetup;
