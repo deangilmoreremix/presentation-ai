@@ -10,7 +10,7 @@ async function globalSetup() {
   const context = await browser.newContext({ baseURL: "http://localhost:3000" });
   const page = await context.newPage();
 
-  await page.goto("/presentation");
+  await page.goto("/presentation", { timeout: 120000 });
 
   // If the app is already authenticated, save state and exit.
   if (await page.locator("text=Sign out").isVisible({ timeout: 1000 }).catch(() => false)) {
@@ -38,117 +38,77 @@ async function globalSetup() {
     process.exit(1);
   }
 
-  // Use Clerk API to create session directly
-  const apiUrl = "https://api.clerk.com/v1/client/sign_in";
-  console.log("Attempting Clerk API sign-in:", apiUrl);
+  // Look up the test user and create a backend session directly.
+  // This avoids the Clerk dev-mode client-trust page entirely.
+  const userResponse = await fetch(
+    `https://api.clerk.com/v1/users?email_address=${encodeURIComponent(testEmail)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${clerkSecretKey}`,
+      },
+    }
+  );
 
-  try {
-    const signInResponse = await fetch(apiUrl, {
+  if (!userResponse.ok) {
+    throw new Error(`Failed to look up test user: ${userResponse.status}`);
+  }
+
+  const users = await userResponse.json();
+  const testUser = users[0];
+
+  if (!testUser?.id) {
+    throw new Error(`Test user not found for ${testEmail}`);
+  }
+
+  const sessionResponse = await fetch("https://api.clerk.com/v1/sessions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${clerkSecretKey}`,
+    },
+    body: JSON.stringify({ user_id: testUser.id }),
+  });
+
+  if (!sessionResponse.ok) {
+    throw new Error(`Failed to create session: ${sessionResponse.status}`);
+  }
+
+  const session = await sessionResponse.json();
+
+  const tokenResponse = await fetch(
+    `https://api.clerk.com/v1/sessions/${session.id}/tokens`,
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${clerkSecretKey}`,
       },
-      body: JSON.stringify({
-        identifier: testEmail,
-        password: testPassword,
-      }),
-    });
+    }
+  );
 
-    console.log("API response status:", signInResponse.status);
-    const responseText = await signInResponse.text();
-    console.log("API response body:", responseText);
+  if (!tokenResponse.ok) {
+    throw new Error(`Failed to create session token: ${tokenResponse.status}`);
+  }
 
-    if (signInResponse.ok) {
-      const signInData = JSON.parse(responseText);
-      console.log("Sign-in data status:", signInData.status);
+  const tokenData = await tokenResponse.json();
 
-      if (signInData.status === "complete" && signInData.created_session_id) {
-        // Get session token
-        const tokenResponse = await fetch(
-          `https://api.clerk.com/v1/client/sessions/${signInData.created_session_id}/tokens`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${clerkSecretKey}`,
-            },
-          }
-        );
-
-        console.log("Token API response status:", tokenResponse.status);
-        const tokenText = await tokenResponse.text();
-        console.log("Token API response body:", tokenText);
-
-        if (tokenResponse.ok) {
-          const tokenData = JSON.parse(tokenText);
-          console.log("Got session token");
-
-          // Set the session cookie
-          await context.addCookies([
-            {
-              name: "__session",
-              value: tokenData.jwt,
-              domain: "localhost",
-              path: "/",
-              httpOnly: true,
-              secure: false,
-              sameSite: "Lax",
-            },
-          ]);
+  await context.addCookies([
+    {
+      name: "__session",
+      value: tokenData.jwt,
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax",
+    },
+  ]);
 
   await page.goto("/presentation", { timeout: 120000 });
-          await page.waitForURL((url) => url.href.includes("/presentation"), { timeout: 30000 });
-          await page.waitForTimeout(2000);
-          await context.storageState({ path: authFile });
-          console.log("Successfully authenticated via API");
-          await browser.close();
-          return;
-        }
-      }
-    }
-
-    console.error("API auth failed, falling back to UI");
-  } catch (error) {
-    console.error("API auth error:", error);
-  }
-
-  // Fallback: use Clerk client-side API from the sign-in page
-  await page.goto("/sign-in");
-  await page.waitForTimeout(3000);
-
-  // Wait for Clerk to be available
-  await page.waitForFunction(() => typeof window.Clerk !== "undefined", { timeout: 15000 });
-
-  const signInResult = await page.evaluate(async ({ email, password }) => {
-    try {
-      const clerk = window.Clerk;
-      const result = await clerk.client.signIn.create({
-        identifier: email,
-        password: password,
-      });
-      return { success: true, status: result.status, sessionId: result.createdSessionId };
-    } catch (error) {
-      return { success: false, error: error?.message ?? String(error) };
-    }
-  }, { email: testEmail, password: testPassword });
-
-  console.log("Clerk client sign-in result:", JSON.stringify(signInResult));
-
-  if (signInResult.success && signInResult.status === "complete" && signInResult.sessionId) {
-    await page.evaluate(async (sessionId) => {
-      const clerk = window.Clerk;
-      await clerk.updateSession(() => sessionId);
-    }, signInResult.sessionId);
-
-    await page.waitForTimeout(2000);
-    await page.waitForURL((url) => url.href.includes("/presentation"), { timeout: 30000 });
-    await page.waitForTimeout(2000);
-    await context.storageState({ path: authFile });
-    await browser.close();
-    return;
-  }
-
-  throw new Error(`Unable to complete authenticated Playwright setup. Last sign-in result: ${JSON.stringify(signInResult)}`);
+  await page.waitForURL((url) => url.href.includes("/presentation"), { timeout: 30000 });
+  await page.waitForTimeout(2000);
+  await context.storageState({ path: authFile });
+  await browser.close();
 }
 
 export default globalSetup;
