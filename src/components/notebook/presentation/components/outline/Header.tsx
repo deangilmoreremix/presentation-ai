@@ -34,6 +34,7 @@ import {
   PRESENTATION_GENERATION_ASPECT_RATIO_OPTIONS,
   type PresentationGenerationAspectRatio,
 } from "@/lib/presentation/aspect-ratio";
+import { getPresentationEditorModeLabel } from "@/lib/presentation/editor-mode";
 import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";
 
@@ -79,6 +80,7 @@ export function Header({
     setWebSearchEnabled,
     generationAspectRatio,
     setGenerationAspectRatio,
+    editorMode,
     isGeneratingOutline: isGeneratingOutlineFromState,
     startOutlineGeneration,
     attachedFiles,
@@ -141,6 +143,9 @@ export function Header({
               {numSlides} slides
             </Badge>
             <Badge variant="secondary" className="font-normal">
+              {getPresentationEditorModeLabel(editorMode)}
+            </Badge>
+            <Badge variant="secondary" className="font-normal">
               {formatBadgeLabel}
             </Badge>
             <Badge variant="secondary" className="font-normal">
@@ -184,6 +189,9 @@ export function Header({
             <div className="flex flex-wrap gap-1.5 sm:hidden">
               <Badge variant="secondary" className="font-normal">
                 {numSlides} slides
+              </Badge>
+              <Badge variant="secondary" className="font-normal">
+                {editorMode}
               </Badge>
               <Badge variant="secondary" className="font-normal">
                 {formatBadgeLabel}

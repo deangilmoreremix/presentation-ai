@@ -44,6 +44,7 @@ type PresentationRow = {
   search_results: unknown;
   tool_calls: unknown;
   selected_chunks: unknown;
+  editor_mode: string | null;
 };
 
 type BaseDocumentWithPresentation = BaseDocumentRow & {
@@ -86,6 +87,7 @@ type CamelPresentation = {
   searchResults: unknown;
   toolCalls: unknown;
   selectedChunks: unknown;
+  editorMode: string | null;
 };
 
 function toCamelPresentation(row: PresentationRow): CamelPresentation {
@@ -102,6 +104,7 @@ function toCamelPresentation(row: PresentationRow): CamelPresentation {
     searchResults: row.search_results,
     toolCalls: row.tool_calls,
     selectedChunks: row.selected_chunks,
+    editorMode: row.editor_mode,
   };
 }
 
@@ -143,6 +146,7 @@ export async function createPresentation({
   presentationStyle,
   customization,
   language,
+  editorMode = "flow",
 }: {
   content: { slides: PlateSlide[] };
   title: string;
@@ -152,6 +156,7 @@ export async function createPresentation({
   presentationStyle?: string;
   customization?: PresentationCustomization;
   language?: string;
+  editorMode?: "flow" | "design";
 }) {
   const supabase = await createClient();
   if (!supabase) {
@@ -191,6 +196,7 @@ export async function createPresentation({
         customization: customization ?? null,
         language: language ?? null,
         outline: sanitizedOutline ?? null,
+        editor_mode: editorMode ?? null,
       })
       .select("*")
       .single();
@@ -216,11 +222,13 @@ export async function createEmptyPresentation({
   theme = "mystique",
   language = "en-US",
   customization,
+  editorMode = "flow",
 }: {
   title: string;
   theme?: string;
   language?: string;
   customization?: PresentationCustomization;
+  editorMode?: "flow" | "design";
 }) {
   return createPresentation({
     content: { slides: [] },
@@ -228,6 +236,7 @@ export async function createEmptyPresentation({
     theme,
     language,
     customization,
+    editorMode,
   });
 }
 
@@ -235,6 +244,7 @@ export async function createBlankPresentation(
   title: string,
   theme = "mystique",
   language = "en-US",
+  editorMode: "flow" | "design" = "flow",
 ) {
   const blankSlide: PlateSlide = {
     content: [{ type: "h1", children: [{ text: "" }] }],
@@ -246,6 +256,7 @@ export async function createBlankPresentation(
     title,
     theme,
     language,
+    editorMode,
   });
 }
 
@@ -258,11 +269,13 @@ export async function createPresentationFromTemplate({
   title,
   theme = "mystique",
   language = "en-US",
+  editorMode = "flow",
 }: {
   template: Omit<PlateSlide, "id">;
   title: string;
   theme?: string;
   language?: string;
+  editorMode?: "flow" | "design";
 }) {
   const slide: PlateSlide = {
     ...template,
@@ -274,6 +287,7 @@ export async function createPresentationFromTemplate({
     title,
     theme,
     language,
+    editorMode,
   });
 }
 
@@ -613,6 +627,7 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
         search_results: origPres.search_results,
         tool_calls: origPres.tool_calls,
         selected_chunks: origPres.selected_chunks,
+        editor_mode: origPres.editor_mode ?? "flow",
       })
       .select("*")
       .single();

@@ -120,9 +120,14 @@ interface PresentationState {
   currentPresentationUpdatedAt: string | null;
   currentPresentationOwnerId: string | null;
   outputFormat: "flow" | "html";
+  editorMode: "flow" | "design";
   contentVersion: number;
   isGridView: boolean;
   isSheetOpen: boolean;
+  brandingRemoved: boolean;
+  setBrandingRemoved: (removed: boolean) => void;
+  animationsEnabled: boolean;
+  setAnimationsEnabled: (enabled: boolean) => void;
   numSlides: number;
 
   theme: Themes | string;
@@ -196,6 +201,37 @@ interface PresentationState {
   // cannot be applied to a different deck that reuses the same generated slide id.
   rootImageGeneration: Record<string, PresentationImageGenerationJob>;
 
+  // Image generation history for multi-turn refinement
+  imageGenerationHistory: Record<string, any[]>;
+  setImageGenerationHistory: (key: string, entries: any[]) => void;
+  addImageGenerationHistoryEntry: (key: string, entry: any) => void;
+  clearImageGenerationHistory: (key: string) => void;
+
+  // Current image generation session
+  currentImageGenerationSession: any | null;
+  setCurrentImageGenerationSession: (session: any | null) => void;
+
+  // Image generation A/B testing
+  imageABTests: any[];
+  setImageABTests: (tests: any[]) => void;
+  addImageABTest: (test: any) => void;
+
+  // Streaming state
+  isStreamingImage: boolean;
+  setIsStreamingImage: (streaming: boolean) => void;
+  imageStreamProgress: number;
+  setImageStreamProgress: (progress: number) => void;
+
+  // Mask editor state
+  imageMaskData: any | null;
+  setImageMaskData: (mask: any | null) => void;
+
+  // Reference images for edits
+  imageReferenceImages: any[];
+  setImageReferenceImages: (images: any[]) => void;
+  addImageReferenceImage: (image: any) => void;
+  removeImageReferenceImage: (id: string) => void;
+
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (update: boolean) => void;
   isRightPanelCollapsed: boolean;
@@ -242,6 +278,7 @@ interface PresentationState {
   setCurrentPresentationOwnerId: (ownerId: string | null) => void;
   setCurrentPresentationUpdatedAt: (updatedAt: Date | string | null) => void;
   setOutputFormat: (outputFormat: "flow" | "html") => void;
+  setEditorMode: (editorMode: "flow" | "design") => void;
   setContentVersion: (version: number) => void;
   setIsGridView: (isGrid: boolean) => void;
   setIsSheetOpen: (isOpen: boolean) => void;
@@ -526,9 +563,12 @@ export const usePresentationState = create<PresentationState>()(
       currentPresentationUpdatedAt: null,
       currentPresentationOwnerId: null,
       outputFormat: "flow",
+      editorMode: "flow",
       contentVersion: 0,
       isGridView: true,
       isSheetOpen: false,
+      brandingRemoved: false,
+      animationsEnabled: false,
       shouldShowExitHeader: false,
       setShouldShowExitHeader: (update) =>
         set({ shouldShowExitHeader: update }),
@@ -561,6 +601,13 @@ export const usePresentationState = create<PresentationState>()(
       scenario: "auto",
       slides: [], // Now holds the new slide object structure
       rootImageGeneration: {},
+      imageGenerationHistory: {},
+      currentImageGenerationSession: null,
+      imageABTests: [],
+      isStreamingImage: false,
+      imageStreamProgress: 0,
+      imageMaskData: null,
+      imageReferenceImages: [],
       savingStatus: "idle",
       isPresenting: false,
       isPresentingLoading: false,
@@ -1043,9 +1090,15 @@ export const usePresentationState = create<PresentationState>()(
         set((state) =>
           state.outputFormat === outputFormat ? state : { outputFormat },
         ),
+      setEditorMode: (editorMode) =>
+        set((state) =>
+          state.editorMode === editorMode ? state : { editorMode },
+        ),
       setContentVersion: (contentVersion) => set({ contentVersion }),
       setIsGridView: (isGrid) => set({ isGridView: isGrid }),
       setIsSheetOpen: (isOpen) => set({ isSheetOpen: isOpen }),
+      setBrandingRemoved: (removed) => set({ brandingRemoved: removed }),
+      setAnimationsEnabled: (enabled) => set({ animationsEnabled: enabled }),
       setNumSlides: (num) => set({ numSlides: num }),
       setLanguage: (lang) => set({ language: lang }),
       setModelProvider: (provider) => set({ modelProvider: provider }),
@@ -1095,6 +1148,41 @@ export const usePresentationState = create<PresentationState>()(
       setImageSource: (source) => set({ imageSource: source }),
       setStockImageProvider: (provider) =>
         set({ stockImageProvider: provider }),
+      setImageGenerationHistory: (key, entries) =>
+        set((state) => ({
+          imageGenerationHistory: { ...state.imageGenerationHistory, [key]: entries },
+        })),
+      addImageGenerationHistoryEntry: (key, entry) =>
+        set((state) => ({
+          imageGenerationHistory: {
+            ...state.imageGenerationHistory,
+            [key]: [...(state.imageGenerationHistory[key] || []), entry],
+          },
+        })),
+      clearImageGenerationHistory: (key) =>
+        set((state) => {
+          const { [key]: _removed, ...rest } = state.imageGenerationHistory;
+          return { imageGenerationHistory: rest } as Partial<PresentationState>;
+        }),
+      setCurrentImageGenerationSession: (session) =>
+        set({ currentImageGenerationSession: session }),
+      setImageABTests: (tests) => set({ imageABTests: tests }),
+      addImageABTest: (test) =>
+        set((state) => ({
+          imageABTests: [...state.imageABTests, test],
+        })),
+      setIsStreamingImage: (streaming) => set({ isStreamingImage: streaming }),
+      setImageStreamProgress: (progress) => set({ imageStreamProgress: progress }),
+      setImageMaskData: (mask) => set({ imageMaskData: mask }),
+      setImageReferenceImages: (images) => set({ imageReferenceImages: images }),
+      addImageReferenceImage: (image) =>
+        set((state) => ({
+          imageReferenceImages: [...state.imageReferenceImages, image],
+        })),
+      removeImageReferenceImage: (id) =>
+        set((state) => ({
+          imageReferenceImages: state.imageReferenceImages.filter((img) => img.id !== id),
+        })),
       setPresentationStyle: (style) => set({ presentationStyle: style }),
       setGenerationAspectRatio: (generationAspectRatio) =>
         set({ generationAspectRatio }),
@@ -1316,6 +1404,7 @@ export const usePresentationState = create<PresentationState>()(
           completedGenerationPresentationId: null,
           pendingCreateRequest: null,
           outputFormat: "flow",
+          editorMode: "flow",
 
           // Reset UI state
           activeRightPanel: null,
@@ -1381,6 +1470,7 @@ export const usePresentationState = create<PresentationState>()(
         customThemeData: state.customThemeData,
         themeDataByTheme: state.themeDataByTheme,
         generatedThemeData: state.generatedThemeData,
+        editorMode: state.editorMode,
         extractorRagIds: state.extractorRagIds,
         generationAspectRatio: state.generationAspectRatio,
         imageSearchResults: state.imageSearchResults,

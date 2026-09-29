@@ -16,8 +16,10 @@ import { ShareButton } from "@/components/presentation/buttons/ShareButton";
 import { SaveStatus } from "@/components/presentation/buttons/SaveStatus";
 import { PresentationMenu } from "@/components/presentation/controls/PresentationMenu";
 import { PresentationSavingIndicator } from "@/components/presentation/core/PresentationSavingIndicator";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Brain } from "@/components/ui/icons";
+import { formatPresentationEditorMode } from "@/lib/presentation/editor-mode";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@clerk/nextjs";
 import { usePresentationState } from "@/states/presentation-state";
@@ -39,6 +41,7 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
   const setActiveRightPanel = usePresentationState(
     (s) => s.setActiveRightPanel,
   );
+  const editorMode = usePresentationState((s) => s.editorMode);
 
   const { user, isLoaded } = useUser();
 
@@ -63,7 +66,8 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
   }, [searchParams]);
 
   const isLoggedOut = isLoaded && !user;
-  const showBrand = isLoggedOut;
+  const brandingRemoved = usePresentationState((s) => s.brandingRemoved);
+  const showBrand = isLoggedOut && !brandingRemoved;
 
   // Update title when it changes in the state
   useEffect(() => {
@@ -89,15 +93,17 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
             </Button>
           </Link>
 
-          <motion.div
-            initial={false}
-            layout="position"
-            transition={{ duration: 1 }}
-          >
-            <Link href="/" className="h-max">
-              <SmartPresentationsLogo className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></SmartPresentationsLogo>
-            </Link>
-          </motion.div>
+          {!brandingRemoved && (
+            <motion.div
+              initial={false}
+              layout="position"
+              transition={{ duration: 1 }}
+            >
+              <Link href="/" className="h-max">
+                <SmartPresentationsLogo className="h-10 w-30 cursor-pointer transition-transform duration-100 active:scale-95"></SmartPresentationsLogo>
+              </Link>
+            </motion.div>
+          )}
         </div>
 
         {/* <SideBarDropdown /> */}
@@ -131,36 +137,43 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
             {presentationTitle}
           </span>
         ) : !isLoggedOut && showPresentationTitle ? (
-          <Input
-            type="text"
-            id="presentation-title-input"
-            value={presentationTitle}
-            onChange={(e) => setPresentationTitle(e.target.value)}
-            disabled={isReadOnly}
-            onBlur={async () => {
-              if (isReadOnly) {
-                return;
-              }
-              if (
-                presentationTitle &&
-                currentPresentationTitle !== presentationTitle &&
-                currentPresentationId
-              ) {
-                try {
-                  await updatePresentationTitle(
-                    currentPresentationId,
-                    presentationTitle,
-                  );
-                } catch {
-                  setPresentationTitle(currentPresentationTitle || "");
+          <>
+            <Input
+              type="text"
+              id="presentation-title-input"
+              value={presentationTitle}
+              onChange={(e) => setPresentationTitle(e.target.value)}
+              disabled={isReadOnly}
+              onBlur={async () => {
+                if (isReadOnly) {
+                  return;
                 }
-              }
-            }}
-            className="line-clamp-1 h-auto min-w-0 flex-1 cursor-text rounded-xs border-none bg-transparent p-0 font-medium text-ellipsis shadow-none outline-none sm:max-w-96"
-            style={{
-              appearance: "none",
-            }}
-          />
+                if (
+                  presentationTitle &&
+                  currentPresentationTitle !== presentationTitle &&
+                  currentPresentationId
+                ) {
+                  try {
+                    await updatePresentationTitle(
+                      currentPresentationId,
+                      presentationTitle,
+                    );
+                  } catch {
+                    setPresentationTitle(currentPresentationTitle || "");
+                  }
+                }
+              }}
+              className="line-clamp-1 h-auto min-w-0 flex-1 cursor-text rounded-xs border-none bg-transparent p-0 font-medium text-ellipsis shadow-none outline-none sm:max-w-96"
+              style={{
+                appearance: "none",
+              }}
+            />
+            {!isPresenting && (
+              <Badge variant="secondary" className="shrink-0 font-normal">
+                {formatPresentationEditorMode(editorMode)}
+              </Badge>
+            )}
+          </>
         ) : null}
       </div>
 
@@ -169,6 +182,9 @@ export default function PresentationHeader({ title }: PresentationHeaderProps) {
           <span className="line-clamp-1 text-lg font-medium text-foreground">
             {presentationTitle}
           </span>
+          <Badge variant="secondary" className="ml-2 inline-flex font-normal">
+            {formatPresentationEditorMode(editorMode)}
+          </Badge>
         </div>
       ) : null}
 

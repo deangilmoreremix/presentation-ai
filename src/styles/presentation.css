@@ -49,3 +49,25 @@
 [data-theme="dark"] [data-is-presenting="true"] {
   backdrop-filter: brightness(1.1);
 }
+
+/* Animations (enabled via PremiumFeaturesSection → presentation state) */
+.presentation-animate > * {
+  animation: slideFadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.presentation-animate > *:nth-child(1) { animation-delay: 0ms; }
+.presentation-animate > *:nth-child(2) { animation-delay: 80ms; }
+.presentation-animate > *:nth-child(3) { animation-delay: 160ms; }
+.presentation-animate > *:nth-child(4) { animation-delay: 240ms; }
+.presentation-animate > *:nth-child(5) { animation-delay: 320ms; }
+
+@keyframes slideFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

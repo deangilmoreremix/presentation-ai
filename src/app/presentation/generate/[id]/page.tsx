@@ -79,6 +79,7 @@ export default function PresentationGenerateWithIdPage() {
     setScenario,
     setSelectedChunks,
     setPendingCreateRequest,
+    setEditorMode,
     outline,
     currentPresentationId,
   } = usePresentationState();
@@ -240,6 +241,13 @@ export default function PresentationGenerateWithIdPage() {
         setLanguage(presentationData.presentation.language);
       }
 
+      // Hydrate editor mode from persisted presentation metadata.
+      // Legacy decks without editor_mode default to flow.
+      const persistedEditorMode =
+        ((presentationData.presentation as unknown as { editorMode?: string })
+          ?.editorMode ?? "flow") as "flow" | "design";
+      setEditorMode(persistedEditorMode);
+
       if (customization?.pageBackground) {
         const { setPageBackground } = usePresentationState.getState();
         const next = applyPageBackgroundToConfig(
@@ -268,6 +276,7 @@ export default function PresentationGenerateWithIdPage() {
     setScenario,
     setSelectedChunks,
     resolvedTheme,
+    setEditorMode,
   ]);
 
   async function persistCurrentGenerationSettings() {

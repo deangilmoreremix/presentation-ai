@@ -5,13 +5,13 @@ import { UTFile } from "uploadthing/server";
 import { utapi } from "@/app/api/uploadthing/lib";
 import {
   DEFAULT_IMAGE_MODEL,
-  OPENAI_IMAGE_MODEL,
   OPENAI_RESPONSES_MODEL,
   type ImageModelList,
 } from "@/constants/image-models";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { logger } from "@/lib/observability/server/logger";
 import { createClient, getClerkUserId } from "@/lib/supabase/server";
+import { type ImageBackground, type ImageGenerationMode, type ImageQuality, type OutputFormat } from "@/lib/image/types";
 
 type GenerateInfographicImageActionInput = {
   illustrationStyle?: string;
@@ -19,6 +19,18 @@ type GenerateInfographicImageActionInput = {
   model?: ImageModelList;
   prompt: string;
   apiKey?: string;
+  size?: string;
+  quality?: ImageQuality;
+  outputFormat?: OutputFormat;
+  outputCompression?: number;
+  background?: ImageBackground;
+  mode?: ImageGenerationMode;
+  previousResponseId?: string;
+  inputFidelity?: "high" | "low";
+  moderation?: "low" | "auto";
+  userId?: string;
+  referenceImages?: Array<{ url: string; role?: string }>;
+  mask?: { url?: string; base64?: string; x?: number; y?: number; width?: number; height?: number };
 };
 
 function buildInfographicPrompt({
@@ -57,6 +69,18 @@ export async function generateInfographicImageAction({
   model = DEFAULT_IMAGE_MODEL,
   prompt,
   apiKey,
+  size = "1536x1024",
+  quality = "high",
+  outputFormat = "png",
+  outputCompression,
+  background = "opaque",
+  mode = "generate",
+  previousResponseId,
+  inputFidelity,
+  moderation,
+  userId,
+  referenceImages,
+  mask,
 }: GenerateInfographicImageActionInput) {
   const trimmedPrompt = prompt.trim();
   const actionName = "apps.image-studio.generateInfographicImageAction";
@@ -82,7 +106,7 @@ export async function generateInfographicImageAction({
   });
 
   try {
-    const actualModel = DEFAULT_IMAGE_MODEL;
+    const actualModel = model || DEFAULT_IMAGE_MODEL;
 
     span.annotate({
       "smart.server.image_generation.authorized": true,
@@ -96,17 +120,40 @@ export async function generateInfographicImageAction({
 
     const openai = await getOpenAIClient(apiKey);
 
+    const tool: Record<string, unknown> = {
+      type: "image_generation",
+      model: actualModel.replace("openai/", ""),
+      size,
+      quality,
+      output_format: outputFormat,
+      background,
+      action: mode === "generate" ? "auto" : mode,
+    };
+
+    if (outputCompression !== undefined) tool.output_compression = outputCompression;
+    if (previousResponseId) tool.previous_response_id = previousResponseId;
+    if (inputFidelity) tool.input_fidelity = inputFidelity;
+    if (referenceImages && referenceImages.length > 0) {
+      tool.input_image = referenceImages.map((ref) => ({
+        type: "input_image",
+        image_url: ref.url,
+        role: ref.role || "other",
+      }));
+    }
+    if (mask) {
+      tool.mask = mask.url || mask.base64;
+      if (mask.x !== undefined) tool.mask_x = mask.x;
+      if (mask.y !== undefined) tool.mask_y = mask.y;
+      if (mask.width !== undefined) tool.mask_width = mask.width;
+      if (mask.height !== undefined) tool.mask_height = mask.height;
+    }
+
     const response = await openai.responses.create({
       model: OPENAI_RESPONSES_MODEL,
       input: `Draw the following infographic image:\n${fullPrompt}`,
-      tools: [
-        {
-          type: "image_generation",
-          model: actualModel.replace("openai/", ""),
-          size: "1536x1024",
-          background: "opaque",
-        },
-      ],
+      tools: [tool as any],
+      ...(moderation ? { moderation } : {}),
+      ...(userId ? { user: userId } : {}),
     });
 
     const imageCalls = response.output.filter(
@@ -129,37 +176,31 @@ export async function generateInfographicImageAction({
     const permanentUrl = uploadResult[0]?.data?.ufsUrl;
 
     if (!permanentUrl) {
-      throw new Error("Failed to upload generated infographic");
+      throw new Error("Failed to upload infographic image");
     }
-
-    span.event("smart.server.image_generation.upload_completed", {
-      "smart.server.image_generation.uploaded": true,
-    });
 
     const supabase = await createClient();
     if (!supabase) {
       throw new Error("Supabase is not configured");
     }
 
-    const { data: generatedImage, error: insErr } = await supabase
+    const { data, error } = await supabase
       .from("generated_images")
       .insert({
         url: permanentUrl,
         prompt: fullPrompt,
         user_id: await getClerkUserId(),
       })
-      .select("id, prompt, url")
+      .select("*")
       .single();
 
-    if (insErr) throw insErr;
+    if (error) throw error;
 
-    span.event("smart.server.image_generation.completed", {
-      "smart.server.image_generation.generated_image.id": generatedImage?.id,
-    });
-
-    return { success: true, image: generatedImage };
+    span.end();
+    return { success: true, image: data, responseId: response.id };
   } catch (error) {
-    span.error(error);
+    console.error("Error generating infographic:", error);
+    span.end();
     return {
       success: false,
       error:
@@ -167,7 +208,5 @@ export async function generateInfographicImageAction({
           ? error.message
           : "Failed to generate infographic",
     };
-  } finally {
-    span.end();
   }
 }

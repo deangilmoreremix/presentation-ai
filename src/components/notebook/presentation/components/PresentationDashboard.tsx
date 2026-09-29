@@ -76,7 +76,9 @@ import { motion } from "motion/react";
 
 import { useTipRegistry } from "@/components/onboarding/TipProvider";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatPresentationEditorMode } from "@/lib/presentation/editor-mode";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Credenza,
@@ -1500,7 +1502,8 @@ export function PresentationDashboard() {
     setWebSearchEnabled,
     autoThemeEnabled,
     setAutoThemeEnabled,
-    setOutputFormat,
+    editorMode,
+    setEditorMode,
     setCurrentPresentation,
     setIsGeneratingOutline,
     setTheme,
@@ -1530,8 +1533,8 @@ export function PresentationDashboard() {
   } = usePresentationState();
 
   useEffect(() => {
-    setOutputFormat("flow");
-  }, [setOutputFormat]);
+    setEditorMode("flow");
+  }, [setEditorMode]);
 
   const { showTip } = useTipRegistry();
   const firstCreationRef = useRef(false);
@@ -1874,7 +1877,7 @@ export function PresentationDashboard() {
   const slidesLabel =
     SLIDE_OPTIONS.find((option) => option.value === String(numSlides))?.label ??
     `${numSlides} slides`;
-  const outputFormatLabel =
+  const aspectRatioLabel =
     getPresentationGenerationAspectRatioLabel(generationAspectRatio);
   const selectedToneLabel =
     TONE_OPTIONS.find((option) => option.value === tone)?.label ?? "Auto";
@@ -1917,7 +1920,7 @@ export function PresentationDashboard() {
     const initialTheme = resolvedTheme === "dark" ? "ebony" : "mystique";
     const title = prompt.substring(0, 50) || "Untitled Presentation";
 
-    setOutputFormat("flow");
+    setEditorMode("flow");
     setIsGeneratingOutline(true);
     setTheme(initialTheme);
 
@@ -2017,8 +2020,8 @@ export function PresentationDashboard() {
             </DropdownMenuRadioGroup>
           </SettingPill>
 
-          <SettingPill icon={LayoutTemplate} label={outputFormatLabel}>
-            <DropdownMenuLabel>Format</DropdownMenuLabel>
+          <SettingPill icon={LayoutTemplate} label={aspectRatioLabel}>
+            <DropdownMenuLabel>Aspect Ratio</DropdownMenuLabel>
             <DropdownMenuRadioGroup
               value={generationAspectRatio}
               onValueChange={(value) =>
@@ -2033,6 +2036,28 @@ export function PresentationDashboard() {
               <DropdownMenuRadioItem value="16:9">16:9</DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </SettingPill>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-8 max-w-full items-center gap-2 rounded-full border border-border bg-background px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-accent sm:h-9 sm:px-3.5 sm:text-sm"
+              >
+                <PanelsTopLeft className="size-3.5 shrink-0 sm:size-4" />
+                <span className="truncate">{formatPresentationEditorMode(editorMode)}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 max-w-[calc(100vw-1rem)] p-2">
+              <DropdownMenuLabel>{formatPresentationEditorMode(editorMode)}</DropdownMenuLabel>
+              <DropdownMenuLabel className="font-normal text-muted-foreground">
+                Structured, layout-aware slides
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="font-normal text-muted-foreground">
+                Content follows the presentation structure while still supporting flexible editing.
+              </DropdownMenuLabel>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <SettingPill icon={Languages} label={selectedLanguageLabel}>
             <DropdownMenuLabel>Language</DropdownMenuLabel>

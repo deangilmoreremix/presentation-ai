@@ -62,6 +62,7 @@ export function SlideWrapper({
   const aspectRatio =
     currentSlide?.aspectRatio ?? DEFAULT_PRESENTATION_SLIDE_ASPECT_RATIO;
   const zoomLevel = usePresentationState((s) => s.zoomLevel);
+  const animationsEnabled = usePresentationState((s) => s.animationsEnabled);
 
   // Get theme data for computing overlay background (same as ThemeBackground)
   const presentationTheme = usePresentationState((s) => s.theme);
@@ -258,6 +259,7 @@ export function SlideWrapper({
             className={cn(
               "relative origin-[top_left]",
               isPresenting && getPresentModeSlideClasses(formatCategory),
+              isPresenting && animationsEnabled && "presentation-animate",
               className,
             )}
             style={{

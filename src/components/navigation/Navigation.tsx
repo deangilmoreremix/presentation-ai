@@ -6,8 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Settings, Image as ImageIcon, Presentation, Plus, Hash, Play, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
-import { UserButton } from "@clerk/react";
+import { SignInButton, SignUpButton, useUser, UserButton } from "@clerk/nextjs";
 import { KeyboardShortcutsModal } from "@/components/onboarding/KeyboardShortcutsModal";
 import { ProgressiveTip } from "@/components/onboarding/ProgressiveTip";
 

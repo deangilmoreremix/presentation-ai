@@ -9,7 +9,7 @@ export function useBlankPresentationCreator() {
   const router = useRouter();
   const { resolvedTheme } = useAppTheme();
   const [isCreating, setIsCreating] = useState(false);
-  const { language, setCurrentPresentation, setTheme } = usePresentationState();
+  const { language, setCurrentPresentation, setTheme, setEditorMode } = usePresentationState();
 
   const createBlank = useCallback(async () => {
     if (isCreating) return;
@@ -26,6 +26,7 @@ export function useBlankPresentationCreator() {
 
       if (result.success && result.presentation) {
         setTheme(theme);
+        setEditorMode("flow");
         setCurrentPresentation(
           result.presentation.id,
           result.presentation.title,
@@ -47,6 +48,7 @@ export function useBlankPresentationCreator() {
     router,
     setCurrentPresentation,
     setTheme,
+    setEditorMode,
   ]);
 
   return {

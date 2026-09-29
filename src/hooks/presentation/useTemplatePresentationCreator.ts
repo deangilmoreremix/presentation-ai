@@ -13,7 +13,7 @@ export function useTemplatePresentationCreator() {
   const router = useRouter();
   const { resolvedTheme } = useAppTheme();
   const [isCreating, setIsCreating] = useState(false);
-  const { language, setCurrentPresentation, setTheme } = usePresentationState();
+  const { language, setCurrentPresentation, setTheme, setEditorMode } = usePresentationState();
 
   const createFromTemplate = useCallback(
     async (template: TemplateDefinition) => {
@@ -32,6 +32,7 @@ export function useTemplatePresentationCreator() {
 
         if (result.success && result.presentation) {
           setTheme(theme);
+          setEditorMode("flow");
           setCurrentPresentation(
             result.presentation.id,
             result.presentation.title,
@@ -54,6 +55,7 @@ export function useTemplatePresentationCreator() {
       router,
       setCurrentPresentation,
       setTheme,
+      setEditorMode,
     ],
   );
 

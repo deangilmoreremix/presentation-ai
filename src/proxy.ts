@@ -8,11 +8,13 @@ import { rateLimit } from "@/lib/rate-limit";
  */
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
   "/auth/signin(.*)",
   "/auth/signout(.*)",
   "/api/health(.*)",
   "/api/webhooks/clerk(.*)",
-  "/api/webhooks/stripe(.*)",
+  "/api/test/image-search-providers(.*)",
 ]);
 
 /**
@@ -36,8 +38,6 @@ const RATE_LIMITS: Record<string, { windowMs: number; maxRequests: number }> = {
   "/api/user/api-key": { windowMs: 60 * 1000, maxRequests: 15 },
   "/api/uploadthing(.*)": { windowMs: 60 * 1000, maxRequests: 10 },
   "/api/webhooks/clerk": { windowMs: 60 * 1000, maxRequests: 20 },
-  "/api/webhooks/stripe": { windowMs: 60 * 1000, maxRequests: 60 },
-  "/api/billing/checkout": { windowMs: 60 * 1000, maxRequests: 10 },
 };
 
 const DEFAULT_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 30 };
@@ -54,11 +54,12 @@ function getRateLimitConfig(pathname: string): { windowMs: number; maxRequests: 
 function buildContentSecurityPolicy(): string {
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev blob:",
+    "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.ufs.sh https://images.unsplash.com https://*.supabase.co https://media.giphy.com https://i.giphy.com https://images.pexels.com https://cdn.pixabay.com",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.clerk.com https://*.clerk.accounts.dev https://api.unsplash.com https://www.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://api.giphy.com https://api.pexels.com https://cdn.pixabay.com",
+    "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.clerk.com https://*.clerk.accounts.dev https://clerk-telemetry.com https://api.unsplash.com https://www.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://api.giphy.com https://api.pexels.com https://cdn.pixabay.com",
     "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://www.loom.com https://www.figma.com https://www.google.com https://codepen.io",
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -90,7 +91,6 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
 export default clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
-  // Enforce authentication for protected routes
   if (!isPublicRoute(request)) {
     const session = await auth();
     if (!session.userId) {
@@ -135,5 +135,6 @@ export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
+    "/__clerk/:path*",
   ],
 };

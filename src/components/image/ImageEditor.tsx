@@ -27,13 +27,13 @@ import {
 } from "@/lib/image/types";
 
 // Image models
-const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2", "dall-e-2"];
+const IMAGE_MODELS: ImageModel[] = ["gpt-image-2.5-sunburst", "gpt-image-2.5-flare", "gpt-image-2.5", "gpt-image-1", "gpt-image-1-mini", "gpt-image-1.5", "gpt-image-2", "dall-e-2"];
 
 // Sizes
-const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "auto"];
+const IMAGE_SIZES: GptImageSize[] = ["1024x1024", "1536x1024", "1024x1536", "2048x2048", "2048x1152", "3840x2160", "2160x3840", "auto"];
 
 // Qualities
-const IMAGE_QUALITIES: ImageQuality[] = ["low", "medium", "high", "auto"];
+const IMAGE_QUALITIES: ImageQuality[] = ["auto", "low", "medium", "high", "xhigh", "max"];
 
 // Formats
 const OUTPUT_FORMATS: OutputFormat[] = ["png", "jpeg", "webp"];

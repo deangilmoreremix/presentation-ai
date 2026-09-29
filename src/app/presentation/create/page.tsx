@@ -37,6 +37,7 @@ export default function Page() {
     startOutlineGeneration,
     setWebSearchEnabled,
     setTheme: setPresentationTheme,
+    setEditorMode,
   } = usePresentationState();
 
   // Direct generation function
@@ -44,6 +45,7 @@ export default function Page() {
     try {
       setIsGeneratingOutline(true);
       setPresentationTheme(createTheme);
+      setEditorMode("flow");
 
       // Create empty presentation
       const result = await createEmptyPresentation({
