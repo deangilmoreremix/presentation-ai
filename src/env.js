@@ -3,10 +3,10 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    // Clerk (server-side). Optional so local dev with Clerk "keyless" mode
-    // and CI can build without secrets; set these in production to avoid
-    // runtime "Missing publishableKey/secretKey" errors.
-    CLERK_SECRET_KEY: z.string().optional(),
+    // Clerk (server-side). Required: `proxy.ts` runs clerkMiddleware on every
+    // route and server code calls auth(), so a missing key is a hard failure.
+    // Validate at build/start rather than letting Clerk throw at runtime.
+    CLERK_SECRET_KEY: z.string().min(1),
     CLERK_WEBHOOK_SECRET: z.string().optional(),
 
     // Server-only Supabase secret
@@ -42,7 +42,7 @@ export const env = createEnv({
 
   client: {
     // NEXT_PUBLIC_* vars must live in the client schema for @t3-oss/env-nextjs.
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional(),
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
     NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
@@ -72,6 +72,9 @@ export const env = createEnv({
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
   },
 
-  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  // Only an explicit truthy value skips validation. Using `!!value` here meant
+  // `SKIP_ENV_VALIDATION=false` (as shipped in .env.example) silently disabled
+  // every check, hiding missing required vars such as the Clerk keys.
+  skipValidation: /^(1|true)$/i.test(process.env.SKIP_ENV_VALIDATION ?? ""),
   emptyStringAsUndefined: true,
 });

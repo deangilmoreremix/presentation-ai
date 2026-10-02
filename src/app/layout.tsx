@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
+import { env } from "@/env";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import { TipProvider } from "@/components/onboarding/TipProvider";
@@ -25,7 +26,10 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ClerkProvider appearance={{ theme: shadcn }}>
+        <ClerkProvider
+          publishableKey={env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+          appearance={{ theme: shadcn }}
+        >
           <TanStackQueryProvider>
             <ThemeProvider>
               <TipProvider>
