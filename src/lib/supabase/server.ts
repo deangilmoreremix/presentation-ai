@@ -3,6 +3,7 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 /**
  * Server-side Supabase client using cookie-based auth.
@@ -92,8 +93,51 @@ export const ANONYMOUS_USER_ID = "00000000-0000-0000-0000-000000000000";
 
 export async function getClerkUserId(): Promise<string> {
   const { userId } = await auth();
-  return userId ?? ANONYMOUS_USER_ID;
+  if (userId) {
+    await ensureUserProvisioned(userId);
+    return userId;
+  }
+  return ANONYMOUS_USER_ID;
 }
+
+/**
+ * Ensures a `users` row exists for a signed-in Clerk user before any write that
+ * carries `user_id`.
+ *
+ * Every identity column in this schema has a foreign key to `users(clerk_id)`,
+ * so a signed-in user without a row cannot create a presentation, a theme, or a
+ * favourite. The Clerk webhook normally creates that row, but webhooks are
+ * asynchronous (and absent in local development), so the first request after
+ * sign-in would otherwise fail on the foreign key.
+ *
+ * This intentionally writes only `clerk_id` and `updated_at`: profile fields
+ * (email, name, image) are owned by the Clerk webhook, and a profile-less
+ * upsert would otherwise blank them out on every request.
+ *
+ * `cache` collapses repeated calls into a single upsert per request. A failure
+ * is logged rather than thrown so identity resolution still degrades to the
+ * previous behaviour instead of breaking the whole request.
+ */
+export const ensureUserProvisioned = cache(
+  async (clerkUserId: string): Promise<void> => {
+    const supabase = await createClient();
+    if (!supabase) {
+      return;
+    }
+
+    const { error } = await supabase.from("users").upsert(
+      {
+        clerk_id: clerkUserId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "clerk_id" },
+    );
+
+    if (error) {
+      console.error("Failed to provision Clerk user:", error);
+    }
+  },
+);
 
 export async function getCurrentUser(): Promise<CurrentUser> {
   const _supabase = await createClient();
@@ -108,6 +152,10 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       isAdmin: false,
     };
   }
+
+  // Callers pass `user.id` straight into `user_id` columns, so the row that
+  // those foreign keys point at has to exist first.
+  await ensureUserProvisioned(userId);
 
   // Prefer Clerk publicMetadata as the source of truth for authz.
   let clerkPublicMetadata: Record<string, unknown> = {};

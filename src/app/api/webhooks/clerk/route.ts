@@ -76,19 +76,19 @@ async function handleClerkWebhook(event: ClerkWebhookEvent) {
 
     await supabase.from("users").upsert(
       {
-        id: data.id,
+        clerk_id: data.id,
         email,
         name: fullName,
         image: data.image_url,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "id" },
+      { onConflict: "clerk_id" },
     );
     return;
   }
 
   if (type === "user.deleted") {
-    await supabase.from("users").delete().eq("id", data.id);
+    await supabase.from("users").delete().eq("clerk_id", data.id);
     return;
   }
 }

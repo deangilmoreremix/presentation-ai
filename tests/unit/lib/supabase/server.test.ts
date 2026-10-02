@@ -34,6 +34,9 @@ function createMockSupabaseClient(
           maybeSingle: vi.fn().mockResolvedValue({ data: dbUser }),
         }),
       }),
+      // `getCurrentUser` provisions a `users` row keyed by Clerk id before
+      // returning, so the mock has to answer the upsert too.
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
     }),
   };
 }
@@ -112,6 +115,27 @@ describe("getCurrentUser", () => {
     expect(result.role).toBe("USER");
     expect(result.hasAccess).toBe(false);
     expect(result.isAdmin).toBe(false);
+  });
+
+  it("provisions a users row keyed by the Clerk id", async () => {
+    setupEnv();
+    const mockSupabase = createMockSupabaseClient(null);
+    vi.mocked(createServerClient).mockReturnValue(mockSupabase as any);
+    vi.mocked(cookies).mockReturnValue({
+      getAll: vi.fn(),
+      setAll: vi.fn(),
+    } as any);
+    vi.mocked(auth).mockResolvedValue({ userId: "clerk-user-id", sessionId: "s1" } as any);
+    vi.mocked(currentUser).mockResolvedValue(null as any);
+
+    await getCurrentUser();
+
+    expect(mockSupabase.from).toHaveBeenCalledWith("users");
+    const upsertMock = vi.mocked(mockSupabase.from("users").upsert as any);
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ clerk_id: "clerk-user-id" }),
+      { onConflict: "clerk_id" },
+    );
   });
 
   it("falls back to anonymous when supabase client is unavailable", async () => {
