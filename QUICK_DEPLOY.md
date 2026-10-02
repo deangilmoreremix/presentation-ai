@@ -4,7 +4,7 @@
 
 **Project ID:** Use your own Supabase project ID  
 **Database URL:** Configure in Netlify environment variables  
-**Anon Key:** Configure `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Netlify
+**Anon Key:** Configure `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Netlify
 
 ---
 
@@ -17,7 +17,7 @@
 3. Connect your GitHub repository
 4. Configure build settings:
    - **Build command:** `pnpm build`
-   - **Publish directory:** `.next/standalone`
+   - **Publish directory:** leave empty (see `netlify.toml` below)
    - **Functions directory:** `.netlify/functions`
 5. Click "Deploy site"
 
@@ -30,7 +30,7 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Your Clerk publishable key |
 | `CLERK_SECRET_KEY` | Your Clerk secret key |
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your Supabase publishable key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (optional) |
 | `DATABASE_URL` | Your Supabase PostgreSQL connection string |
 | `OPENAI_API_KEY` | Your OpenAI API key (if you have one) |
@@ -41,7 +41,7 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
 1. Go to https://supabase.com/dashboard
 2. Select your project (or create a new one)
 3. Go to **Settings → Database** for `DATABASE_URL`
-4. Go to **Settings → API** for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+4. Go to **Settings → API** for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 **To get your Clerk credentials:**
 1. Go to https://dashboard.clerk.com
@@ -134,36 +134,47 @@ curl https://your-site.netlify.app/api/health
 
 ## 🔧 Configuration Files Reference
 
-### `netlify.toml` (create this in project root)
+### `netlify.toml` (already present in the project root)
 
 ```toml
 [build]
+  base = "."
   command = "pnpm build"
-  publish = ".next/standalone"
-  [build.environment]
-    NODE_VERSION = "18"
-    NPM_VERSION = "10"
-    NODE_OPTIONS = "--max-old-space-size=4096"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 [dev]
   command = "pnpm dev"
   port = 3000
   targetPort = 3000
-  publish = ".next/standalone"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
 ```
 
-### Netlify Plugin (Recommended)
+There is deliberately **no `publish` directory, no `@netlify/plugin-nextjs`, and no
+`/api/*` redirect** in this file. `next.config.js` sets
+`output: "standalone"` (the `Dockerfile` requires it), and the Netlify Next.js
+plugin deploys the *default* Next.js output instead — it is not a dependency of
+this repo, so declaring it would break the build. The `/api/*` redirect only
+applies once the plugin is in use; with a Node runtime Next.js serves its own
+`/api` routes.
+
+### Deploying on Netlify (requires a build-output change)
 
 ```bash
+# 1. Remove `output: "standalone"` from next.config.js (the Dockerfile needs it,
+#    so deploy via Docker or Vercel instead if you keep it).
+# 2. Add the Netlify plugin:
 pnpm add -D @netlify/plugin-nextjs
+# 3. In netlify.toml, set `publish = ".next"` and re-add:
+#    [[redirects]]
+#      from = "/api/*"
+#      to = "/.netlify/functions/api/:splat"
+#      status = 200
 ```
 
-This plugin automatically handles Next.js routing and serverless functions.
+`packageManager` is pinned to `pnpm@10.34.6` in `package.json`; use Corepack
+(`corepack enable`) so local, CI, Docker, and Netlify builds all use it.
 
 ---
 
@@ -196,7 +207,9 @@ This plugin automatically handles Next.js routing and serverless functions.
 **Solution:** Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly. Also check that your domain is in Clerk's allowed origins.
 
 ### 404 on API routes
-**Solution:** Ensure `netlify.toml` has the redirect rule and `@netlify/plugin-nextjs` is installed.
+**Solution:** `/api/*` routes are only rewritten when `@netlify/plugin-nextjs` is
+installed and `netlify.toml` declares the redirect — neither is currently true
+(see above). Docker and Vercel serve `/api/*` directly and need no redirect.
 
 ### Database connection errors
 **Solution:** Check that Supabase project is active, not paused. Verify connection string is correct. Ensure connection pooling is enabled in Supabase.

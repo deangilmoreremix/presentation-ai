@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -95,7 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -103,6 +103,9 @@ jobs:
 
       - name: Build application
         run: pnpm build
+        env:
+          # See PRODUCTION_DEPLOYMENT_CHECKLIST.md: the build needs a >=4GB heap.
+          NODE_OPTIONS: --max-old-space-size=4096
 
   bundle-analysis:
     runs-on: ubuntu-latest
@@ -114,20 +117,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
 
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          echo "SKIP_ENV_VALIDATION=true" >> .env
+
       - name: Bundle analysis
+        # Writes the report to .next/diagnostics/analyze and exits without
+        # starting the interactive analyzer server.
         run: pnpm analyze
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Upload bundle report
         uses: actions/upload-artifact@v4
         with:
           name: bundle-report
-          path: .next/analyze
+          path: .next/diagnostics/analyze
+          if-no-files-found: error
           retention-days: 30
 
   deploy:
@@ -142,7 +155,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "22"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -160,6 +173,8 @@ jobs:
 
       - name: Build application
         run: pnpm build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25

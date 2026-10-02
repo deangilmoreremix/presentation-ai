@@ -10,6 +10,8 @@ Each item is tied to the current codebase state as of the latest cleanup.
 - [ ] `pnpm lint` passes cleanly
 - [ ] `pnpm test:unit` passes cleanly
 - [ ] `pnpm build` succeeds in a memory-sufficient environment (>=4GB RAM)
+- [ ] Node.js 22 is used everywhere (`node:22-alpine` in `Dockerfile`, `node-version: "22"` in CI, `NODE_VERSION = "22"` in `netlify.toml`); Next.js 16 requires Node >= 20.9
+- [ ] pnpm 10.34.6 is used via Corepack (pinned by the `packageManager` field in `package.json`)
 - [ ] No references to `NextAuth`, `next-auth`, `@prisma/client`, `SupabaseAuthProvider`, or `supabase-provider` remain in `src/`
 - [ ] `.env.example` matches the required production variables
 
@@ -21,7 +23,7 @@ Set these in your hosting platform (Vercel, Netlify, Docker, etc.):
 - [ ] `CLERK_SECRET_KEY`
 - [ ] `CLERK_WEBHOOK_SECRET` (if using webhooks)
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`
-- [ ] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` (optional but recommended)
 - [ ] `DATABASE_URL`
 - [ ] `OPENAI_API_KEY`
@@ -48,7 +50,7 @@ Set these in your hosting platform (Vercel, Netlify, Docker, etc.):
 
 - [ ] Supabase project is created and active
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` matches project URL
-- [ ] `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` is set
+- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` is set
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` is set (for server-side admin access)
 - [ ] `DATABASE_URL` is set and connection pooling is configured
 - [ ] Database migrations are applied: `pnpm db:push`
@@ -113,7 +115,7 @@ If deployment fails:
 
 ## Known Limitations
 
-- Full `pnpm build` requires >=4GB RAM; CI runners should specify `NODE_OPTIONS="--max-old-space-size=4096"`
+- Full `pnpm build` requires >=4GB RAM; CI runners should specify `NODE_OPTIONS="--max-old-space-size=4096"`. This is already set in `netlify.toml`, the CI `build` / `bundle-analysis` / `deploy` jobs, and the `Dockerfile` builder stage — keep it set if you add another build environment.
 - Anonymous users can read public content but cannot create/edit presentations unless signed in
 - `users.role` and `users.has_access` columns are deprecated; authz now uses Clerk `publicMetadata`
 - PPTX/PDF export requires all slides to be visible in the DOM at export time

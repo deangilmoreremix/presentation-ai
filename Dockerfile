@@ -1,4 +1,5 @@
-FROM node:18-alpine AS base
+# Next.js 16.2.1 requires Node >= 20.9 (engines.node); 22 is the current LTS.
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -6,8 +7,12 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
-COPY package.json pnpm-lock.yaml* ./
+# Install dependencies based on the preferred package manager.
+# pnpm-workspace.yaml + patches/ must be copied too: the workspace file declares
+# `patchedDependencies` and pnpm aborts a frozen install when that config does
+# not match the lockfile.
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+COPY patches ./patches
 RUN \
   if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
   else echo "Lockfile not found." && exit 1; \
@@ -23,6 +28,9 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
+
+# PRODUCTION_DEPLOYMENT_CHECKLIST.md: the build needs a >=4GB heap.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 
 RUN \
   if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \

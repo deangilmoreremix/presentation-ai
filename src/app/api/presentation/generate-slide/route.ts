@@ -241,7 +241,7 @@ export async function POST(req: Request) {
       modelId: "gpt-4o-mini",
     });
     try {
-      assertModelIsConfigured("gpt-4o-mini");
+      assertModelIsConfigured("gpt-4o-mini", undefined, apiKey);
     } catch (error) {
       routeLogger.error(
         "Single slide generation request rejected: invalid model configuration",

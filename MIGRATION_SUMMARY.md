@@ -37,7 +37,7 @@ CLERK_WEBHOOK_SECRET="whsec_..."  # Optional: for webhook verification
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL="https://..."
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..."
 SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional: for server-side admin access
 
 # Database

@@ -68,7 +68,7 @@ CLERK_WEBHOOK_SECRET="whsec_..."  # Optional: for webhook verification
 
 # ── Supabase ────────────────────────────────────────────────────────
 NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..."
 SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional: for server-side admin access
 
 # ── Database ────────────────────────────────────────────────────────
@@ -253,7 +253,7 @@ docker run -d \
   -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="..." \
   -e CLERK_SECRET_KEY="..." \
   -e NEXT_PUBLIC_SUPABASE_URL="..." \
-  -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="..." \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY="..." \
   -e SUPABASE_SERVICE_ROLE_KEY="..." \
   -e DATABASE_URL="..." \
   -e OPENAI_API_KEY="..." \

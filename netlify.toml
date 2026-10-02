@@ -1,10 +1,34 @@
+# Netlify build configuration.
+#
+# Why there is no `publish` directory and no plugin here:
+#   * next.config.js sets `output: "standalone"` (the Dockerfile depends on it).
+#     `@netlify/plugin-nextjs` cannot consume standalone output - it deploys the
+#     default Next.js output (static assets + serverless functions) and is not a
+#     dependency of this repo, so it would fail the build if declared.
+#   * Declaring the plugin without `output: "standalone"` is the alternative, but
+#     that would break the Docker image, so the mismatch is documented here
+#     instead of papered over. To actually deploy on Netlify, drop
+#     `output: "standalone"` from next.config.js, `pnpm add -D
+#     @netlify/plugin-nextjs`, then restore `publish = ".next"` and the
+#     `/api/*` -> `/.netlify/functions/api/:splat` redirect that
+#     QUICK_DEPLOY.md describes.
+#   * The `/api/*` redirect is intentionally absent from this file: it only
+#     applies to the Netlify Next.js plugin. With a Node runtime Next.js serves
+#     its own /api routes.
+#
+# Until that migration, this file only pins the toolchain the build needs.
+
 [build]
   base = "."
   command = "pnpm build"
-  publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # Must match the Dockerfile (node:22-alpine) and CI.
+  NODE_VERSION = "22"
+  # See PRODUCTION_DEPLOYMENT_CHECKLIST.md "Known Limitations".
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+[dev]
+  command = "pnpm dev"
+  port = 3000
+  targetPort = 3000

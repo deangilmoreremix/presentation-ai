@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     });
 
     try {
-      assertModelIsConfigured(modelProvider, modelId);
+      assertModelIsConfigured(modelProvider, modelId, apiKey);
     } catch (error) {
       routeLogger.error(
         "Presentation generation request rejected: invalid model configuration",

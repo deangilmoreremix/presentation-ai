@@ -66,7 +66,9 @@ export function useFontUpload({ setValue, control }: UseFontUploadOptions) {
         }
       } catch (error) {
         console.error("Font upload failed:", error);
-        toast.error("Upload failed");
+        toast.error(
+          error instanceof Error ? `Upload failed: ${error.message}` : "Upload failed",
+        );
       } finally {
         if (target === "heading") setIsUploadingHeading(false);
         else setIsUploadingBody(false);

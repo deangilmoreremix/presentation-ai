@@ -2,12 +2,14 @@
 
 import { useCallback, useState } from "react";
 
-import { useUser } from "@clerk/nextjs";
 import { uploadUserAssetClient } from "@/lib/supabase/storage";
 
+/**
+ * `uploadAsset` forwards to a Server Action that resolves the owning user from
+ * the Clerk session, so no user id is threaded through the client.
+ */
 export function useAssetUpload() {
   const [isUploading, setIsUploading] = useState(false);
-  const { user } = useUser();
 
   const uploadAsset = useCallback(
     async (file: File, options: {
@@ -19,7 +21,6 @@ export function useAssetUpload() {
       try {
         return await uploadUserAssetClient({
           bucket: options.bucket,
-          userId: user?.id ?? "00000000-0000-0000-0000-000000000000",
           file,
           prefix: options.prefix,
         });
@@ -27,7 +28,7 @@ export function useAssetUpload() {
         setIsUploading(false);
       }
     },
-    [user],
+    [],
   );
 
   return { uploadAsset, isUploading };

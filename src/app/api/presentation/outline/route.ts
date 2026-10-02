@@ -22,6 +22,7 @@ import { NextResponse } from "next/server";
 
 interface OutlineRequest {
   messages?: UIMessage[];
+  apiKey?: string;
 }
 
 interface OutlineMessageMetadata {
@@ -205,7 +206,10 @@ export async function POST(req: Request) {
     const language = metadata.language ?? "";
     const modelProvider = metadata.modelProvider ?? "openai";
     const modelId = metadata.modelId;
-    const apiKey = metadata.apiKey;
+    // The client sends the bring-your-own key as a top-level request body field
+    // (DefaultChatTransport `body`), so fall back to it when the latest message
+    // metadata does not carry one.
+    const apiKey = metadata.apiKey ?? request.apiKey;
     const webSearch = Boolean(metadata.webSearch);
     const autoTheme = metadata.autoTheme ?? false;
 
@@ -266,7 +270,7 @@ export async function POST(req: Request) {
       day: "numeric",
     });
     try {
-      assertModelIsConfigured(modelProvider, modelId);
+      assertModelIsConfigured(modelProvider, modelId, apiKey);
     } catch (error) {
       routeLogger.error("Outline request rejected: invalid model configuration", error, {
         requestId,

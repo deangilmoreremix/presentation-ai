@@ -142,7 +142,7 @@ export async function POST(req: Request) {
       presentationId,
     });
     try {
-      assertModelIsConfigured(modelProvider, modelId);
+      assertModelIsConfigured(modelProvider, modelId, apiKey);
     } catch (error) {
       routeLogger.error(
         "Image slide generation request rejected: invalid model configuration",

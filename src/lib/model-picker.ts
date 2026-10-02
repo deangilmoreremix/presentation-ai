@@ -136,13 +136,25 @@ async function ensureLMStudioModelIsReady(modelId: string): Promise<void> {
   );
 }
 
+/**
+ * Throws when the selected provider cannot be used.
+ *
+ * `apiKey` is the caller-supplied (bring-your-own) OpenAI key. When provided, it
+ * satisfies the OpenAI check just like `env.OPENAI_API_KEY` does, so users who
+ * saved their own key can generate without a server-side key configured.
+ * The key value is never logged.
+ */
 export function assertModelIsConfigured(
   modelProviderOrModel: string,
   modelId?: string,
+  apiKey?: string | null,
 ) {
   const selection = resolveModelSelection(modelProviderOrModel, modelId);
   const selectedOpenAIModel = selection.modelId || "gpt-4o-mini";
   const selectedLocalModel = selection.modelId?.trim();
+  const hasOpenAIApiKey = Boolean(
+    apiKey?.trim() || env.OPENAI_API_KEY?.trim(),
+  );
 
   if (selection.provider === "lmstudio" && !selectedLocalModel) {
     modelLogger.error("Model configuration failed", undefined, {
@@ -152,11 +164,12 @@ export function assertModelIsConfigured(
     throw new Error("An LM Studio model must be selected before continuing.");
   }
 
-  if (selection.provider === "openai" && !env.OPENAI_API_KEY?.trim()) {
+  if (selection.provider === "openai" && !hasOpenAIApiKey) {
     modelLogger.error("Model configuration failed", undefined, {
       provider: selection.provider,
       modelId: selectedOpenAIModel,
       reason: "missing_openai_api_key",
+      hasCallerApiKey: Boolean(apiKey?.trim()),
     });
     throw new Error(
       `OPENAI_API_KEY is required when using the OpenAI model "${selectedOpenAIModel}".`,

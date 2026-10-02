@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.34.6",
   "scripts": {
+    "analyze": "next experimental-analyze --output",
     "build": "next build",
     "dev": "node scripts/dev.mjs",
     "lint": "biome lint src tests",
