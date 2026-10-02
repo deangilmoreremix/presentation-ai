@@ -11,7 +11,9 @@ overrides:
   canvas: ^3.2.1
 
 patchedDependencies:
-  '@ai-sdk/langchain@2.0.122': 793c33c68014071cdc0c6cecb66d458c61b8eb2945c8db70312aef086859870f
+  '@ai-sdk/langchain@2.0.122':
+    hash: 793c33c68014071cdc0c6cecb66d458c61b8eb2945c8db70312aef086859870f
+    path: patches/@ai-sdk__langchain@2.0.122.patch
 
 importers:
 

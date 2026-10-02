@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient(apiKey);
 
     // Streaming is not supported by the SDK path here; return an explicit error if requested.
     if (stream) {

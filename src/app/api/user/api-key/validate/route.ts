@@ -45,8 +45,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error validating API key:", error);
     return NextResponse.json(
-      { valid: false, error: "Failed to validate API key" },
-      { status: 500 }
+      { valid: false, error: "Failed to read the validation request. Send { \"key\": \"sk-...\" } as JSON." },
+      { status: 400 }
     );
   }
 }

@@ -1,6 +1,33 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+const base64ByteLength = (value) => {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(value, "base64").length;
+  }
+  try {
+    return atob(value).length;
+  } catch {
+    return -1;
+  }
+};
+
+const masterKeySchema = z
+  .string()
+  .optional()
+  .superRefine((value, ctx) => {
+    if (value === undefined) return;
+    const isBase6432Bytes = base64ByteLength(value) === 32;
+    const isHex32Bytes = /^[0-9a-fA-F]{64}$/.test(value);
+    if (!isBase6432Bytes && !isHex32Bytes) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "API_KEY_ENCRYPTION_MASTER_KEY must decode to exactly 32 bytes (base64, or 64-character hex). Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+      });
+    }
+  });
+
 export const env = createEnv({
   server: {
     // Clerk (server-side). Required: `proxy.ts` runs clerkMiddleware on every
@@ -38,6 +65,8 @@ export const env = createEnv({
 
     // UploadThing
     UPLOADTHING_TOKEN: z.string().optional(),
+
+    API_KEY_ENCRYPTION_MASTER_KEY: masterKeySchema,
   },
 
   client: {
@@ -70,6 +99,7 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
+    API_KEY_ENCRYPTION_MASTER_KEY: process.env.API_KEY_ENCRYPTION_MASTER_KEY,
   },
 
   // Only an explicit truthy value skips validation. Using `!!value` here meant

@@ -4,6 +4,21 @@ import { decryptApiKey, encryptApiKey, validateKeyFormat } from "@/lib/crypto/ke
 import { createClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
 
+const MASTER_KEY_NOT_CONFIGURED_CODE = "MASTER_KEY_NOT_CONFIGURED";
+const MASTER_KEY_NOT_CONFIGURED_MESSAGE =
+  "Server-side API key storage is unavailable because API_KEY_ENCRYPTION_MASTER_KEY is not set to a valid value. " +
+  "Set it to a 32-byte key encoded as base64 (or 64-character hex) and restart the server. " +
+  'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"';
+
+const masterKeyNotConfiguredResponse = () =>
+  NextResponse.json(
+    { error: MASTER_KEY_NOT_CONFIGURED_MESSAGE, code: MASTER_KEY_NOT_CONFIGURED_CODE },
+    { status: 503 }
+  );
+
+const isMasterKeyConfigurationError = (error: unknown) =>
+  error instanceof Error && error.message.includes("API_KEY_ENCRYPTION_MASTER_KEY");
+
 /**
  * GET /api/user/api-key
  * Returns the masked server-stored key for authenticated users.
@@ -86,6 +101,11 @@ export async function POST(request: Request) {
     }
 
     if (storage === "server" && userId) {
+      if (!process.env.API_KEY_ENCRYPTION_MASTER_KEY) {
+        appLogger.warn("Rejected server API key storage: API_KEY_ENCRYPTION_MASTER_KEY is not set");
+        return masterKeyNotConfiguredResponse();
+      }
+
       try {
         const supabase = await createClient();
         if (!supabase) {
@@ -109,6 +129,10 @@ export async function POST(request: Request) {
         appLogger.info("API key encrypted and saved", { userId });
         return NextResponse.json({ success: true });
       } catch (error) {
+        if (isMasterKeyConfigurationError(error)) {
+          appLogger.warn("Rejected server API key storage: invalid API_KEY_ENCRYPTION_MASTER_KEY");
+          return masterKeyNotConfiguredResponse();
+        }
         appLogger.error("Encryption failed", { error });
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
       }

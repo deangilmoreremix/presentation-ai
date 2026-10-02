@@ -32,6 +32,26 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # PRODUCTION_DEPLOYMENT_CHECKLIST.md: the build needs a >=4GB heap.
 ENV NODE_OPTIONS=--max-old-space-size=4096
 
+# NEXT_PUBLIC_* variables are statically inlined into the client bundle at BUILD
+# time, so they must be supplied here rather than only at runtime:
+#   docker build --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=... \
+#               --build-arg NEXT_PUBLIC_SUPABASE_URL=... \
+#               --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=... .
+# Server-only secrets (CLERK_SECRET_KEY, DATABASE_URL, ...) are read at runtime
+# and are NOT passed as build args, so build-time validation has to be skipped;
+# the runtime stage still validates and fails fast if they are missing.
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Builder-stage only: `next.config.js` imports `src/env.js`, which validates on
+# load. Deliberately NOT inherited by the `runner` stage, so a misconfigured
+# container still fails at startup instead of silently booting broken.
+ENV SKIP_ENV_VALIDATION=1
+
 RUN \
   if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
   else echo "Lockfile not found." && exit 1; \

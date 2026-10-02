@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient(apiKey);
 
     // The SDK types predate gpt-image-2; the runtime API accepts these fields.
     const tools: any[] = [

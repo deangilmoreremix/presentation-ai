@@ -57,6 +57,10 @@ playwright-report/
 test-results/
 /historia/
 
+# Playwright auth state written by tests/global-setup.ts (contains Clerk
+# session tokens and test-user credentials)
+/tests/.auth/
+
 
 # clerk configuration (can include secrets)
 /.clerk/

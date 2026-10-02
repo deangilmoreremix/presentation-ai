@@ -1,21 +1,31 @@
 import "server-only";
 
+import { auth } from "@clerk/nextjs/server";
 import { createUploadthing } from "uploadthing/next";
 import { UTApi } from "uploadthing/server";
 
 export const f = createUploadthing();
 export const utapi = new UTApi();
 
+/**
+ * Uploads require a signed-in Clerk user. `auth()` resolves here because
+ * `src/proxy.ts` runs clerkMiddleware over `/(api|trpc)(.*)` and the rest of
+ * the app is not listed as a public route.
+ */
 export async function requireUploadThingUser(): Promise<{ userId: string }> {
-  // No authentication required — uploads are open.
-  return { userId: "anonymous" };
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return { userId };
 }
 
 export async function requireAdminUploadThingUser(): Promise<{
   userId: string;
 }> {
-  // No authentication required — uploads are open.
-  return { userId: "anonymous" };
+  return requireUploadThingUser();
 }
 
 function getUploadThingFileKeyFromUrl(url: string): string | null {

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "At least one image is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient(apiKey);
 
     const requestParams: Record<string, unknown> = {
       model,

@@ -1,3 +1,20 @@
+# Local Docker setup for the Next.js app.
+#
+# Database note (important):
+# `supabase/migrations/*.sql` are Supabase migrations. They reference Supabase
+# internals that do not exist on a vanilla `postgres` image — `auth.users` and a
+# trigger on it (002, 009, 010), ~35 RLS policies calling `auth.uid()` (007),
+# and the `storage.buckets` / `storage.objects` / `storage.foldername()` schema
+# (011). `scripts/db-push.mjs` applies files in numeric order with no Supabase
+# detection, so running it against a plain Postgres container aborts at
+# 002_users_and_trigger.sql and every later migration never runs.
+#
+# Therefore this file does NOT ship a local Postgres container. DATABASE_URL
+# points at the real Supabase project and is required, so compose fails fast
+# with an actionable message instead of booting into a half-migrated state.
+#
+# Apply migrations with the Supabase CLI against that project instead:
+#   supabase link --project-ref <ref> && supabase db push
 version: "3.8"
 
 services:
@@ -7,17 +24,24 @@ services:
       - "3000:3000"
     environment:
       # Clerk Authentication
-      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      # Required: `src/proxy.ts` runs clerkMiddleware on every route and
+      # `src/env.js` requires these, so a missing key is a hard failure.
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:?NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:?CLERK_SECRET_KEY is required}
+
       - CLERK_WEBHOOK_SECRET=${CLERK_WEBHOOK_SECRET}
 
       # Supabase
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 
-      # Database (direct Postgres for LangGraph checkpoints)
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/presentation_ai
+      # Database — the real Supabase project. Required both because
+      # `src/env.js` validates it and because the LangGraph checkpointer
+      # (`src/ai/lib/postgres.ts`) connects with it at module load.
+      # It is NOT the local `db` container that used to live here: the
+      # migrations cannot run on vanilla Postgres (see header note).
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL must be the Supabase project connection string (postgresql://...@db.<ref>.supabase.co:5432/postgres)}
 
       # AI / External APIs
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -37,22 +61,5 @@ services:
       # App
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
-      - SKIP_ENV_VALIDATION=true
-    depends_on:
-      - db
     volumes:
       - /app/node_modules
-
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=presentation_ai
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:

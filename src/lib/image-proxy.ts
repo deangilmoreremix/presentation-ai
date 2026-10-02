@@ -6,12 +6,26 @@ type PresentationImageProxyInput = {
   stockImageProvider?: string;
 };
 
+/** Image provenance metadata that decides whether an image needs the proxy. */
+export type ExportImageProxyInput = PresentationImageProxyInput;
+
 type RewriteOptions = {
   absolute?: boolean;
 };
 
 type ExportImageSourceInput = PresentationImageProxyInput;
 
+/**
+ * Result of {@link resolveExportImageSource}.
+ *
+ * `data` is always safe to embed. A `path` is a URL that the consumer has to
+ * fetch itself, and when that URL points at `/api/image-proxy` it only resolves
+ * because the proxy route answers with `access-control-allow-origin: *` — see
+ * the fallback in {@link resolveExportImageSource}. Consumers that cannot
+ * issue a CORS-aware fetch (pptxgenjs runs its fetch in the page, jsPDF cannot
+ * fetch at all) should prefer {@link resolveExportImageDataUrl} so this
+ * dependency disappears instead of being implicit.
+ */
 export type ExportImageSource =
   | {
       type: "data";
@@ -69,6 +83,35 @@ function createImageProxyUrl(
   return origin ? `${origin}${relativeUrl}` : relativeUrl;
 }
 
+/**
+ * Decide whether a scanned image has to travel through `/api/image-proxy`.
+ *
+ * Exemptions (both are deliberate, both are re-verified against the actual
+ * configuration rather than assumed):
+ *
+ * - `embedType`: an embedded media root (YouTube/Vimeo/infographic embeds see
+ *   `src/lib/presentation/thumbnail.ts`) stores a *page* URL, not an image
+ *   byte stream. `/api/image-proxy` only forwards `image/*` content types and
+ *   answers 415 otherwise, so proxying these would convert a working embed into
+ *   a hard failure.
+ * - `imageSource === "upload"`: uploads are written through
+ *   `/api/assets/upload` into the `presentation-images` bucket, and migration
+ *   `supabase/migrations/011_user_asset_storage.sql` creates both
+ *   `user-assets` and `presentation-images` with `public = true`, so
+ *   `getUserAssetPublicUrl` hands out `/storage/v1/object/public/...` URLs.
+ *   Those are readable without auth and the Supabase Storage API answers them
+ *   with `access-control-allow-origin: *`, which is exactly the condition the
+ *   proxy itself exists to create. Routing them through the proxy would add a
+ *   server round trip (and a 10 MB / 415 cliff) for no gain.
+ *
+ * Everything else remote is proxied: AI-generated images (`generate`), stock
+ * search results (`search`), GIFs from Giphy (`gif`) and images with unknown
+ * provenance all come from hosts that either send no CORS headers at all or
+ * send headers that `pptxgenjs` / `html-to-image` cannot satisfy, so an
+ * unproxied export either silently drops the image or aborts the whole export.
+ * Giphy in particular serves `image/gif` / `image/webp`, both of which the
+ * proxy's `image/*` allowlist forwards.
+ */
 function shouldProxyPresentationImage(
   url: string | undefined,
   input: PresentationImageProxyInput = {},
@@ -77,15 +120,7 @@ function shouldProxyPresentationImage(
     return false;
   }
 
-  if (input.embedType || input.imageSource === "upload") {
-    return false;
-  }
-
-  if (input.imageSource === "search" || input.stockImageProvider === "google") {
-    return true;
-  }
-
-  return !input.imageSource;
+  return !input.embedType && input.imageSource !== "upload";
 }
 
 export function proxyPresentationImageUrl(
@@ -143,64 +178,45 @@ export async function resolveExportImageSource(
     };
   } catch (error) {
     console.warn("Failed to prepare proxied image for export:", error);
+    // Falling back to the proxied absolute URL is only viable because the
+    // proxy route sets `access-control-allow-origin: *`; see the
+    // `ExportImageSource` doc comment. Prefer `resolveExportImageDataUrl`
+    // where a CORS-aware fetch is not available.
     return { type: "path", value: proxiedUrl };
   }
 }
 
-function rewriteCssUrls(value: string, options: RewriteOptions): string {
-  return value.replace(
-    /url\(\s*(["']?)(https?:\/\/[^"')\s]+)\1\s*\)/gi,
-    (match: string, quote: string, url: string) => {
-      const proxiedUrl = createImageProxyUrl(url, options);
-      if (!proxiedUrl || proxiedUrl === url) {
-        return match;
-      }
+/**
+ * Resolve an image to an inline data URL, or `null` when it cannot be read.
+ *
+ * Use this for consumers that cannot fetch a URL themselves — jsPDF, for
+ * instance, only accepts data URLs / buffers, and pptxgenjs only gets a
+ * reliable fetch when the page sends CORS headers. Both cases otherwise depend
+ * on the proxy's `access-control-allow-origin: *` (or, for non-proxied URLs,
+ * on the upstream happening to be CORS-friendly) to succeed at all.
+ */
+export async function resolveExportImageDataUrl(
+  url: string,
+  input: ExportImageSourceInput = {},
+): Promise<string | null> {
+  if (url.startsWith("data:")) {
+    return url;
+  }
 
-      const nextQuote = quote || '"';
-      return `url(${nextQuote}${proxiedUrl}${nextQuote})`;
-    },
-  );
-}
+  const source = await resolveExportImageSource(url, input);
+  if (source.type === "data") {
+    return source.value;
+  }
 
-function rewriteSrcSet(value: string, options: RewriteOptions): string {
-  return value
-    .split(",")
-    .map((candidate) => {
-      const trimmed = candidate.trim();
-      if (!trimmed) {
-        return trimmed;
-      }
+  try {
+    const response = await fetch(source.value, { cache: "force-cache" });
+    if (!response.ok) {
+      throw new Error(`Image request failed with status ${response.status}.`);
+    }
 
-      const [url, ...descriptors] = trimmed.split(/\s+/);
-      if (!url) {
-        return trimmed;
-      }
-
-      const proxiedUrl = createImageProxyUrl(url, options) ?? url;
-      return [proxiedUrl, ...descriptors].join(" ");
-    })
-    .join(", ");
-}
-
-export function rewriteHtmlArtifactImageUrls(
-  html: string,
-  options: RewriteOptions = {},
-): string {
-  return rewriteCssUrls(html, options)
-    .replace(
-      /(<(?:img|source)\b[^>]*?\s(?:src)=)(["'])(https?:\/\/[^"']+)\2/gi,
-      (match: string, prefix: string, quote: string, url: string) => {
-        const proxiedUrl = createImageProxyUrl(url, options);
-        return proxiedUrl ? `${prefix}${quote}${proxiedUrl}${quote}` : match;
-      },
-    )
-    .replace(
-      /(<(?:img|source)\b[^>]*?\s(?:srcset)=)(["'])([^"']+)\2/gi,
-      (match: string, prefix: string, quote: string, srcset: string) => {
-        const rewrittenSrcset = rewriteSrcSet(srcset, options);
-        return rewrittenSrcset === srcset
-          ? match
-          : `${prefix}${quote}${rewrittenSrcset}${quote}`;
-      },
-    );
+    return await blobToDataUrl(await response.blob());
+  } catch (error) {
+    console.warn("Failed to inline export image:", error);
+    return null;
+  }
 }

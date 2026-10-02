@@ -4,16 +4,20 @@ import { type UIMessage } from "ai";
 
 import { logger } from "@/lib/observability/server/logger";
 import { auth } from "@/server/auth";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 
 /**
  * Get persisted chat messages for a presentation.
  *
- * Reads from `public.presentation_messages` (migration 015). The agent
- * route at `/api/agent/presentation` is responsible for inserting rows
- * into this table as the conversation progresses — see the TODO comment
- * in that route for the integration point. Until that write is wired,
- * this action returns an empty array.
+ * Reads from `public.presentation_messages` (created by migration 019 for the
+ * schema declared in migration 015). Rows are written by the agent route at
+ * `/api/agent/presentation` as the conversation streams.
+ *
+ * `presentationId` is the `base_documents.id` used by the editor route -- the
+ * same value the route writes to `presentation_id`.
+ *
+ * Every row is scoped to the caller: `presentation_id` alone is not enough,
+ * because a shared or public presentation id is not a secret.
  *
  * The returned rows are mapped to the AI SDK `UIMessage` shape:
  *   { id, role, parts }
@@ -45,10 +49,16 @@ export async function getPresentationMessages(
       return [];
     }
 
+    // `user_id` holds a Clerk id (`user_2abc...`); `getClerkUserId()` also
+    // provisions the `users` row so reads of an unauthenticated-but-provisioned
+    // account stay consistent with the write path.
+    const userId = await getClerkUserId();
+
     const { data, error } = await supabase
       .from("presentation_messages")
       .select("id, role, parts, created_at")
       .eq("presentation_id", presentationId)
+      .eq("user_id", userId)
       .order("created_at", { ascending: true });
 
     if (error) {

@@ -9,7 +9,7 @@ import OpenAI from "openai";
  * This module is safe to import even when OPENAI_API_KEY is missing.
  * The missing-key check happens lazily inside getOpenAIClient().
  */
-export async function getOpenAIClient(_userId?: string, providedApiKey?: string): Promise<OpenAI> {
+export async function getOpenAIClient(providedApiKey?: string): Promise<OpenAI> {
   // Use provided API key, or fall back to environment
   const apiKey = providedApiKey || env.OPENAI_API_KEY;
 

@@ -8,6 +8,7 @@ import {
 import { env } from "@/env";
 import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 import { csrfGuard } from "@/lib/csrf";
+import { createClient, getClerkUserId } from "@/lib/supabase/server";
 
 const CLIENT_TOOLS = new Set([
   "edit_slide_properties",
@@ -339,6 +340,255 @@ function buildInput(messages: UIMessage[]): Array<Record<string, unknown>> {
   return input;
 }
 
+/**
+ * Persistence for the agent chat (migration 019 creates
+ * `public.presentation_messages`).
+ *
+ * Shape contract:
+ *   presentation_id uuid -> base_documents.id (the id in the
+ *                         `/presentation/[id]` route and in `body.id`),
+ *   user_id         text -> a Clerk id (`user_2abc...`), matching every other
+ *                         identity column in the schema,
+ *   role            text -> CHECK (role in ('user','assistant','system')),
+ *   parts           jsonb -> the AI SDK `UIMessage["parts"]` array.
+ *
+ * Every helper below is best-effort: the caller must never fail because of a
+ * database problem, so errors are logged and swallowed.
+ */
+
+/** Only these three values satisfy the table's CHECK constraint. */
+type StoredRole = "user" | "assistant" | "system";
+
+/**
+ * `body.messages` is client-supplied, and the AI SDK's `UIMessage["role"]`
+ * union is wider than the table's CHECK. Anything else (`tool`, an unknown
+ * value, a non-string) is dropped rather than mapped, because a wrong mapping
+ * would silently misattribute a message in the persisted history.
+ */
+function toStoredRole(value: unknown): StoredRole | null {
+  return value === "user" || value === "assistant" || value === "system"
+    ? value
+    : null;
+}
+
+/** Keeps only plain objects with a string `type`, i.e. real `UIMessage` parts. */
+function toStoredParts(value: unknown): Array<Record<string, unknown>> | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const parts = value.filter(
+    (part): part is Record<string, unknown> =>
+      Boolean(part) &&
+      typeof part === "object" &&
+      !Array.isArray(part) &&
+      typeof (part as { type?: unknown }).type === "string",
+  );
+
+  return parts.length > 0 ? parts : null;
+}
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+type Supabase = NonNullable<Awaited<ReturnType<typeof createClient>>>;
+
+type WriteContext = { supabase: Supabase; userId: string };
+
+type MessageRow = {
+  presentation_id: string;
+  user_id: string;
+  role: StoredRole;
+  parts: Array<Record<string, unknown>>;
+};
+
+/**
+ * Resolve the write context. `presentation_id` must be a real
+ * `base_documents.id`; `body.id` falls back to the literal `"default"` when the
+ * client sends no id (no saved presentation), which is not a uuid and would
+ * only produce a foreign-key error, so persistence is skipped there.
+ *
+ * `getClerkUserId()` also lazily provisions the `users` row the `user_id`
+ * foreign key points at.
+ */
+async function resolveWriteContext(
+  presentationId: string,
+): Promise<WriteContext | null> {
+  if (!UUID_PATTERN.test(presentationId)) {
+    return null;
+  }
+
+  const supabase = await createClient();
+  if (!supabase) {
+    return null;
+  }
+
+  const userId = await getClerkUserId();
+  if (!userId) {
+    return null;
+  }
+
+  return { supabase, userId };
+}
+
+/** Insert rows, swallowing every failure so the stream is never broken. */
+async function insertMessages(
+  context: WriteContext,
+  presentationId: string,
+  rows: Array<{ role: StoredRole; parts: Array<Record<string, unknown>> }>,
+): Promise<void> {
+  if (rows.length === 0) {
+    return;
+  }
+
+  const payload: MessageRow[] = rows.map((row) => ({
+    presentation_id: presentationId,
+    user_id: context.userId,
+    role: row.role,
+    parts: row.parts,
+  }));
+
+  const { error } = await context.supabase
+    .from("presentation_messages")
+    .insert(payload);
+
+  if (error) {
+    console.error("Failed to persist presentation agent messages:", error);
+  }
+}
+
+/**
+ * Persist the user turns of the incoming request.
+ *
+ * The client sends its whole conversation, so re-inserting every message on
+ * every turn would duplicate history. Only the messages after the last
+ * assistant turn are new; anything that is not a `user` message is dropped
+ * (the assistant half is written by this route from the stream). If the user
+ * cleared the chat the client history restarts anyway, so this stays correct
+ * across `clearPresentationChat`.
+ */
+async function persistIncomingUserMessages(
+  presentationId: string,
+  messages: UIMessage[],
+): Promise<void> {
+  try {
+    let lastAssistantTurn = -1;
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (toStoredRole(messages[index]?.role) === "assistant") {
+        lastAssistantTurn = index;
+        break;
+      }
+    }
+
+    const rows: Array<{ role: StoredRole; parts: Array<Record<string, unknown>> }> = [];
+    for (const message of messages.slice(lastAssistantTurn + 1)) {
+      const role = toStoredRole(message?.role);
+      if (role !== "user") {
+        continue;
+      }
+      const parts = toStoredParts(message?.parts);
+      if (parts) {
+        rows.push({ role, parts });
+      }
+    }
+
+    if (rows.length === 0) {
+      return;
+    }
+
+    const context = await resolveWriteContext(presentationId);
+    if (!context) {
+      return;
+    }
+
+    await insertMessages(context, presentationId, rows);
+  } catch (error) {
+    console.error("Failed to persist presentation user messages:", error);
+  }
+}
+
+/**
+ * Reassembles the streamed assistant message into `UIMessage["parts"]` while
+ * the chunks are written, so the finished parts array can be persisted.
+ */
+function createPartCollector() {
+  const parts: Array<Record<string, unknown>> = [];
+  const indexByKey = new Map<string, number>();
+
+  function upsert(key: string, create: (previous?: Record<string, unknown>) => Record<string, unknown>) {
+    const at = indexByKey.get(key);
+    if (at === undefined) {
+      indexByKey.set(key, parts.length);
+      parts.push(create());
+      return;
+    }
+    parts[at] = create(parts[at]);
+  }
+
+  return {
+    collect(chunk: Record<string, unknown>) {
+      const type = typeof chunk.type === "string" ? chunk.type : "";
+
+      if (type === "text-start") {
+        const id = typeof chunk.id === "string" ? chunk.id : "";
+        upsert(`text:${id}`, () => ({ type: "text", text: "" }));
+        return;
+      }
+
+      if (type === "text-delta") {
+        const id = typeof chunk.id === "string" ? chunk.id : "";
+        const delta = typeof chunk.delta === "string" ? chunk.delta : "";
+        upsert(`text:${id}`, (previous) => ({
+          type: "text",
+          text: `${typeof previous?.text === "string" ? previous.text : ""}${delta}`,
+        }));
+        return;
+      }
+
+      if (type.startsWith("tool-") && typeof chunk.toolCallId === "string") {
+        const toolCallId = chunk.toolCallId;
+        const state = typeof chunk.state === "string" ? chunk.state : "";
+        upsert(`tool:${toolCallId}`, (previous) => ({
+          type,
+          toolCallId,
+          state: state === "output-available" ? "output-available" : "input-available",
+          input: chunk.input ?? previous?.input,
+          ...(state === "output-available" ? { output: chunk.output } : {}),
+        }));
+      }
+    },
+    getParts(): Array<Record<string, unknown>> {
+      return parts.filter((part) =>
+        part.type === "tool-"
+          ? true
+          : typeof part.text === "string" && part.text.length > 0,
+      );
+    },
+  };
+}
+
+/** Persist the completed assistant turn. Never throws. */
+async function persistAssistantParts(
+  presentationId: string,
+  parts: Array<Record<string, unknown>>,
+): Promise<void> {
+  try {
+    const stored = toStoredParts(parts);
+    if (!stored) {
+      return;
+    }
+
+    const context = await resolveWriteContext(presentationId);
+    if (!context) {
+      return;
+    }
+
+    await insertMessages(context, presentationId, [{ role: "assistant", parts: stored }]);
+  } catch (error) {
+    console.error("Failed to persist presentation assistant message:", error);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const csrfError = csrfGuard(req);
@@ -357,27 +607,33 @@ export async function POST(req: Request) {
     const openai = apiKey ? new OpenAI({ apiKey }) : null;
     const input = buildInput(messages);
 
-    // TODO(migration-015): persist agent chat to public.presentation_messages.
-    // When wiring this, insert one row per user message from `messages` here
-    // (or just the latest user turn), and insert the assistant message at
-    // the end of the `execute` callback once the stream completes (use
-    // `writer.onFinish` or a `try/finally` around the stream). See
-    // supabase/migrations/015_presentation_messages.sql for the schema and
-    // src/app/_actions/presentation/getPresentationMessages.ts for the read
-    // side. The current behavior is intentional (no-op) until you wire it.
+    // The agent chat is persisted per `base_documents.id`, which is the same id
+    // the editor route uses. A failure here must not stop the answer from
+    // streaming, so the error is swallowed by the helper.
+    await persistIncomingUserMessages(presentationId, messages);
 
     const stream = createUIMessageStream({
       execute: async ({ writer }: { writer: UIMessageStreamWriter }) => {
+        const collector = createPartCollector();
+        const write = (chunk: Record<string, unknown>) => {
+          try {
+            collector.collect(chunk);
+          } catch {
+            // Collector must never interfere with the stream.
+          }
+          (writer as any).write(chunk);
+        };
+
         try {
           if (!openai) {
-            writer.write({ type: "text-start", id: "no-key" });
-            writer.write({
+            write({ type: "text-start", id: "no-key" });
+            write({
               type: "text-delta",
               id: "no-key",
               delta:
                 "No OpenAI API key is configured. Set OPENAI_API_KEY (or pass apiKey) to enable the agent.",
             });
-            writer.write({ type: "text-end", id: "no-key" });
+            write({ type: "text-end", id: "no-key" });
             return;
           }
 
@@ -419,14 +675,14 @@ export async function POST(req: Request) {
                 const query = typeof parsedArgs.query === "string" ? parsedArgs.query : "";
                 const result = await executeWebSearch(query);
 
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "input-streaming",
                   input: parsedArgs,
                 });
 
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "output-available",
@@ -452,7 +708,7 @@ export async function POST(req: Request) {
                 try {
                   for await (const ev of continueStream) {
                     if (ev.type === "response.output_text.delta") {
-                      writer.write({
+                      write({
                         type: "text-delta",
                         id: ev.item_id ?? currentCallId,
                         delta: ev.delta,
@@ -465,14 +721,14 @@ export async function POST(req: Request) {
                   // stream ended
                 }
               } else if (CLIENT_TOOLS.has(currentToolName)) {
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "input-streaming",
                   input: parsedArgs,
                 });
 
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "output-available",
@@ -484,22 +740,22 @@ export async function POST(req: Request) {
                 const message =
                   typeof parsedArgs.message === "string" ? parsedArgs.message : "";
 
-                writer.write({ type: "text-start", id: currentCallId });
-                writer.write({
+                write({ type: "text-start", id: currentCallId });
+                write({
                   type: "text-delta",
                   id: currentCallId,
                   delta: message,
                 });
-                writer.write({ type: "text-end", id: currentCallId });
+                write({ type: "text-end", id: currentCallId });
 
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "input-streaming",
                   input: parsedArgs,
                 });
 
-                (writer as any).write({
+                write({
                   type: `tool-${currentToolName}`,
                   toolCallId: currentCallId,
                   state: "output-available",
@@ -509,7 +765,7 @@ export async function POST(req: Request) {
                 return;
               }
             } else if (event.type === "response.output_text.delta") {
-              writer.write({
+              write({
                 type: "text-delta",
                 id: event.item_id ?? currentCallId ?? "text",
                 delta: event.delta,
@@ -518,10 +774,15 @@ export async function POST(req: Request) {
           }
         } catch (innerError) {
           console.error("Stream processing error:", innerError);
-          writer.write({
+          write({
             type: "error",
             errorText: innerError instanceof Error ? innerError.message : "Stream error",
           });
+        } finally {
+          // Persist whatever was streamed. Runs on every exit path (normal,
+          // early `return` for client tools, and stream errors) and cannot
+          // throw: a failed write must not cost the user their answer.
+          await persistAssistantParts(presentationId, collector.getParts());
         }
       },
     });

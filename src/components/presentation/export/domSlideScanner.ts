@@ -141,6 +141,11 @@ async function captureRootImageForExport(
         image: imageElement,
         src: imageElement.src,
       });
+      // `html-to-image` re-fetches every image through an in-memory canvas, so
+      // the swap only works while the element opts into a CORS read. This works
+      // solely because `/api/image-proxy` answers with
+      // `access-control-allow-origin: *`; without that header the swap would
+      // turn a tainted image into a blank capture.
       imageElement.crossOrigin = "anonymous";
       imageElement.src = proxiedSrc;
     }
