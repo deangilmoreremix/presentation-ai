@@ -23,19 +23,76 @@
 
 ### 2. Set Environment Variables in Netlify
 
-After creating the site, go to **Site settings → Build & Deploy → Environment** and add these variables:
+After creating the site, go to **Site settings → Build & Deploy → Environment** and add these variables.
 
-| Variable | Value |
-|----------|-------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Your Clerk publishable key |
-| `CLERK_SECRET_KEY` | Your Clerk secret key |
-| `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role key (optional) |
-| `DATABASE_URL` | Your Supabase PostgreSQL connection string |
-| `OPENAI_API_KEY` | Your OpenAI API key (if you have one) |
-| `API_KEY_ENCRYPTION_MASTER_KEY` | Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
-| `SKIP_ENV_VALIDATION` | `true` |
+**Required** — `pnpm build` fails immediately while any of these is unset:
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk Dashboard → **API Keys** → Publishable key |
+| `CLERK_SECRET_KEY` | Clerk Dashboard → **API Keys** → Secret key |
+| `DATABASE_URL` | Supabase Dashboard → **Project Settings → Database** → Connection string (see the warning below) |
+
+**Optional** — unset only disables the named feature, it never blocks the build:
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → **Project Settings → API** → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → **Project Settings → API** → anon / publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → **Project Settings → API** → `service_role` key |
+| `OPENAI_API_KEY` | https://platform.openai.com/api-keys — **required for any AI output** |
+| `CLERK_WEBHOOK_SECRET` | Clerk Dashboard → **Webhooks** → **Add Endpoint** — **required for user sync** |
+| `UPLOADTHING_TOKEN` | https://app.uploadthing.com → **API Keys** |
+| `API_KEY_ENCRYPTION_MASTER_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` (must decode to exactly 32 bytes; keep it permanent) |
+| `TAVILY_API_KEY`, `TOGETHER_AI_API_KEY`, `PINECONE_API_KEY` | Respective provider dashboards |
+| `UNSPLASH_ACCESS_KEY`, `PIXABAY_API_KEY`, `GIPHY_API_KEY`, `PEXELS_API_KEY` | Respective provider dashboards |
+| `GOOGLE_CUSTOM_SEARCH_API_KEY` + `SEARCH_ENGINE_CX` | Google Cloud → **APIs & Services → Credentials** + Programmable Search Engine |
+| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | Sentry → **Project → Settings → Client Keys** |
+
+Do **not** set `SKIP_ENV_VALIDATION`. It is read directly by `src/env.js` (it is not part of
+the validated schema) and setting it to `true` switches off every check, which turns a
+missing Clerk key into an opaque runtime failure instead of an up-front error.
+
+`.env.example` is the annotated template for the same list and stays in sync with `src/env.js`.
+
+### ⚠️ `DATABASE_URL` must point at Supabase, not a local Postgres
+
+Use the connection string from **Supabase Dashboard → Project Settings → Database**
+(session mode), e.g. `postgresql://postgres.<project-ref>:<password>@db.<project-ref>.supabase.co:5432/postgres`,
+or the Session-mode pooler host `aws-0-<region>.pooler.supabase.com`.
+
+A local Postgres container cannot run these migrations: `002_users_and_trigger.sql`
+references `auth.users` and creates a trigger on it, `007_rls_policies.sql` has 35 policies
+calling `auth.uid()`, `009`/`010` read and delete from `auth.users`, and
+`011_user_asset_storage.sql` uses `storage.buckets` / `storage.objects` /
+`storage.foldername()`. `pnpm db:push` applies migrations in numeric order with no Supabase
+detection, so against vanilla Postgres it aborts at `002` and every later migration silently
+never runs. That is why `docker-compose.yml` ships no local Postgres container.
+
+### ⚠️ Secrets that are not configured yet
+
+`OPENAI_API_KEY`, `UPLOADTHING_TOKEN` and `CLERK_WEBHOOK_SECRET` are unset everywhere today.
+Because they are optional in `src/env.js`, the deploy succeeds and the breakage only appears at
+runtime:
+
+| Variable | What breaks without it |
+|----------|------------------------|
+| `OPENAI_API_KEY` | **Every** AI generation endpoint returns **400** — no outlines, no slides, no images. The app produces nothing unless each user first adds their own key under `/settings`. |
+| `UPLOADTHING_TOKEN` | Browser uploads to `/api/uploadthing` fail signature verification (the server-side `utapi` paths still work). |
+| `CLERK_WEBHOOK_SECRET` | `POST /api/webhooks/clerk` returns **500**, so Clerk users are never synced into Supabase `public.users`. |
+
+**`CLERK_WEBHOOK_SECRET` in detail.** There is no Backend API endpoint that creates this value;
+it only exists as a by-product of creating a webhook endpoint in the Clerk Dashboard, and it is
+displayed **once**:
+
+1. Deploy the app so `https://<your-origin>/api/webhooks/clerk` is publicly reachable.
+2. Clerk Dashboard → **Webhooks** → **Add Endpoint**.
+3. Endpoint URL: `https://<your-origin>/api/webhooks/clerk`.
+4. Subscribe to `user.created`, `user.updated` and `user.deleted`.
+5. Copy the **Signing Secret** (`whsec_...`) shown for the new endpoint.
+6. Store it as `CLERK_WEBHOOK_SECRET` and redeploy — the route reads it at module load.
+7. If it is lost, delete the endpoint and create a new one; it cannot be revealed again.
+8. Verify locally with `WEBHOOK_SECRET=<whsec_...> node scripts/test-webhook.mjs`.
 
 **To get your Supabase credentials:**
 1. Go to https://supabase.com/dashboard
@@ -56,6 +113,9 @@ After creating the site, go to **Site settings → Build & Deploy → Environmen
    - After sign-in redirect: `/presentation`
 2. Add your Netlify domain to **Allowed origins** in Clerk Dashboard
 3. (Optional) Enable social providers in Clerk Dashboard → **User & Authentication** → **Social connections**
+4. Create the webhook endpoint (see "Secrets that are not configured yet" above) at
+   `https://<your-site.netlify.app>/api/webhooks/clerk` for `user.created`, `user.updated`,
+   `user.deleted`, then store the shown signing secret as `CLERK_WEBHOOK_SECRET`
 
 ### 4. Deploy Your Site
 
@@ -91,9 +151,10 @@ Visit your Netlify URL and check:
 - [ ] Sign-in page accessible at `/auth/signin`
 - [ ] Sign-in with Clerk works (email or social auth)
 - [ ] Can create a new presentation
-- [ ] Real-time generation starts
+- [ ] Real-time generation starts (requires `OPENAI_API_KEY`, or a user-supplied key saved under `/settings` — otherwise generation returns 400)
 - [ ] Can export to PPTX
 - [ ] Can export to PDF
+- [ ] A sign-up creates a row in Supabase `public.users` (requires the Clerk webhook endpoint and `CLERK_WEBHOOK_SECRET`)
 - [ ] Health endpoint: `curl https://your-site.netlify.app/api/health` returns `{"status":"healthy"}`
 
 ---
@@ -114,13 +175,18 @@ Visit your Netlify URL and check:
 ## 🎯 Quick Commands Summary
 
 ```bash
+# Verify the local environment before anything else (names only, never values).
+# Use `pnpm run doctor`: pnpm >= 10 has its own built-in `doctor` command for the
+# pnpm installation, and built-in commands win over package.json scripts.
+pnpm run doctor
+
 # Local development (already working)
 pnpm dev
 
 # Build for production (test locally)
 pnpm build
 
-# Run database migration (locally or via Netlify)
+# Run database migration against Supabase (locally or via Netlify)
 pnpm db:push
 
 # Deploy to Netlify (CLI)
@@ -182,7 +248,7 @@ pnpm add -D @netlify/plugin-nextjs
 
 1. **Database migration must run** before using the app. Tables won't exist until you run `pnpm db:push`.
 
-2. **Environment variables must be set** in Netlify dashboard. The build will fail without `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY`.
+2. **Environment variables must be set** in Netlify dashboard. The build will fail without `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY` — those are the only three the schema requires.
 
 3. **Clerk domains must be configured** in Clerk Dashboard to include your Netlify domain.
 
@@ -210,6 +276,23 @@ pnpm add -D @netlify/plugin-nextjs
 **Solution:** `/api/*` routes are only rewritten when `@netlify/plugin-nextjs` is
 installed and `netlify.toml` declares the redirect — neither is currently true
 (see above). Docker and Vercel serve `/api/*` directly and need no redirect.
+
+### Build fails with "Invalid environment variables: { CLERK_SECRET_KEY: [ 'Required' ], ... }"
+**Solution:** A required variable is missing from `.env` (locally) or from the Netlify
+environment. This is almost always the git-ignored `.env` having been deleted by a
+worktree reset. Run `pnpm run doctor`, which names every missing variable and where to
+get it, then `cp .env.example .env` and restore the values. `pnpm install` is also
+required after a reset if `node_modules/` was wiped.
+
+### AI generation returns 400
+**Solution:** `OPENAI_API_KEY` is not set. It is optional in the schema, so the build
+succeeds and only generation fails. Set it (https://platform.openai.com/api-keys) or have
+the user save their own key under `/settings`.
+
+### Webhook deliveries are rejected / the endpoint returns 500
+**Solution:** `CLERK_WEBHOOK_SECRET` is not set. Copy the `whsec_...` signing secret from
+the Clerk Dashboard entry for `<origin>/api/webhooks/clerk` — it is only shown when the
+endpoint is created, so delete and recreate the endpoint if it is lost.
 
 ### Database connection errors
 **Solution:** Check that Supabase project is active, not paused. Verify connection string is correct. Ensure connection pooling is enabled in Supabase.

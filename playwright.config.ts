@@ -1,5 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// One port for the whole E2E run. `next dev` with no --port silently falls back
+// to 3001 (and keeps incrementing) when 3000 is taken, which left the suite
+// probing a port that was not serving this app. Read PORT so the port can be
+// moved when 3000 is occupied, and pass it explicitly to the webServer below so
+// Next fails loudly instead of drifting.
+const PORT = process.env.PORT ?? "3000";
+const baseURL = `http://localhost:${PORT}`;
+
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
@@ -9,7 +17,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "on-first-retry",
     browserName: "chromium",
     storageState: "./tests/.auth/user.json",
@@ -41,8 +49,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
+    command: `pnpm dev --port ${PORT}`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 300000,
   },

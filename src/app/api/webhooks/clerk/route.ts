@@ -74,7 +74,7 @@ async function handleClerkWebhook(event: ClerkWebhookEvent) {
     const email = data.email_addresses?.[0]?.email_address ?? null;
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
 
-    await supabase.from("users").upsert(
+    const { error } = await supabase.from("users").upsert(
       {
         clerk_id: data.id,
         email,
@@ -84,11 +84,18 @@ async function handleClerkWebhook(event: ClerkWebhookEvent) {
       },
       { onConflict: "clerk_id" },
     );
+
+    if (error) {
+      throw new Error(`users upsert failed: ${error.message}`);
+    }
     return;
   }
 
   if (type === "user.deleted") {
-    await supabase.from("users").delete().eq("clerk_id", data.id);
+    const { error } = await supabase.from("users").delete().eq("clerk_id", data.id);
+    if (error) {
+      throw new Error(`users delete failed: ${error.message}`);
+    }
     return;
   }
 }

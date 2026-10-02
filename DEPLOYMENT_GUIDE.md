@@ -29,24 +29,51 @@ This guide covers deploying Smart Presentations to production with Supabase and 
 
 ⚠️ **Important:** Use the password shown in Supabase, not your actual database password. Supabase generates a secure password for you.
 
+⚠️ **`DATABASE_URL` must point at the Supabase project, never at a local Postgres
+container.** The migrations in `supabase/migrations/` depend on Supabase internals:
+`002_users_and_trigger.sql` references `auth.users` and creates a trigger on it,
+`007_rls_policies.sql` contains 35 RLS policies calling `auth.uid()`,
+`009`/`010` read and delete rows in `auth.users`, and
+`011_user_asset_storage.sql` uses `storage.buckets` / `storage.objects` /
+`storage.foldername()`. `pnpm db:push` applies migrations in numeric order with no
+Supabase detection, so against vanilla Postgres it aborts at `002` and every later
+migration silently never runs. This is also why `docker-compose.yml` ships no local
+Postgres container. Use the direct host (`db.<project-ref>.supabase.co`) or the
+Session-mode pooler host (`aws-0-<region>.pooler.supabase.com`).
+
 ### 1.3 Clerk Authentication Setup
 
 1. Go to https://dashboard.clerk.com and create an account
 2. Create a new application
-3. Copy your **Publishable Key** and **Secret Key**
+3. In **API Keys**, copy your **Publishable Key** and **Secret Key**
 4. Configure your Clerk application:
    - Add your production domain to **Allowed origins**
    - Configure redirect URLs to match your app
    - Enable email/password sign-in (or social providers as needed)
 
+`CLERK_WEBHOOK_SECRET` is *not* available here — see Step 5.2.
+
 ### 1.4 Run Database Migrations
 
 ```bash
+# Verify the environment first (names only, never values). Use `pnpm run doctor`:
+# pnpm >= 10 has its own built-in `doctor` command and built-ins win over scripts.
+pnpm run doctor
+
 # Install dependencies if not already
 pnpm install
 
-# Push Supabase migrations to your database
+# Push Supabase migrations to your Supabase project
 pnpm db:push
+```
+
+`pnpm db:push` needs `psql` and `DATABASE_URL` pointing at the Supabase project (see
+Step 1.2). The Supabase CLI is the supported alternative and skips the local `psql`
+dependency:
+
+```bash
+supabase link --project-ref <project-ref>
+supabase db push
 ```
 
 This creates all necessary tables:
@@ -58,33 +85,75 @@ This creates all necessary tables:
 
 ## Step 2: Environment Variables Configuration
 
-Create a `.env` file (or set in your hosting platform):
+`.env.example` is the committed, annotated template and is kept in sync with the schema
+in `src/env.js` — prefer it over any hand-written list. Create a local `.env` with
+`cp .env.example .env`, fill in the three required values, and run `pnpm run doctor` to
+confirm nothing is missing. In production, set the same names in your hosting platform.
 
 ```env
 # ── Clerk Authentication ────────────────────────────────────────────
+# [REQUIRED] Clerk Dashboard -> API Keys
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
 CLERK_SECRET_KEY="sk_test_..."
-CLERK_WEBHOOK_SECRET="whsec_..."  # Optional: for webhook verification
+
+# [OPTIONAL] Clerk Dashboard -> Webhooks -> Add Endpoint. Shown once, at creation.
+# Without it POST /api/webhooks/clerk returns 500 and users are never synced
+# into Supabase. See Step 5.2 — no API can create this value.
+CLERK_WEBHOOK_SECRET="whsec_..."
 
 # ── Supabase ────────────────────────────────────────────────────────
+# [OPTIONAL] Supabase Dashboard -> Project Settings -> API
 NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional: for server-side admin access
+SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # server-side admin access; bypasses RLS
 
 # ── Database ────────────────────────────────────────────────────────
+# [REQUIRED] Supabase Dashboard -> Project Settings -> Database.
+# Must be the Supabase project host, never a local Postgres container (Step 1.2).
 DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
 
 # ── AI Providers ────────────────────────────────────────────────────
+# [OPTIONAL but required for any AI output] https://platform.openai.com/api-keys
+# Without OPENAI_API_KEY every generation endpoint returns 400; the only
+# remaining path is a user-supplied key saved under /settings.
 OPENAI_API_KEY="sk-your-openai-key"
+TOGETHER_AI_API_KEY=""   # [OPTIONAL]
+PINECONE_API_KEY=""      # [OPTIONAL]
+TAVILY_API_KEY=""        # [OPTIONAL]
 
 # ── Encryption ──────────────────────────────────────────────────────
-API_KEY_ENCRYPTION_MASTER_KEY="..."  # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# [OPTIONAL] Encrypts per-user OpenAI keys stored server-side. Must decode to
+# exactly 32 bytes (64-char hex is also accepted). Generate with:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+# Keep it permanent: rotating it makes stored user keys undecryptable.
+API_KEY_ENCRYPTION_MASTER_KEY="..."
 
-# ── Optional Services ───────────────────────────────────────────────
-UNSPLASH_ACCESS_KEY="your-unsplash-key"
-TAVILY_API_KEY="your-tavily-key"
+# ── Uploads ─────────────────────────────────────────────────────────
+# [OPTIONAL] https://app.uploadthing.com -> API Keys
 UPLOADTHING_TOKEN="your-uploadthing-token"
+
+# ── Error Tracking ──────────────────────────────────────────────────
+# [OPTIONAL] Sentry -> Project -> Settings -> Client Keys
+NEXT_PUBLIC_SENTRY_DSN=""
+SENTRY_DSN=""
+
+# ── Media Search ────────────────────────────────────────────────────
+UNSPLASH_ACCESS_KEY=""   # [OPTIONAL]
+PIXABAY_API_KEY=""       # [OPTIONAL]
+GIPHY_API_KEY=""         # [OPTIONAL]
+PEXELS_API_KEY=""        # [OPTIONAL]
+GOOGLE_CUSTOM_SEARCH_API_KEY=""  # [OPTIONAL]
+SEARCH_ENGINE_CX=""      # [OPTIONAL]
+
+# ── Runtime ─────────────────────────────────────────────────────────
+# [OPTIONAL] development | test | production — defaults to "development".
+NODE_ENV=""
 ```
+
+Only `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` and `DATABASE_URL` are
+required by the schema; everything else is `.optional()` or defaulted. Never set
+`SKIP_ENV_VALIDATION` in production: it is read outside the schema and disables every
+check, converting a missing required variable into an opaque runtime failure.
 
 ## Step 3: Local Testing (Before Deploy)
 
@@ -93,16 +162,21 @@ UPLOADTHING_TOKEN="your-uploadthing-token"
 cp .env.example .env
 # Edit .env with your actual values
 
-# 2. Install deps
+# 2. Confirm nothing is missing before building. Prints variable names only,
+#    never values. (`pnpm run doctor` — pnpm >= 10 shadows `pnpm doctor` with its
+#    own installation check.)
+pnpm run doctor
+
+# 3. Install deps
 pnpm install
 
-# 3. Push database schema
+# 4. Push database schema to Supabase
 pnpm db:push
 
-# 4. Run dev server
+# 5. Run dev server (binds to 3000; override with PORT=3001 pnpm dev)
 pnpm dev
 
-# 5. Test manually:
+# 6. Test manually:
 #    - Visit http://localhost:3000
 #    - Sign in with Clerk (email or social auth)
 #    - Create a presentation
@@ -175,46 +249,40 @@ Also configure:
 
 1. **Social providers** (optional): Enable Google, GitHub, etc. in Clerk Dashboard → **User & Authentication** → **Social connections**
 2. **Email verification**: Configure in Clerk Dashboard → **User & Authentication** → **Email**
-3. **Webhooks** (optional): Set up webhook endpoint to sync Clerk user data to Supabase
+3. **Webhooks**: required for Clerk → Supabase user sync (it is what writes `public.users` rows)
    - Webhook URL: `https://your-app.vercel.app/api/webhooks/clerk`
-   - Events: `user.created`, `user.updated`
+   - Events: `user.created`, `user.updated`, `user.deleted`
+   - Copy the `whsec_...` **Signing Secret** that Clerk displays when the endpoint is created and store it as `CLERK_WEBHOOK_SECRET`. There is **no Backend API endpoint that creates this value**, and it is shown only once — if it is lost, delete the endpoint and create a new one.
 
-### 5.3 Clerk Webhook Verification (Optional but Recommended)
+### 5.3 Clerk Webhook Verification
 
-If you set up Clerk webhooks for user sync, add signature verification:
+`src/app/api/webhooks/clerk/route.ts` verifies every delivery with Svix and returns 400 on
+a bad signature, so the endpoint is safe to expose. What it needs from you is the
+`CLERK_WEBHOOK_SECRET` obtained in Step 5.2; with the variable unset the route returns 500
+before it ever looks at the payload:
 
 ```typescript
-// src/app/api/webhooks/clerk/route.ts
+// src/app/api/webhooks/clerk/route.ts (abridged)
 import { Webhook } from "svix";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-  
+
   if (!webhookSecret) {
-    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+    return NextResponse.json({ error: "CLERK_WEBHOOK_SECRET is not configured" }, { status: 500 });
   }
 
   const svix = new Webhook(webhookSecret);
-  
-  try {
-    const payload = await request.text();
-    const headers = {
-      "svix-id": request.headers.get("svix-id") || "",
-      "svix-timestamp": request.headers.get("svix-timestamp") || "",
-      "svix-signature": request.headers.get("svix-signature") || "",
-    };
-
-    const event = svix.verify(payload, headers);
-    
-    // Handle webhook event
-    // Sync user data to Supabase users table
-    
-    return NextResponse.json({ received: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
-  }
+  // ... verify(payload, headers) -> 400 on an invalid signature,
+  // ... then sync the user row into Supabase `public.users`.
 }
+```
+
+Verify a delivery end to end once the app is deployed:
+
+```bash
+WEBHOOK_SECRET=<whsec_...> node scripts/test-webhook.mjs
 ```
 
 ## Step 6: Deploy to Other Platforms
@@ -252,21 +320,27 @@ docker run -d \
   -p 3000:3000 \
   -e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="..." \
   -e CLERK_SECRET_KEY="..." \
+  -e CLERK_WEBHOOK_SECRET="..." \
   -e NEXT_PUBLIC_SUPABASE_URL="..." \
   -e NEXT_PUBLIC_SUPABASE_ANON_KEY="..." \
   -e SUPABASE_SERVICE_ROLE_KEY="..." \
   -e DATABASE_URL="..." \
   -e OPENAI_API_KEY="..." \
+  -e UPLOADTHING_TOKEN="..." \
   -e API_KEY_ENCRYPTION_MASTER_KEY="..." \
   smart-presentations
 ```
 
-Or with Docker Compose (includes PostgreSQL):
+Or with Docker Compose:
 
 ```bash
-# Edit docker-compose.yml with your environment variables
-# Then:
-docker-compose up -d
+# docker-compose.yml builds the same image and takes its variables from the
+# shell environment (a local .env is read automatically). It ships NO local
+# Postgres container: DATABASE_URL must be the Supabase project connection
+# string, because the migrations cannot run on vanilla Postgres (Step 1.2).
+# The three schema-required variables use ${VAR:?...} so compose fails fast
+# with an actionable message instead of booting half-configured.
+docker compose up -d
 ```
 
 ## Step 7: Monitoring & Maintenance

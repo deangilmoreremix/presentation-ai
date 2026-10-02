@@ -20,7 +20,9 @@
     "test:report": "playwright show-report",
     "test:unit": "vitest run",
     "test:unit:ui": "vitest --ui",
-    "db:push": "node scripts/db-push.mjs"
+    "db:push": "node scripts/db-push.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "preflight": "node scripts/doctor.mjs"
   },
   "dependencies": {
     "@ai-sdk/langchain": "2.0.122",
