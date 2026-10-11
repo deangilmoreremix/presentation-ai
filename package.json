@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@12.11.2",
   "scripts": {
     "build": "next build",
     "dev": "node scripts/dev.mjs",
@@ -30,6 +31,7 @@
     "@antv/infographic": "0.2.19",
     "@ariakit/react": "^0.4.17",
     "@clerk/nextjs": "^7.7.0",
+    "@clerk/ui": "^1.33.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -221,22 +223,5 @@
     "vite": "^8.0.10",
     "vitest": "^4.1.5",
     "webpack": "^5.97.1"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowAny": [
-        "react",
-        "react-dom",
-        "@types/react"
-      ]
-    },
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "core-js",
-      "es5-ext",
-      "esbuild",
-      "protobufjs",
-      "unrs-resolver"
-    ]
   }
 }

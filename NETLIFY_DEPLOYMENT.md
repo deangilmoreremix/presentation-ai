@@ -115,3 +115,16 @@ Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correc
 ---
 
 For detailed comparison with Vercel and additional deployment options, see `DEPLOYMENT_GUIDE.md`.
+
+## Clerk `Missing publishableKey` troubleshooting
+
+The application initializes Clerk in `src/app/layout.tsx` and uses Clerk middleware in `src/proxy.ts`. A successful Netlify deploy does not prove that the Clerk publishable key was present when Next.js compiled the app.
+
+1. Identify the actual Netlify site and deploy context. This repository has previously been deployed to more than one Netlify site; settings on one do not automatically apply to the other.
+2. In that site's environment-variable settings, configure `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` with the publishable key, available to **Builds** (for the matching production/preview/branch context). Configure `CLERK_SECRET_KEY` server-side for **Functions** as well, and for **Builds** if required by the build. Do not store secrets in `netlify.toml`, Git history, or client code.
+3. Ensure both keys are from the **same Clerk instance**. Use production keys and an authorized production domain when publishing publicly, rather than development-instance keys.
+4. Trigger a **new build and deploy** after changing these variables; a deploy that simply republishes existing build artifacts will still contain the previous `NEXT_PUBLIC_*` values.
+5. For local development, save the keys in the repository-root `.env.local`, without quote or line-break artifacts; restart `pnpm dev`. Do not commit `.env.local`.
+6. If the problem persists, verify key presence **without logging values**: `node -e 'console.log({ publishableKeyPresent: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim(), secretKeyPresent: !!process.env.CLERK_SECRET_KEY?.trim() })'`. Execute in the same environment/context as the failing process; this check does not establish validity of the keys.
+
+If a secret key was shared in chat, logs, issues, or other non-secret locations, rotate it in Clerk and replace it in all relevant deployment environments.
