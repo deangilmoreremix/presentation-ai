@@ -5,7 +5,7 @@ import {
   type AgentMiddleware,
 } from "langchain";
 
-import { checkpointer } from "@/ai/lib/postgres";
+import { getCheckpointer } from "@/ai/lib/postgres";
 import { pastedContentMiddleware } from "@/ai/lib/processPastedContent";
 import { presentationTools } from "@/ai/tools/presentation/tools";
 import { modelPicker } from "@/lib/modelPicker";
@@ -135,7 +135,7 @@ You work with presentations in XML format that contain:
 - If a change might break the design, warn the user and suggest modifications
 
 Remember: You're not just executing commands - you're a design partner helping create better presentations. Think about the overall visual impact and user experience of your changes.`,
-    checkpointer: checkpointer,
+    checkpointer: getCheckpointer(),
   });
 
   return agent;
