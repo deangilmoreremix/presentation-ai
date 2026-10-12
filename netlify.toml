@@ -1,6 +1,11 @@
 [build]
   base = "."
-  command = "pnpm build"
+  # `preflight.mjs` fails fast on missing build-time configuration (e.g. the
+  # Clerk publishable key) before a full compile, with an actionable message.
+  # It never prints or persists any value. `pnpm build` still runs the full
+  # Next.js pipeline, including its own TypeScript pass, so nothing redundant
+  # is added.
+  command = "node scripts/preflight.mjs && pnpm build"
   publish = ".next"
 
 [build.environment]
