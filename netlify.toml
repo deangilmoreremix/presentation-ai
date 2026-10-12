@@ -10,6 +10,13 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # Node caps its old space at a fraction of the RAM it sees at boot, and the
+  # Turbopack build of this app peaks well above that default. Netlify's build
+  # container (8 GiB on Free/Starter) has the headroom; without an explicit
+  # cap the build dies with "Ineffective mark-compacts near heap limit"
+  # part-way through. This only raises the ceiling — it does not weaken the
+  # preflight above or any of the typecheck/lint/test gates.
+  NODE_OPTIONS = "--max-old-space-size=6144"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
