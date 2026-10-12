@@ -2,6 +2,7 @@
 
 import { utapi } from "@/app/api/uploadthing/core";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { toActionErrorResult } from "@/lib/ai/action-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { UTFile } from "uploadthing/server";
 import {
@@ -15,7 +16,6 @@ const DEFAULT_SLIDE_IMAGE_MODEL = "openai/gpt-image-2.5-sunburst";
 export async function generateSlideImageAction(
   prompt: string,
   imageModel: ImageModelList = DEFAULT_SLIDE_IMAGE_MODEL,
-  apiKey?: string,
   options?: {
     size?: string;
     quality?: ImageQuality;
@@ -44,7 +44,7 @@ export async function generateSlideImageAction(
   }
 
   try {
-    const openai = await getOpenAIClient(apiKey);
+    const openai = await getOpenAIClient();
 
     const tool: Record<string, unknown> = {
       type: "image_generation",
@@ -122,12 +122,6 @@ export async function generateSlideImageAction(
     return { success: true, image: generatedImage, responseId: response.id };
   } catch (error) {
     console.error("Error generating slide image:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate slide image",
-    };
+    return toActionErrorResult(error, "Failed to generate slide image");
   }
 }

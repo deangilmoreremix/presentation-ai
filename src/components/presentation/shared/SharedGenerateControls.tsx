@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { type Image as GeneratedImage } from "@/app/_actions/apps/image-studio/fetch";
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
-import { getApiKey } from "@/lib/key-storage";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,6 +25,7 @@ import {
   type ImageAspectRatio,
   type ImageModelList,
 } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import {
   buildPresentationThemedImagePrompt,
   resolvePresentationImageTheme,
@@ -164,7 +164,6 @@ export function SharedGenerateControls({
               ? imageModel
               : DEFAULT_IMAGE_MODEL,
             aspectRatio,
-            getApiKey() ?? undefined,
           ),
         );
 
@@ -186,6 +185,10 @@ export function SharedGenerateControls({
         onImagesGenerated?.(successfulImages);
       } else {
         setLocalError(firstError ?? "Failed to generate images");
+        const byokProvider = results.map(byokErrorFromResult).find(Boolean);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
       }
     } catch (error) {
       setLocalError(

@@ -6,6 +6,7 @@ import {
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { withTimeout } from "@/lib/request-timeout";
 import { toUIMessageStream } from "@ai-sdk/langchain";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -19,7 +20,6 @@ interface ImageSlidesRequest {
   language: string;
   modelId?: string;
   modelProvider?: "openai" | "lmstudio";
-  apiKey?: string;
   presentationId?: string;
 }
 
@@ -109,7 +109,6 @@ export async function POST(req: Request) {
       language,
       modelId,
       modelProvider = "openai",
-      apiKey,
       presentationId,
     } = (await req.json()) as ImageSlidesRequest;
 
@@ -185,7 +184,7 @@ export async function POST(req: Request) {
         { status: 503 },
       );
     }
-    const model = modelPicker(modelProvider, modelId, apiKey);
+    const model = await modelPicker(modelProvider, modelId);
     const chain = RunnableSequence.from([prompt, model]);
 
     routeLogger.info("Image slide generation started", {
@@ -218,6 +217,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     routeLogger.error("Image slide generation failed", error, { requestId });
+
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
 
     if (error instanceof Error && error.name === "TimeoutError") {
       return NextResponse.json(

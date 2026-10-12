@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/provider/theme-provider";
 import { TipProvider } from "@/components/onboarding/TipProvider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
+import { ByokPromptProvider } from "@/components/settings/ByokPromptProvider";
+import { ByokGate } from "@/components/settings/ByokGate";
 import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -22,20 +24,32 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // NEXT_PUBLIC_* values are injected at build time. A key configured only
+  // for runtime (or for another Netlify deploy context) will not reach Clerk.
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
+  if (!publishableKey) {
+    throw new Error(
+      "Clerk publishable key is unavailable. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in the hosting provider's BUILD environment for this deploy context, then rebuild and redeploy. For local development, set it in .env.local and restart Next.js.",
+    );
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ClerkProvider appearance={{ theme: shadcn }}>
-          <TanStackQueryProvider>
-            <ThemeProvider>
-              <TipProvider>
-                <AppErrorBoundary>
-                  {children}
-                  <GlobalGenerationManagers />
-                </AppErrorBoundary>
-              </TipProvider>
-            </ThemeProvider>
-          </TanStackQueryProvider>
+        <ClerkProvider publishableKey={publishableKey} appearance={{ theme: shadcn }}>
+          <ByokPromptProvider>
+            <TanStackQueryProvider>
+              <ThemeProvider>
+                <TipProvider>
+                  <AppErrorBoundary>
+                    {children}
+                    <GlobalGenerationManagers />
+                  </AppErrorBoundary>
+                </TipProvider>
+              </ThemeProvider>
+            </TanStackQueryProvider>
+            <ByokGate />
+          </ByokPromptProvider>
         </ClerkProvider>
       </body>
     </html>

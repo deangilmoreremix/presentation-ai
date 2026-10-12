@@ -14,6 +14,7 @@ import {
 
 import { type TAntvInfographicElement } from "@/components/presentation/editor/plugins/antv-infographic-plugin";
 import { findInfographicEntryById } from "@/hooks/presentation/infographic/findInfographicNode";
+import { byokProviderFromError, notifyByokError } from "@/lib/ai/byok-client";
 import {
   buildInfographicLayoutInstruction,
   getInfographicOrientationForSlideLayout,
@@ -227,8 +228,12 @@ export function useAntvInfographicGeneration({
     onFinish(_prompt, completion) {
       handleGenerationFinish(completion);
     },
-    onError() {
+    onError(error) {
       handleGenerationError();
+      const byokProvider = byokProviderFromError(error);
+      if (byokProvider) {
+        notifyByokError(byokProvider);
+      }
     },
   });
 
@@ -242,8 +247,12 @@ export function useAntvInfographicGeneration({
     onFinish(_prompt, completion) {
       handleGenerationFinish(completion);
     },
-    onError() {
+    onError(error) {
       handleGenerationError();
+      const byokProvider = byokProviderFromError(error);
+      if (byokProvider) {
+        notifyByokError(byokProvider);
+      }
     },
   });
 

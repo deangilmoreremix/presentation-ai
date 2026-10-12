@@ -95,7 +95,11 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     const session = await auth();
     if (!session.userId) {
       const signInUrl = new URL("/auth/signin", request.url);
-      signInUrl.searchParams.set("redirect", pathname);
+      // `callbackUrl` is the parameter the sign-in page actually reads to build
+      // its post-login `forceRedirectUrl`; the previous `redirect` param was
+      // silently ignored and every user landed on the homepage instead of the
+      // page they had asked for.
+      signInUrl.searchParams.set("callbackUrl", pathname);
       return applySecurityHeaders(
         NextResponse.redirect(signInUrl),
       );

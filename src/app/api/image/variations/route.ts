@@ -1,5 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { csrfGuard } from "@/lib/csrf";;
+import { type NextRequest, NextResponse } from "next/server";
+import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
@@ -14,13 +15,12 @@ export async function POST(req: NextRequest) {
     const imageFile = formData.get("image") as File | null;
     const model = (formData.get("model") as ImageModel) || "dall-e-2";
     const n = Number(formData.get("n")) || 1;
-    const apiKey = formData.get("apiKey") as string | undefined;
 
     if (!imageFile) {
       return NextResponse.json({ error: "Image file is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient();
 
     const response = await openai.images.createVariation({
       model,
@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, images: uploadedUrls, count: uploadedUrls.length });
   } catch (error) {
     console.error("Image variation API error:", error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to create variation" },
       { status: 500 },

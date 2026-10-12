@@ -206,10 +206,15 @@ export async function createPresentation({
       return { success: false, message: "Failed to create presentation" };
     }
 
+    // `presentations.id` is a surrogate primary key that the rest of the app
+    // never uses: the document id (`base_documents.id`) is the canonical
+    // identifier for routing, access checks, updates, and deletion. Returning
+    // the surrogate here made every "create"/"duplicate" flow navigate to
+    // `/presentation/<uuid-that-does-not-exist>` and 404.
     return {
       success: true,
       message: "Presentation created successfully",
-      presentation,
+      presentation: { ...presentation, id: doc.id },
     };
   } catch (error) {
     console.error(error);
@@ -634,10 +639,12 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
 
     if (presErr) throw presErr;
 
+    // Same contract as `createPresentation`: the returned `id` must be the
+    // base document id, because every other access path keys on it.
     return {
       success: true,
       message: "Presentation duplicated successfully",
-      presentation: duplicated,
+      presentation: { ...duplicated, id: newDoc.id },
     };
   } catch (error) {
     console.error(error);

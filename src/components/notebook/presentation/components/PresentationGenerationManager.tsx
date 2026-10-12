@@ -15,6 +15,7 @@ import {
   getToolState,
   isToolPart,
 } from "@/lib/ai/uiMessageParts";
+import { byokProviderFromError, notifyByokError } from "@/lib/ai/byok-client";
 import { collectNotebookAgentToolCalls } from "@/lib/notebook/agent-activity";
 import { isWebSearchToolName } from "@/lib/ai/tool-names";
 import { createLogger } from "@/lib/observability/logger";
@@ -29,7 +30,6 @@ import { type ThemeProperties } from "@/lib/presentation/themes";
 import { usePresentationState } from "@/states/presentation-state";
 import { useChat, useCompletion } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { getApiKey } from "@/lib/key-storage";
 import { usePresentationTheme } from "@/components/presentation/providers/PresentationThemeProvider";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -103,6 +103,20 @@ function usesStockSearchForPresentation(
   imageSource: "automatic" | "ai" | "stock" | "gif",
 ): boolean {
   return imageSource === "automatic" || imageSource === "stock";
+}
+
+function reportGenerationError(error: unknown, prefix: string): void {
+  const provider = byokProviderFromError(error);
+  if (provider) {
+    notifyByokError(provider);
+    toast.error(
+      `Add your ${provider === "muapi" ? "Muapi" : "OpenAI"} API key to continue.`,
+    );
+    return;
+  }
+  toast.error(
+    `${prefix}: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 
 export function PresentationGenerationManager() {
@@ -348,7 +362,6 @@ export function PresentationGenerationManager() {
   if (outlineTransportRef.current === null) {
     outlineTransportRef.current = new DefaultChatTransport({
       api: "/api/presentation/outline",
-      body: { apiKey: getApiKey() ?? undefined },
     });
   }
 
@@ -453,7 +466,7 @@ export function PresentationGenerationManager() {
       setIsGeneratingOutline(false);
       setShouldStartOutlineGeneration(false);
       setShouldStartPresentationGeneration(false);
-      toast.error("Failed to generate outline: " + error.message);
+      reportGenerationError(error, "Failed to generate outline");
       resetGeneration();
       setOutlineToolCalls([]);
 
@@ -543,7 +556,6 @@ export function PresentationGenerationManager() {
   const { completion: presentationCompletion, complete: generatePresentation } =
     useCompletion({
       api: "/api/presentation/generate",
-      body: { apiKey: getApiKey() ?? undefined },
       onFinish: (_prompt, _completion) => {
         generationLogger.info("Presentation generation completed", {
           presentationId: currentPresentationId,
@@ -583,7 +595,7 @@ export function PresentationGenerationManager() {
         generationLogger.error("Presentation generation failed", error, {
           presentationId: usePresentationState.getState().currentPresentationId,
         });
-        toast.error("Failed to generate presentation: " + error.message);
+        reportGenerationError(error, "Failed to generate presentation");
         resetGeneration();
         streamingParserRef.current.reset();
 
@@ -599,7 +611,6 @@ export function PresentationGenerationManager() {
   const { completion: imageSlidesCompletion, complete: generateImageSlides } =
     useCompletion({
       api: "/api/presentation/generate-image-slides",
-      body: { apiKey: getApiKey() ?? undefined },
       onFinish: (_prompt, _completion) => {
         generationLogger.info("Image slide generation completed", {
           presentationId: currentPresentationId,
@@ -639,7 +650,7 @@ export function PresentationGenerationManager() {
         generationLogger.error("Image slide generation failed", error, {
           presentationId: usePresentationState.getState().currentPresentationId,
         });
-        toast.error("Failed to generate image slides: " + error.message);
+        reportGenerationError(error, "Failed to generate image slides");
         resetGeneration();
         streamingParserRef.current.reset();
 
@@ -931,14 +942,12 @@ export function PresentationGenerationManager() {
                   result = await generateSlideImageAction(
                     slide.rootImage!.query,
                     imageModel,
-                    getApiKey() ?? undefined,
                   );
                 } else {
                   result = await generateImageAction(
                     slide.rootImage!.query,
                     imageModel,
                     "16:9",
-                    getApiKey() ?? undefined,
                   );
                 }
               }
