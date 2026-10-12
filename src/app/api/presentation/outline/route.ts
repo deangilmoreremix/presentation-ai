@@ -10,6 +10,7 @@ import {
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { withTimeout } from "@/lib/request-timeout";
 import { logger } from "@/lib/observability/server/logger";
 import { toBaseMessages, toUIMessageStream } from "@ai-sdk/langchain";
@@ -29,7 +30,6 @@ interface OutlineMessageMetadata {
   language?: string;
   modelId?: string;
   modelProvider?: "openai" | "lmstudio";
-  apiKey?: string;
   webSearch?: boolean;
   autoTheme?: boolean;
   textContent?: "minimal" | "concise" | "detailed" | "extensive";
@@ -205,7 +205,6 @@ export async function POST(req: Request) {
     const language = metadata.language ?? "";
     const modelProvider = metadata.modelProvider ?? "openai";
     const modelId = metadata.modelId;
-    const apiKey = metadata.apiKey;
     const webSearch = Boolean(metadata.webSearch);
     const autoTheme = metadata.autoTheme ?? false;
 
@@ -307,7 +306,7 @@ export async function POST(req: Request) {
     }
 
     const agent = createAgent({
-      model: modelPicker(modelProvider, modelId, apiKey),
+      model: await modelPicker(modelProvider, modelId),
       tools: webSearch ? [search_tool] : [],
       systemPrompt:
         buildOutlineSystemPrompt({
@@ -358,6 +357,9 @@ export async function POST(req: Request) {
       requestId,
     });
     span.error(error);
+
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
 
     if (error instanceof Error && error.name === "TimeoutError") {
       return NextResponse.json(

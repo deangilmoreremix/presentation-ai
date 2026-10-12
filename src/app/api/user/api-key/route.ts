@@ -1,188 +1,167 @@
 import { NextResponse } from "next/server";
 import { appLogger } from "@/lib/observability/logger";
-import { decryptApiKey, encryptApiKey, validateKeyFormat } from "@/lib/crypto/key-encryption";
 import { createClient } from "@/lib/supabase/server";
 import { auth } from "@clerk/nextjs/server";
+import {
+  deleteProviderCredential,
+  getProviderCredentialStatus,
+  storeProviderCredential,
+  type AiProvider,
+} from "@/lib/ai/provider-credentials";
+import { validateProviderKeyFormat } from "@/lib/crypto/key-encryption";
+
+const PROVIDERS: AiProvider[] = ["openai", "muapi"];
+
+function parseProvider(value: unknown): AiProvider | null {
+  return typeof value === "string" && (PROVIDERS as string[]).includes(value)
+    ? (value as AiProvider)
+    : null;
+}
 
 /**
  * GET /api/user/api-key
- * Returns the masked server-stored key for authenticated users.
- * Anonymous users receive a client-only response.
+ *
+ * Returns safe status metadata only: which providers the authenticated user
+ * has configured and, when known, when each key was last validated.
+ *
+ * This endpoint NEVER returns, masks, or derives any part of a stored
+ * credential. There is deliberately no plaintext or last-4 reveal mode.
  */
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
+      return NextResponse.json({ success: true, providers: [] });
     }
 
-    try {
-      const supabase = await createClient();
-      if (!supabase) {
-        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
-      }
+    const providers = await Promise.all(
+      PROVIDERS.map(async (provider) => {
+        const { configured } = await getProviderCredentialStatus(provider);
+        return {
+          provider,
+          configured,
+          ...(await readLastValidatedAt(provider)),
+        };
+      }),
+    );
 
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("openai_api_key_encrypted, openai_api_key_iv")
-        .eq("id", userId)
-        .maybeSingle<{ openai_api_key_encrypted: string | null; openai_api_key_iv: string | null }>();
-
-      if (error) {
-        appLogger.error("Failed to fetch API key from database", { error });
-        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
-      }
-
-      const encrypted = user?.openai_api_key_encrypted ?? null;
-      const iv = user?.openai_api_key_iv ?? null;
-
-      if (!encrypted || !iv) {
-        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
-      }
-
-      try {
-        const decrypted = await decryptApiKey(encrypted, userId, iv);
-        const maskedKey = decrypted.length >= 4 ? `sk-...${decrypted.slice(-4)}` : "sk-";
-        const url = new URL(request.url);
-        const revealRaw = url.searchParams.get("raw") === "true";
-        if (revealRaw) {
-          return NextResponse.json({ success: true, rawKey: decrypted, storage: "server" });
-        }
-        return NextResponse.json({ success: true, maskedKey, storage: "server" });
-      } catch (error) {
-        appLogger.error("Failed to decrypt API key", { error });
-        return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
-      }
-    } catch (error) {
-      appLogger.error("Error fetching API key", { error });
-      return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
-    }
+    return NextResponse.json({ success: true, providers });
   } catch (error) {
-    appLogger.error("Error fetching API key", { error });
-    return NextResponse.json({ success: true, maskedKey: null, storage: "none" });
+    // Never log credential material.
+    appLogger.error("Error fetching API key status", { error });
+    return NextResponse.json({ success: true, providers: [] });
+  }
+}
+
+/** Reads only the non-sensitive `last_validated_at` metadata column. */
+async function readLastValidatedAt(
+  provider: AiProvider,
+): Promise<{ lastValidatedAt: string | null }> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) return { lastValidatedAt: null };
+
+    const column =
+      provider === "openai"
+        ? "openai_last_validated_at"
+        : "muapi_last_validated_at";
+
+    const { data, error } = await supabase
+      .from("users")
+      .select(column)
+      .eq("id", (await auth()).userId ?? "")
+      .maybeSingle<Record<string, string | null>>();
+
+    if (error || !data) return { lastValidatedAt: null };
+    const value = data[column];
+    return { lastValidatedAt: value ?? null };
+  } catch {
+    return { lastValidatedAt: null };
   }
 }
 
 /**
  * POST /api/user/api-key
- * Body: { key: string; storage: "client" | "server" }
- * Authenticated users: server storage encrypts and persists to DB; client storage clears DB copy.
- * Anonymous users: server storage is rejected; client storage is a no-op (handled client-side).
+ * Body: { provider: "openai" | "muapi"; key: string }
+ *
+ * Encrypts and persists the authenticated user's own provider key.
  */
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
 
-    const body = await request.json();
-    const { key, storage } = body as { key: string; storage: "client" | "server" };
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
+    }
 
-    if (!key || key.trim().length === 0) {
+    const body = await request.json();
+    const provider = parseProvider(body?.provider);
+    const key = typeof body?.key === "string" ? body.key.trim() : "";
+
+    if (!provider) {
+      return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
+    }
+
+    if (!key) {
       return NextResponse.json({ error: "Key required" }, { status: 400 });
     }
 
-    if (!validateKeyFormat(key)) {
-      return NextResponse.json({ error: "Invalid API key format" }, { status: 400 });
+    if (!validateProviderKeyFormat(provider, key)) {
+      return NextResponse.json(
+        {
+          error:
+            provider === "openai"
+              ? "Invalid OpenAI key format. Keys start with sk- and are at least 32 characters."
+              : "Invalid MuAPI key format.",
+        },
+        { status: 400 },
+      );
     }
 
-    if (storage === "server" && userId) {
-      try {
-        const supabase = await createClient();
-        if (!supabase) {
-          return NextResponse.json({ error: "Database not configured" }, { status: 500 });
-        }
+    await storeProviderCredential(provider, key);
 
-        const { encrypted, iv } = await encryptApiKey(key, userId);
-        const { error } = await supabase
-          .from("users")
-          .update({
-            openai_api_key_encrypted: encrypted,
-            openai_api_key_iv: iv,
-          })
-          .eq("id", userId);
-
-        if (error) {
-          appLogger.error("Failed to save API key to database", { error });
-          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-        }
-
-        appLogger.info("API key encrypted and saved", { userId });
-        return NextResponse.json({ success: true });
-      } catch (error) {
-        appLogger.error("Encryption failed", { error });
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-      }
-    }
-
-    // Client storage or anonymous user: clear any server-side copy
-    if (userId) {
-      try {
-        const supabase = await createClient();
-        if (!supabase) {
-          return NextResponse.json({ success: true });
-        }
-
-        const { error } = await supabase
-          .from("users")
-          .update({
-            openai_api_key_encrypted: null,
-            openai_api_key_iv: null,
-          })
-          .eq("id", userId);
-
-        if (error) {
-          appLogger.error("Failed to clear server API key", { error });
-        }
-
-        appLogger.info("Client-only storage selected, server copy cleared", { userId });
-      } catch (error) {
-        appLogger.error("Error clearing server API key", { error });
-      }
-    }
-    return NextResponse.json({ success: true });
+    appLogger.info("Provider API key stored", { userId, provider });
+    return NextResponse.json({ success: true, provider, configured: true });
   } catch (error) {
-    appLogger.error("Error processing API key", { error });
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    // Never log credential material.
+    appLogger.error("Error saving API key", { error });
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 /**
- * DELETE /api/user/api-key
- * Deletes the server-stored key for authenticated users.
- * Anonymous users receive a success response without DB changes.
+ * DELETE /api/user/api-key?provider=openai|muapi
+ * Removes the authenticated user's stored credential for that provider.
  */
-export async function DELETE() {
+export async function DELETE(request: Request) {
   try {
     const { userId } = await auth();
 
-    if (userId) {
-      try {
-        const supabase = await createClient();
-        if (!supabase) {
-          return NextResponse.json({ success: true });
-        }
-
-        const { error } = await supabase
-          .from("users")
-          .update({
-            openai_api_key_encrypted: null,
-            openai_api_key_iv: null,
-          })
-          .eq("id", userId);
-
-        if (error) {
-          appLogger.error("Failed to delete API key from database", { error });
-          return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-        }
-
-        appLogger.info("API key deleted", { userId });
-      } catch (error) {
-        appLogger.error("Error deleting API key", { error });
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-      }
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required" },
+        { status: 401 },
+      );
     }
 
-    return NextResponse.json({ success: true });
+    const provider = parseProvider(
+      new URL(request.url).searchParams.get("provider"),
+    );
+
+    if (!provider) {
+      return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
+    }
+
+    await deleteProviderCredential(provider);
+
+    appLogger.info("Provider API key deleted", { userId, provider });
+    return NextResponse.json({ success: true, provider, configured: false });
   } catch (error) {
     appLogger.error("Error deleting API key", { error });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

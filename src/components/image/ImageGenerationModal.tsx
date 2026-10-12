@@ -52,7 +52,6 @@ import {
 import { useMediaQuery } from "@/hooks/globals/useMediaQuery";
 import { usePresentationState } from "@/states/presentation-state";
 import { generateImageAction, generateImageStreamAction } from "@/app/_actions/apps/image-studio/generate";
-import { getApiKey } from "@/lib/key-storage";
 import { useToast } from "@/components/ui/use-toast";
 import { ImageHistoryPanel } from "./ImageHistoryPanel";
 import { ImageMaskEditor } from "./ImageMaskEditor";
@@ -282,7 +281,6 @@ export function ImageGenerationModal({
           fullPrompt,
           selectedModel,
           aspectRatio,
-          getApiKey() ?? undefined,
           {
             size: activeSize,
             quality,
@@ -334,7 +332,6 @@ export function ImageGenerationModal({
               fullPrompt,
               selectedModel,
               aspectRatio,
-              getApiKey() ?? undefined,
               {
                 size: activeSize,
                 quality,

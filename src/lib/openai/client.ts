@@ -1,23 +1,16 @@
-import { env } from "@/env";
 import OpenAI from "openai";
+import { resolveOpenAICredential } from "@/lib/ai/provider-credentials";
 
 /**
- * Creates an OpenAI client with the provided API key or fallback.
+ * Creates an OpenAI client using the authenticated user's own API key.
  * Used by all AI generation actions.
- * Note: Database-dependent API key resolution removed - uses provided key or env var only.
  *
- * This module is safe to import even when OPENAI_API_KEY is missing.
- * The missing-key check happens lazily inside getOpenAIClient().
+ * BYOK: there is no fallback to a platform-owned key. If the user has not
+ * configured their own OpenAI key this throws, and callers surface
+ * `PROVIDER_KEY_REQUIRED` so the UI can open the API key modal.
  */
-export async function getOpenAIClient(_userId?: string, providedApiKey?: string): Promise<OpenAI> {
-  // Use provided API key, or fall back to environment
-  const apiKey = providedApiKey || env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      "OpenAI API key is required. Provide one via apiKey parameter or set OPENAI_API_KEY in your environment."
-    );
-  }
+export async function getOpenAIClient(): Promise<OpenAI> {
+  const apiKey = await resolveOpenAICredential();
 
   return new OpenAI({
     apiKey,
@@ -26,12 +19,13 @@ export async function getOpenAIClient(_userId?: string, providedApiKey?: string)
 }
 
 /**
- * Stub function for user API key resolution.
- * Database-dependent key lookup removed - returns null to fall back to env var.
- * In Supabase architecture, users provide their API key via the apiKey parameter.
+ * Resolves the current user's OpenAI API key, or null when unconfigured.
+ * Never falls back to a platform key.
  */
-export async function resolveUserApiKey(_userId?: string): Promise<string | null> {
-  // No database lookup in Supabase-only architecture
-  // Returns null to trigger fallback to env.OPENAI_API_KEY
-  return null;
+export async function resolveUserApiKey(): Promise<string | null> {
+  try {
+    return await resolveOpenAICredential();
+  } catch {
+    return null;
+  }
 }

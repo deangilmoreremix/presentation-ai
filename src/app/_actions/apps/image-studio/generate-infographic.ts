@@ -18,7 +18,6 @@ type GenerateInfographicImageActionInput = {
   layout?: string;
   model?: ImageModelList;
   prompt: string;
-  apiKey?: string;
   size?: string;
   quality?: ImageQuality;
   outputFormat?: OutputFormat;
@@ -68,7 +67,6 @@ export async function generateInfographicImageAction({
   layout = "Timeline",
   model = DEFAULT_IMAGE_MODEL,
   prompt,
-  apiKey,
   size = "1536x1024",
   quality = "high",
   outputFormat = "png",
@@ -118,7 +116,7 @@ export async function generateInfographicImageAction({
       "smart.server.image_generation.model": actualModel,
     });
 
-    const openai = await getOpenAIClient(apiKey);
+    const openai = await getOpenAIClient();
 
     const tool: Record<string, unknown> = {
       type: "image_generation",

@@ -12,7 +12,6 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { generateInfographicImageAction } from "@/app/_actions/apps/image-studio/generate-infographic";
-import { getApiKey } from "@/lib/key-storage";
 import { type RootImage } from "@/components/notebook/presentation/utils/parser";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -137,7 +136,6 @@ export function InfographicGenerationPanel() {
         prompt: trimmedPrompt,
         layout,
         model: selectedModel,
-        apiKey: getApiKey() ?? undefined,
       });
 
       if (!result.success || !result.image) {

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
 import { getOpenAIClient } from "@/lib/openai/client";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
 import {
@@ -50,7 +50,6 @@ export async function POST(req: NextRequest) {
       outputCompression,
       background = "opaque",
       n = 1,
-      apiKey,
       mode = "generate",
       previousResponseId,
       partialImages,
@@ -69,7 +68,6 @@ export async function POST(req: NextRequest) {
       outputCompression?: number;
       background?: ImageBackground;
       n?: number;
-      apiKey?: string;
       mode?: ImageGenerationMode;
       previousResponseId?: string;
       partialImages?: number;
@@ -136,7 +134,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient();
 
     // Streaming is not supported by the SDK path here; return an explicit error if requested.
     if (stream) {
@@ -292,6 +290,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Image generation API error:", error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to generate image" },
       { status: 500 },

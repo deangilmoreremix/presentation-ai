@@ -1,5 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
@@ -40,7 +41,6 @@ export async function POST(req: NextRequest) {
       action = "auto",
       previousResponseId,
       n = 1,
-      apiKey,
       mode,
       moderation,
       userId,
@@ -61,7 +61,6 @@ export async function POST(req: NextRequest) {
       action?: ImageAction;
       previousResponseId?: string;
       n?: number;
-      apiKey?: string;
       mode?: ImageGenerationMode;
       moderation?: "low" | "auto";
       userId?: string;
@@ -119,7 +118,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient();
 
     // The SDK types predate gpt-image-2; the runtime API accepts these fields.
     const tools: any[] = [
@@ -201,6 +200,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Responses API image error:", error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to generate with Responses API" },
       { status: 500 },

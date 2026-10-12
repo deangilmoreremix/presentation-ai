@@ -8,6 +8,7 @@ import {
 import { env } from "@/env";
 import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 import { csrfGuard } from "@/lib/csrf";
+import { getUserOpenAIKey } from "@/lib/crypto/get-user-api-key";
 
 const CLIENT_TOOLS = new Set([
   "edit_slide_properties",
@@ -344,16 +345,26 @@ export async function POST(req: Request) {
     const csrfError = csrfGuard(req);
     if (csrfError) return csrfError;
     if (csrfError) return csrfError;
+    // `apiKey` is intentionally NOT read from the request body: credentials are
+    // always resolved server-side from the authenticated Clerk session. Accepting
+    // a client-supplied key would bypass per-user credential scoping.
     const body = (await req.json()) as {
       id?: string;
       messages?: UIMessage[];
-      apiKey?: string;
     };
 
     const presentationId = body.id ?? "default";
 
     const messages: UIMessage[] = Array.isArray(body.messages) ? body.messages : [];
-    const apiKey = body.apiKey || env.OPENAI_API_KEY;
+    // BYOK: the credential is resolved from the authenticated Clerk session
+    // only. A key supplied in the request body is never trusted, and there is
+    // no platform-owned fallback key.
+    let apiKey: string | undefined;
+    try {
+      apiKey = await getUserOpenAIKey();
+    } catch {
+      apiKey = undefined;
+    }
     const openai = apiKey ? new OpenAI({ apiKey }) : null;
     const input = buildInput(messages);
 
@@ -375,7 +386,7 @@ export async function POST(req: Request) {
               type: "text-delta",
               id: "no-key",
               delta:
-                "No OpenAI API key is configured. Set OPENAI_API_KEY (or pass apiKey) to enable the agent.",
+                "No OpenAI API key is configured for your account. Add your own API key in Settings to enable the presentation agent.",
             });
             writer.write({ type: "text-end", id: "no-key" });
             return;

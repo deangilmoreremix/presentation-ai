@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/provider/theme-provider";
 import { TipProvider } from "@/components/onboarding/TipProvider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
+import { ByokPromptProvider } from "@/components/settings/ByokPromptProvider";
+import { ByokGate } from "@/components/settings/ByokGate";
 import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -35,16 +37,19 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <ClerkProvider publishableKey={publishableKey} appearance={{ theme: shadcn }}>
-          <TanStackQueryProvider>
-            <ThemeProvider>
-              <TipProvider>
-                <AppErrorBoundary>
-                  {children}
-                  <GlobalGenerationManagers />
-                </AppErrorBoundary>
-              </TipProvider>
-            </ThemeProvider>
-          </TanStackQueryProvider>
+          <ByokPromptProvider>
+            <TanStackQueryProvider>
+              <ThemeProvider>
+                <TipProvider>
+                  <AppErrorBoundary>
+                    {children}
+                    <GlobalGenerationManagers />
+                  </AppErrorBoundary>
+                </TipProvider>
+              </ThemeProvider>
+            </TanStackQueryProvider>
+            <ByokGate />
+          </ByokPromptProvider>
         </ClerkProvider>
       </body>
     </html>

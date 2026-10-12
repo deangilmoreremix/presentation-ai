@@ -11,7 +11,6 @@ import {
 } from "react";
 
 import { type ImageModelList } from "@/constants/image-models";
-import { getApiKey } from "@/lib/key-storage";
 import { usePresentationState } from "@/states/presentation-state";
 import { SlideParser } from "../../utils/parser";
 
@@ -70,8 +69,7 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
 
   const { complete, isLoading, stop } = useCompletion({
     api: "/api/presentation/generate-slide",
-    body: { apiKey: getApiKey() ?? undefined },
-    onFinish: (_prompt, finalCompletion) => {
+        onFinish: (_prompt, finalCompletion) => {
       // Parse final content and update the slide only when fully complete
       const processedCompletion = stripXmlCodeBlock(finalCompletion);
       parser.reset();

@@ -16,7 +16,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/AppAuthProvider";
 import {
   type ImageModel,
@@ -113,8 +112,7 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
       formData.append("outputCompression", String(compression));
       formData.append("background", background);
       formData.append("n", String(n));
-      formData.append("apiKey", getApiKey() ?? "");
-
+      
       const response = await fetch("/api/image/edit", {
         method: "POST",
         body: formData,
@@ -148,8 +146,7 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
       formData.append("image", image);
       formData.append("model", model);
       formData.append("size", size);
-      formData.append("apiKey", getApiKey() ?? "");
-
+      
       const response = await fetch("/api/image/variations", {
         method: "POST",
         body: formData,

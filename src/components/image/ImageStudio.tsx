@@ -24,7 +24,6 @@ import {
   Settings2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/AppAuthProvider";
 import { searchUnsplashImages } from "@/app/_actions/apps/image-studio/unsplash";
 import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
@@ -378,7 +377,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
         prompt: trimmed,
         layout: infographicLayout,
         model: infographicModel as any,
-        apiKey: getApiKey() ?? undefined,
       });
       if (!result.success || !result.image) {
         throw new Error(result.error ?? "Failed to generate infographic");
@@ -413,7 +411,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           outputCompression: compression,
           background,
           n,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 
@@ -468,7 +465,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           action: "edit",
           previousResponseId: entry.responseId,
           n: 1,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 
@@ -536,7 +532,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           outputCompression: compression,
           background,
           n,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 

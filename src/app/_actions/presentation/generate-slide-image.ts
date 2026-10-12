@@ -15,7 +15,6 @@ const DEFAULT_SLIDE_IMAGE_MODEL = "openai/gpt-image-2.5-sunburst";
 export async function generateSlideImageAction(
   prompt: string,
   imageModel: ImageModelList = DEFAULT_SLIDE_IMAGE_MODEL,
-  apiKey?: string,
   options?: {
     size?: string;
     quality?: ImageQuality;
@@ -44,7 +43,7 @@ export async function generateSlideImageAction(
   }
 
   try {
-    const openai = await getOpenAIClient(apiKey);
+    const openai = await getOpenAIClient();
 
     const tool: Record<string, unknown> = {
       type: "image_generation",

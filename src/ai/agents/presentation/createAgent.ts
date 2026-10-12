@@ -11,7 +11,7 @@ import { presentationTools } from "@/ai/tools/presentation/tools";
 import { modelPicker } from "@/lib/modelPicker";
 
 // Create the graph
-export function createPresentationGraph(apiKey?: string | null) {
+export async function createPresentationGraph() {
   const trimMessageHistory = createMiddleware({
     name: "TrimMessages",
     wrapModelCall: async (request, handler) => {
@@ -35,7 +35,8 @@ export function createPresentationGraph(apiKey?: string | null) {
     trimMessageHistory,
   ];
 
-  const llm = modelPicker("gpt-4o-mini", undefined, apiKey);
+  // BYOK: the credential is resolved from the authenticated Clerk session.
+  const llm = await modelPicker("gpt-4o-mini");
   const agent = createAgent({
     model: llm.withConfig({
       parallel_tool_calls: false,

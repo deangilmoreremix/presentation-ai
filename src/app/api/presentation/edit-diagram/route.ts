@@ -4,8 +4,9 @@ import { toUIMessageStream } from "@ai-sdk/langchain";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { consumeStream, createUIMessageStreamResponse } from "ai";
-import { NextResponse } from "next/server"
-import { csrfGuard } from "@/lib/csrf";;
+import { NextResponse } from "next/server";
+import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 
 import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";
@@ -224,7 +225,7 @@ export async function POST(req: Request) {
     const templateList = organizeTemplates(templates);
     const editDiagramChain = RunnableSequence.from([
       PromptTemplate.fromTemplate(SYSTEM_PROMPT),
-      modelPicker(INFOGRAPHIC_MODEL),
+      await modelPicker(INFOGRAPHIC_MODEL),
     ]);
 
     const stream = await editDiagramChain.stream({
@@ -250,6 +251,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     span.error(error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: "Failed to edit diagram" },
       { status: 500 },

@@ -11,6 +11,9 @@ interface ApiKeyInputFieldProps {
   showToggle?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  /** Controlled visibility of the entered credential. */
+  revealed?: boolean;
+  onRevealedChange?: (revealed: boolean) => void;
 }
 
 /**
@@ -26,11 +29,20 @@ export function ApiKeyInputField({
   showToggle = true,
   disabled = false,
   placeholder = "sk-...",
+  revealed,
+  onRevealedChange,
 }: ApiKeyInputFieldProps) {
-  const [showKey, setShowKey] = React.useState(false);
+  const [internalShowKey, setInternalShowKey] = React.useState(false);
+  const isControlled = revealed !== undefined;
+  const showKey = isControlled ? revealed : internalShowKey;
 
   const toggleShow = () => {
-    if (showToggle) setShowKey((prev) => !prev);
+    if (!showToggle) return;
+    if (isControlled) {
+      onRevealedChange?.(!showKey);
+    } else {
+      setInternalShowKey((prev) => !prev);
+    }
   };
 
   return (

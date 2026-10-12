@@ -51,7 +51,6 @@ async function generateOpenAIImage(
   prompt: string,
   userId: string,
   aspectRatio: ImageAspectRatio,
-  apiKey?: string,
   model: ImageModelList = DEFAULT_IMAGE_MODEL,
   options?: {
     size?: string;
@@ -69,7 +68,7 @@ async function generateOpenAIImage(
     mask?: { url?: string; base64?: string; x?: number; y?: number; width?: number; height?: number };
   },
 ) {
-  const openai = await getOpenAIClient(apiKey);
+  const openai = await getOpenAIClient();
 
   const tool: Record<string, unknown> = {
     type: "image_generation",
@@ -140,7 +139,6 @@ export async function generateImageAction(
   prompt: string,
   model: ImageModelList = DEFAULT_IMAGE_MODEL,
   aspectRatio: ImageAspectRatio = "16:9",
-  apiKey?: string,
   options?: {
     size?: string;
     quality?: string;
@@ -156,7 +154,7 @@ export async function generateImageAction(
   },
 ) {
   try {
-    return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, apiKey, model, options);
+    return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, model, options);
   } catch (error) {
     console.error("Error generating image:", error);
     return {
@@ -171,7 +169,6 @@ export async function generateImageStreamAction(
   prompt: string,
   model: ImageModelList = DEFAULT_IMAGE_MODEL,
   aspectRatio: ImageAspectRatio = "16:9",
-  apiKey?: string,
   options?: {
     size?: string;
     quality?: string;
@@ -188,7 +185,7 @@ export async function generateImageStreamAction(
   },
 ) {
   try {
-    const openai = await getOpenAIClient(apiKey);
+    const openai = await getOpenAIClient();
 
     const tool: Record<string, unknown> = {
       type: "image_generation",

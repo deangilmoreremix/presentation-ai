@@ -3,213 +3,261 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { ApiKeyModal } from "@/components/settings/ApiKeyModal";
 
-// Mock fetch globally
-global.fetch = vi.fn();
+const fetchMock = vi.fn();
+global.fetch = fetchMock as unknown as typeof fetch;
 
-describe("ApiKeyModal", () => {
+describe("ApiKeyModal (BYOK, OpenAI + MuAPI)", () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn().mockResolvedValue(undefined);
+  const mockOnRemove = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchMock.mockReset();
   });
 
-  it("renders when open is true", () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    expect(screen.getByText("Enter your OpenAI API key")).toBeInTheDocument();
+  it("uses the required title and BYOK subtitle", () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+    expect(
+      screen.getByText("Connect Your AI Providers"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Use your own API keys to generate presentations/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your provider bills you directly for usage/i),
+    ).toBeInTheDocument();
   });
 
-  it("does not render when open is false", () => {
-    render(<ApiKeyModal open={false} onClose={mockOnClose} onSave={mockOnSave} />);
-    expect(screen.queryByText("Enter your OpenAI API key")).not.toBeInTheDocument();
+  it("renders a card for each supported provider with a dashboard link", () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+    expect(screen.getByLabelText("OpenAI API key")).toBeInTheDocument();
+    expect(screen.getByLabelText("MuAPI API key")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /OpenAI API key dashboard/i }),
+    ).toHaveAttribute("href", "https://platform.openai.com/api-keys");
+    expect(
+      screen.getByRole("link", { name: /MuAPI key management/i }),
+    ).toHaveAttribute("href", "https://muapi.ai/dashboard/api-keys");
   });
 
-  it("shows input field and user can type", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-test123" } });
-    expect(input).toHaveValue("sk-test123");
+  it("shows connected status for configured providers only", () => {
+    render(
+      <ApiKeyModal
+        open
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        statuses={{
+          openai: { provider: "openai", configured: true, lastValidatedAt: "2026-01-01T00:00:00.000Z" },
+          muapi: { provider: "muapi", configured: false },
+        }}
+      />,
+    );
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("Not connected")).toBeInTheDocument();
+    // Metadata only.
+    expect(screen.getByText(/Last validated:/i)).toBeInTheDocument();
   });
 
-  it("shows validation error for invalid format", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "invalid-key" } });
-    expect(await screen.findByText(/Invalid format/)).toBeInTheDocument();
+  it("highlights the provider a blocked workflow requires", () => {
+    render(
+      <ApiKeyModal
+        open
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        highlightProvider="muapi"
+      />,
+    );
+    const section = screen.getByLabelText("MuAPI API key");
+    expect(section.className).toContain("ring-1");
+    const openaiSection = screen.getByLabelText("OpenAI API key");
+    expect(openaiSection.className).not.toContain("ring-1");
   });
 
-  it("enables Test button only when key format is valid", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-
-    // Initially disabled because format not met
-    let testBtn = screen.getByRole("button", { name: /test key/i });
-    expect(testBtn).toBeDisabled();
-
-    // Enter valid format (sk- + enough chars)
-    fireEvent.change(input, { target: { value: "sk-" + "a".repeat(32) } });
-    await waitFor(() => {
-      testBtn = screen.getByRole("button", { name: /test key/i });
-      expect(testBtn).not.toBeDisabled();
-    });
+  it("masks input and can reveal a newly entered credential", () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+    const input = screen.getByPlaceholderText("sk-...") as HTMLInputElement;
+    expect(input.type).toBe("password");
+    fireEvent.click(screen.getAllByRole("button", { name: /show api key/i })[0]);
+    expect(input.type).toBe("text");
   });
 
-  it("calls validation endpoint when Test clicked", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+  it("validates a connection with a per-provider payload", async () => {
+    fetchMock.mockResolvedValue({
       ok: true,
+      status: 200,
       json: async () => ({ valid: true }),
     });
 
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-validkey1234567890abcdefghijklmnopqrstuvwxyz" } });
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
 
-    const testBtn = screen.getByRole("button", { name: /test key/i });
-    fireEvent.click(testBtn);
+    const input = screen.getByPlaceholderText("sk-...");
+    fireEvent.change(input, {
+      target: { value: "sk-abcdefghijklmnopqrstuvwxyz012345" },
+    });
+    fireEvent.click(screen.getAllByRole("button", { name: /validate connection/i })[0]);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("/api/user/api-key/validate", expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ key: "sk-validkey1234567890abcdefghijklmnopqrstuvwxyz" }),
-      }));
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/user/api-key/validate",
+        expect.objectContaining({
+          method: "POST",
+        }),
+      );
     });
+
+    const body = JSON.parse(
+      (fetchMock.mock.calls[0][1] as RequestInit).body as string,
+    );
+    expect(body).toEqual({
+      provider: "openai",
+      key: "sk-abcdefghijklmnopqrstuvwxyz012345",
+    });
+    expect(await screen.findByText("Valid")).toBeInTheDocument();
   });
 
-  it("shows valid indicator after successful validation", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ valid: true }),
-    });
-
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-validkey1234567890abcdefghijklmnopqrstuvwxyz" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /test key/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Valid")).toBeInTheDocument();
-    });
-  });
-
-  it("shows invalid indicator and error after failed validation", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+  it("shows a provider-specific validation error", async () => {
+    fetchMock.mockResolvedValue({
       ok: false,
-      json: async () => ({ valid: false, error: "Invalid API key" }),
+      status: 400,
+      json: async () => ({ valid: false, error: "Incorrect API key provided" }),
     });
 
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+
     const input = screen.getByPlaceholderText("sk-...");
-    // Key must satisfy the format check (sk- prefix + length >= 10) for the
-    // Test button to be enabled; the server then rejects it as invalid.
-    fireEvent.change(input, { target: { value: "sk-badkey12345" } });
-    fireEvent.click(screen.getByRole("button", { name: /test key/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Invalid API key")).toBeInTheDocument();
+    fireEvent.change(input, {
+      target: { value: "sk-abcdefghijklmnopqrstuvwxyz012345" },
     });
+    fireEvent.click(screen.getAllByRole("button", { name: /validate connection/i })[0]);
+
+    expect(
+      await screen.findByText("Incorrect API key provided"),
+    ).toBeInTheDocument();
   });
 
-  it("Save button disabled until key valid", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const saveBtn = screen.getByRole("button", { name: /save/i });
-    expect(saveBtn).toBeDisabled();
-
+  it("rejects an OpenAI key with the wrong prefix", async () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
     const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-" + "a".repeat(32) } });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
+    fireEvent.change(input, {
+      target: { value: "muapilibary-long-token-value-123" },
     });
+    expect(await screen.findByText(/Invalid format/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /save key/i })[0],
+    ).toBeDisabled();
   });
 
-  it("calls onSave with key and storage when Save clicked", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
+  it("sends the provider id when saving", async () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+
     const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz" } });
-
-    // Ensure key becomes valid (format only)
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
+    fireEvent.change(input, {
+      target: { value: "sk-abcdefghijklmnopqrstuvwxyz012345" },
     });
-
-    const saveBtn = screen.getByRole("button", { name: /save/i });
-    fireEvent.click(saveBtn);
+    fireEvent.click(screen.getAllByRole("button", { name: /save key/i })[0]);
 
     await waitFor(() => {
       expect(mockOnSave).toHaveBeenCalledWith(
-        "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz",
-        "client" // default preferServerStorage = false
+        "openai",
+        "sk-abcdefghijklmnopqrstuvwxyz012345",
       );
     });
   });
 
-  it("calls onClose after successful save", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz" } });
+  it("offers replace and remove actions for a configured provider", () => {
+    render(
+      <ApiKeyModal
+        open
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        onRemove={mockOnRemove}
+        statuses={{
+          openai: { provider: "openai", configured: true },
+          muapi: { provider: "muapi", configured: false },
+        }}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: /replace key/i })[0],
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("button", { name: /^remove$/i })[0],
+    ).toBeInTheDocument();
+  });
 
+  it("calls onRemove with the correct provider", async () => {
+    render(
+      <ApiKeyModal
+        open
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        onRemove={mockOnRemove}
+        statuses={{
+          openai: { provider: "openai", configured: true },
+          muapi: { provider: "muapi", configured: false },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("button", { name: /^remove$/i })[0]);
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
-
-    await waitFor(() => {
-      expect(mockOnClose).toHaveBeenCalled();
+      expect(mockOnRemove).toHaveBeenCalledWith("openai");
     });
   });
 
-  it("shows error when save fails", async () => {
-    mockOnSave.mockRejectedValueOnce(new Error("Network error"));
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz" } });
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText("Network error")).toBeInTheDocument();
-    });
+  it("never renders a stored credential", async () => {
+    // Even when a key is configured, nothing resembling it may appear.
+    render(
+      <ApiKeyModal
+        open
+        onClose={mockOnClose}
+        onSave={mockOnSave}
+        statuses={{
+          openai: { provider: "openai", configured: true },
+          muapi: { provider: "muapi", configured: false },
+        }}
+      />,
+    );
+    // The prefilled input stays empty: the server never sends the key back.
+    const input = screen.getByPlaceholderText("sk-...") as HTMLInputElement;
+    expect(input.value).toBe("");
   });
 
-  it("server storage checkbox is unchecked by default", () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const checkbox = screen.getByRole("checkbox", { name: /save encrypted on server/i });
-    expect(checkbox).not.toBeChecked();
+  it("does not attempt to fetch a plaintext key from the server", () => {
+    render(
+      <ApiKeyModal open onClose={mockOnClose} onSave={mockOnSave} />,
+    );
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      expect.stringContaining("raw=true"),
+      expect.anything(),
+    );
   });
+});
 
-  it("unchecking server storage still allows save if format valid", async () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    const input = screen.getByPlaceholderText("sk-...");
-    fireEvent.change(input, { target: { value: "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz" } });
-
-    // Check server storage (default is unchecked now)
-    const checkbox = screen.getByRole("checkbox", { name: /save encrypted on server/i }) as HTMLInputElement;
-    expect(checkbox.checked).toBe(false);
-    fireEvent.change(checkbox, { target: { checked: true } });
-    await waitFor(() => expect(checkbox.checked).toBe(true));
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /save/i }));
-
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledWith(
-        "sk-savetest1234567890abcdefghijklmnopqrstuvwxyz",
-        "client"
-      );
-    });
-  });
-
-  it("renders description", () => {
-    render(<ApiKeyModal open={true} onClose={mockOnClose} onSave={mockOnSave} />);
-    expect(screen.getByText(/Your API key powers AI text and image generation/)).toBeInTheDocument();
+describe("BYOK status shape", () => {
+  it("exposes only provider, configured, and lastValidatedAt", async () => {
+    const fs = await import("node:fs");
+    const source = fs.readFileSync(
+      "src/app/api/user/api-key/route.ts",
+      "utf8",
+    );
+    expect(source).not.toContain("rawKey");
+    expect(source).not.toContain("maskedKey");
+    expect(source).not.toContain("decryptApiKey");
   });
 });

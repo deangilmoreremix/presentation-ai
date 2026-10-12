@@ -4,8 +4,9 @@ import { toUIMessageStream } from "@ai-sdk/langchain";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { consumeStream, createUIMessageStreamResponse } from "ai";
-import { NextResponse } from "next/server"
-import { csrfGuard } from "@/lib/csrf";;
+import { NextResponse } from "next/server";
+import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 
 import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";
@@ -246,7 +247,7 @@ export async function POST(req: Request) {
         ["system", SYSTEM_PROMPT],
         ["user", USER_PROMPT],
       ]),
-      modelPicker(INFOGRAPHIC_MODEL),
+      await modelPicker(INFOGRAPHIC_MODEL),
     ]);
 
     const stream = await promptToDiagramChain.stream({
@@ -272,6 +273,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     span.error(error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: "Failed to generate diagram" },
       { status: 500 },
