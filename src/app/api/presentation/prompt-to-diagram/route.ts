@@ -19,7 +19,9 @@ import {
   type InfographicSlideLayout,
 } from "@/lib/presentation/infographic-layout";
 
-const INFOGRAPHIC_MODEL = "google/gemini-3-flash-preview";
+// BYOK: modelPicker resolves this against the user's own OpenAI
+// credentials, so it must be a real OpenAI model id.
+const INFOGRAPHIC_MODEL = "gpt-4o-mini";
 
 type PromptToDiagramRequest = {
   prompt: string;
@@ -207,6 +209,10 @@ const USER_PROMPT = `## User Prompt
 Convert the prompt into one complete AntV infographic syntax output.`;
 
 export async function POST(req: Request) {
+  // Reject cross-origin POSTs before doing any work.
+  const csrfError = csrfGuard(req);
+  if (csrfError) return csrfError;
+
   let endSpanOnReturn = true;
   const actionName = "presentation.prompt_to_diagram.post";
   const span = logger.startSpan(`smart.api.${actionName}`, {

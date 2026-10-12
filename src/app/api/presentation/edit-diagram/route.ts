@@ -12,7 +12,9 @@ import { templates } from "@/constants/antv-templates";
 import { modelPicker } from "@/lib/modelPicker";
 import { logger } from "@/lib/observability/server/logger";
 
-const INFOGRAPHIC_MODEL = "google/gemini-3-flash-preview";
+// BYOK: modelPicker resolves this against the user's own OpenAI
+// credentials, so it must be a real OpenAI model id.
+const INFOGRAPHIC_MODEL = "gpt-4o-mini";
 
 // Organize templates by category for the prompt
 function organizeTemplates(templateList: string[]): string {
@@ -184,6 +186,10 @@ relations
 Apply the user's requested changes to the infographic and output the complete modified syntax.`;
 
 export async function POST(req: Request) {
+  // Reject cross-origin POSTs before doing any work.
+  const csrfError = csrfGuard(req);
+  if (csrfError) return csrfError;
+
   let endSpanOnReturn = true;
   const actionName = "presentation.edit_diagram.post";
   const span = logger.startSpan(`smart.api.${actionName}`, {

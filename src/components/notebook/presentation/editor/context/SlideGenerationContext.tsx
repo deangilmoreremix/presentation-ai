@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { type ImageModelList } from "@/constants/image-models";
+import { byokProviderFromError, notifyByokError } from "@/lib/ai/byok-client";
 import { usePresentationState } from "@/states/presentation-state";
 import { SlideParser } from "../../utils/parser";
 
@@ -69,7 +70,7 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
 
   const { complete, isLoading, stop } = useCompletion({
     api: "/api/presentation/generate-slide",
-        onFinish: (_prompt, finalCompletion) => {
+    onFinish: (_prompt, finalCompletion) => {
       // Parse final content and update the slide only when fully complete
       const processedCompletion = stripXmlCodeBlock(finalCompletion);
       parser.reset();
@@ -121,6 +122,10 @@ export function SlideGenerationProvider({ children }: { children: ReactNode }) {
     },
     onError: (error) => {
       console.error("Failed to generate slide:", error);
+      const byokProvider = byokProviderFromError(error);
+      if (byokProvider) {
+        notifyByokError(byokProvider);
+      }
       setGeneratingSlideId(null);
       slideIdRef.current = null;
       parser.reset();

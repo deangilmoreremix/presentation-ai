@@ -25,6 +25,7 @@ import {
   type ImageAspectRatio,
   type ImageModelList,
 } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import {
   buildPresentationThemedImagePrompt,
   resolvePresentationImageTheme,
@@ -184,6 +185,10 @@ export function SharedGenerateControls({
         onImagesGenerated?.(successfulImages);
       } else {
         setLocalError(firstError ?? "Failed to generate images");
+        const byokProvider = results.map(byokErrorFromResult).find(Boolean);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
       }
     } catch (error) {
       setLocalError(

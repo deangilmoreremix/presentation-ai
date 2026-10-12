@@ -96,8 +96,7 @@ export async function POST(req: NextRequest) {
       if (!custom) {
         return NextResponse.json({
           error: `Invalid size. Must be one of: ${ALLOWED_SIZES.join(", ")}, or a custom WxH (multiples of 16, max 3840, total pixels 655k-8.2M)`,
-          status: 400,
-        });
+        }, { status: 400 });
       }
       normalizedSize = custom;
     }

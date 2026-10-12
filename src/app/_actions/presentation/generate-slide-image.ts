@@ -2,6 +2,7 @@
 
 import { utapi } from "@/app/api/uploadthing/core";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { toActionErrorResult } from "@/lib/ai/action-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { UTFile } from "uploadthing/server";
 import {
@@ -121,12 +122,6 @@ export async function generateSlideImageAction(
     return { success: true, image: generatedImage, responseId: response.id };
   } catch (error) {
     console.error("Error generating slide image:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate slide image",
-    };
+    return toActionErrorResult(error, "Failed to generate slide image");
   }
 }

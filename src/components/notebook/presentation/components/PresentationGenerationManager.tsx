@@ -15,6 +15,7 @@ import {
   getToolState,
   isToolPart,
 } from "@/lib/ai/uiMessageParts";
+import { byokProviderFromError, notifyByokError } from "@/lib/ai/byok-client";
 import { collectNotebookAgentToolCalls } from "@/lib/notebook/agent-activity";
 import { isWebSearchToolName } from "@/lib/ai/tool-names";
 import { createLogger } from "@/lib/observability/logger";
@@ -102,6 +103,20 @@ function usesStockSearchForPresentation(
   imageSource: "automatic" | "ai" | "stock" | "gif",
 ): boolean {
   return imageSource === "automatic" || imageSource === "stock";
+}
+
+function reportGenerationError(error: unknown, prefix: string): void {
+  const provider = byokProviderFromError(error);
+  if (provider) {
+    notifyByokError(provider);
+    toast.error(
+      `Add your ${provider === "muapi" ? "Muapi" : "OpenAI"} API key to continue.`,
+    );
+    return;
+  }
+  toast.error(
+    `${prefix}: ${error instanceof Error ? error.message : String(error)}`,
+  );
 }
 
 export function PresentationGenerationManager() {
@@ -347,7 +362,7 @@ export function PresentationGenerationManager() {
   if (outlineTransportRef.current === null) {
     outlineTransportRef.current = new DefaultChatTransport({
       api: "/api/presentation/outline",
-          });
+    });
   }
 
   const {
@@ -451,7 +466,7 @@ export function PresentationGenerationManager() {
       setIsGeneratingOutline(false);
       setShouldStartOutlineGeneration(false);
       setShouldStartPresentationGeneration(false);
-      toast.error("Failed to generate outline: " + error.message);
+      reportGenerationError(error, "Failed to generate outline");
       resetGeneration();
       setOutlineToolCalls([]);
 
@@ -541,7 +556,7 @@ export function PresentationGenerationManager() {
   const { completion: presentationCompletion, complete: generatePresentation } =
     useCompletion({
       api: "/api/presentation/generate",
-            onFinish: (_prompt, _completion) => {
+      onFinish: (_prompt, _completion) => {
         generationLogger.info("Presentation generation completed", {
           presentationId: currentPresentationId,
           generatedSlides: usePresentationState.getState().slides.length,
@@ -580,7 +595,7 @@ export function PresentationGenerationManager() {
         generationLogger.error("Presentation generation failed", error, {
           presentationId: usePresentationState.getState().currentPresentationId,
         });
-        toast.error("Failed to generate presentation: " + error.message);
+        reportGenerationError(error, "Failed to generate presentation");
         resetGeneration();
         streamingParserRef.current.reset();
 
@@ -596,7 +611,7 @@ export function PresentationGenerationManager() {
   const { completion: imageSlidesCompletion, complete: generateImageSlides } =
     useCompletion({
       api: "/api/presentation/generate-image-slides",
-            onFinish: (_prompt, _completion) => {
+      onFinish: (_prompt, _completion) => {
         generationLogger.info("Image slide generation completed", {
           presentationId: currentPresentationId,
           generatedSlides: usePresentationState.getState().slides.length,
@@ -635,7 +650,7 @@ export function PresentationGenerationManager() {
         generationLogger.error("Image slide generation failed", error, {
           presentationId: usePresentationState.getState().currentPresentationId,
         });
-        toast.error("Failed to generate image slides: " + error.message);
+        reportGenerationError(error, "Failed to generate image slides");
         resetGeneration();
         streamingParserRef.current.reset();
 

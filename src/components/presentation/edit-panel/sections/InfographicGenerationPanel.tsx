@@ -29,6 +29,7 @@ import {
   getAvailableImageModels,
   type ImageModelList,
 } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import { useDebouncedSave } from "@/hooks/presentation/useDebouncedSave";
 import { usePresentationState } from "@/states/presentation-state";
 
@@ -139,6 +140,10 @@ export function InfographicGenerationPanel() {
       });
 
       if (!result.success || !result.image) {
+        const byokProvider = byokErrorFromResult(result);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
         throw new Error(result.error ?? "Failed to generate infographic");
       }
 

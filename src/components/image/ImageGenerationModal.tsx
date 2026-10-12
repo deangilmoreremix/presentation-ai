@@ -81,6 +81,7 @@ import {
   type ImageStreamChunk,
   type OutputFormat,
 } from "@/lib/image/types";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 
 interface ImageGenerationModalProps {
   open: boolean;
@@ -301,20 +302,6 @@ export function ImageGenerationModal({
                   height: maskData.height,
                 }
               : undefined,
-            onProgress: (chunk) => {
-              setStreamProgress(chunk.progress);
-              setStreamChunks((prev) => [
-                ...prev,
-                {
-                  id: `chunk_${Date.now()}`,
-                  sessionId: "current",
-                  type: "progress",
-                  progress: chunk.progress,
-                  message: chunk.message,
-                  timestamp: new Date(),
-                },
-              ]);
-            },
           },
         );
 
@@ -323,6 +310,10 @@ export function ImageGenerationModal({
           setCurrentResponseId(result.previousResponseId);
         } else {
           setLocalError((result as { success: boolean; error?: string }).error || "Streaming generation failed");
+          const byokProvider = byokErrorFromResult(result);
+          if (byokProvider) {
+            notifyByokError(byokProvider);
+          }
         }
       } else {
         const promises = Array(imageCount)
@@ -374,6 +365,10 @@ export function ImageGenerationModal({
           setGeneratedImages(successfulImages);
         } else {
           setLocalError(firstError || "Failed to generate images");
+          const byokProvider = results.map(byokErrorFromResult).find(Boolean);
+          if (byokProvider) {
+            notifyByokError(byokProvider);
+          }
         }
       }
     } catch (error) {

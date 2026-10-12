@@ -9,6 +9,7 @@ import { env } from "@/env";
 import { OPENAI_RESPONSES_MODEL } from "@/constants/image-models";
 import { csrfGuard } from "@/lib/csrf";
 import { getUserOpenAIKey } from "@/lib/crypto/get-user-api-key";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 
 const CLIENT_TOOLS = new Set([
   "edit_slide_properties",
@@ -358,14 +359,11 @@ export async function POST(req: Request) {
     const messages: UIMessage[] = Array.isArray(body.messages) ? body.messages : [];
     // BYOK: the credential is resolved from the authenticated Clerk session
     // only. A key supplied in the request body is never trusted, and there is
-    // no platform-owned fallback key.
-    let apiKey: string | undefined;
-    try {
-      apiKey = await getUserOpenAIKey();
-    } catch {
-      apiKey = undefined;
-    }
-    const openai = apiKey ? new OpenAI({ apiKey }) : null;
+    // no platform-owned fallback key. A missing credential must fail as a
+    // structured 402 here — the chat client has no other way to open the
+    // API key modal, and silently streaming a text apology hides the cause.
+    const apiKey = await getUserOpenAIKey();
+    const openai = new OpenAI({ apiKey });
     const input = buildInput(messages);
 
     // TODO(migration-015): persist agent chat to public.presentation_messages.
@@ -380,18 +378,6 @@ export async function POST(req: Request) {
     const stream = createUIMessageStream({
       execute: async ({ writer }: { writer: UIMessageStreamWriter }) => {
         try {
-          if (!openai) {
-            writer.write({ type: "text-start", id: "no-key" });
-            writer.write({
-              type: "text-delta",
-              id: "no-key",
-              delta:
-                "No OpenAI API key is configured for your account. Add your own API key in Settings to enable the presentation agent.",
-            });
-            writer.write({ type: "text-end", id: "no-key" });
-            return;
-          }
-
           const responseStream = openai.responses.stream({
             model: OPENAI_RESPONSES_MODEL,
             input: input as any,
@@ -540,6 +526,13 @@ export async function POST(req: Request) {
     return createUIMessageStreamResponse({ stream });
   } catch (error) {
     console.error("Presentation agent route error:", error);
+
+    // Surface BYOK credential failures as a structured 402 so the client can
+    // open the API key modal for the required provider. Never fall back to a
+    // platform-owned key.
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Internal Server Error",

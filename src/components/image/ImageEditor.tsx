@@ -124,7 +124,7 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
         throw new Error(data.error || "Failed to edit image");
       }
 
-      setEditedImages(data.images?.map((img: any) => img.url) ?? []);
+      setEditedImages(data.images?.map((img: any) => (typeof img === "string" ? img : img?.url)) ?? []);
       onImageEdited?.(data.images);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to edit image");
@@ -158,7 +158,7 @@ export function ImageEditor({ onImageEdited, onImageSelect }: ImageEditorProps) 
         throw new Error(data.error || "Failed to create variation");
       }
 
-      setEditedImages(data.images?.map((img: any) => img.url) ?? []);
+      setEditedImages(data.images?.map((img: any) => (typeof img === "string" ? img : img?.url)) ?? []);
       onImageEdited?.(data.images);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create variation");

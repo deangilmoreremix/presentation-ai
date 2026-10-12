@@ -51,14 +51,31 @@ export async function POST(req: NextRequest) {
       const imageFile = formData.get("image") as File | null;
       const maskFile = formData.get("mask") as File | null;
 
+      // `URL.createObjectURL` is a browser-only API and is not implemented in
+      // the Node runtime, so it threw here for every multipart edit request.
+      // Upload the files instead, exactly like the generate route does.
       if (imageFile) {
-        const imageUrl = URL.createObjectURL(imageFile);
-        images = [{ url: imageUrl }];
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        const uploaded = await utapi.uploadFiles([
+          new UTFile([new Uint8Array(buffer)], imageFile.name || "edit-source"),
+        ]);
+        const url = uploaded[0]?.data?.ufsUrl;
+        if (!url) {
+          throw new Error("Failed to upload the source image");
+        }
+        images = [{ url }];
       }
 
       if (maskFile) {
-        const maskUrl = URL.createObjectURL(maskFile);
-        mask = { url: maskUrl };
+        const buffer = Buffer.from(await maskFile.arrayBuffer());
+        const uploaded = await utapi.uploadFiles([
+          new UTFile([new Uint8Array(buffer)], maskFile.name || "edit-mask"),
+        ]);
+        const url = uploaded[0]?.data?.ufsUrl;
+        if (!url) {
+          throw new Error("Failed to upload the mask image");
+        }
+        mask = { url };
       }
     } else {
       const body = await req.json();

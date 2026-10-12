@@ -2,6 +2,7 @@
 
 import { utapi } from "@/app/api/uploadthing/core";
 import { createClient, getClerkUserId } from "@/lib/supabase/server";
+import { toActionErrorResult } from "@/lib/ai/action-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import {
   DEFAULT_IMAGE_MODEL,
@@ -157,11 +158,7 @@ export async function generateImageAction(
     return await generateOpenAIImage(prompt, await getClerkUserId(), aspectRatio, model, options);
   } catch (error) {
     console.error("Error generating image:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate image",
-    };
+    return toActionErrorResult(error, "Failed to generate image");
   }
 }
 
@@ -279,10 +276,6 @@ export async function generateImageStreamAction(
     throw new Error("Stream ended without completion");
   } catch (error) {
     console.error("Error generating image stream:", error);
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to generate image stream",
-    };
+    return toActionErrorResult(error, "Failed to generate image stream");
   }
 }

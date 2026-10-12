@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type ImageModelList } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import { raiseError } from "@/lib/raise-error";
 import { useNotesState } from "@/states/notes-state";
 
@@ -73,6 +74,10 @@ function GenerateImageDialogContent({
       const result = await generateImageAction(prompt, selectedModel, "16:9");
 
       if (!result.success || !("image" in result) || !result.image?.url) {
+        const byokProvider = byokErrorFromResult(result);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
         raiseError(new Error(("error" in result ? result.error : undefined) ?? "Failed to generate image"));
       }
 

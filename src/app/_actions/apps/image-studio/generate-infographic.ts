@@ -3,6 +3,7 @@
 import { UTFile } from "uploadthing/server";
 
 import { utapi } from "@/app/api/uploadthing/lib";
+import { toActionErrorResult } from "@/lib/ai/action-error";
 import {
   DEFAULT_IMAGE_MODEL,
   OPENAI_RESPONSES_MODEL,
@@ -199,12 +200,6 @@ export async function generateInfographicImageAction({
   } catch (error) {
     console.error("Error generating infographic:", error);
     span.end();
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate infographic",
-    };
+    return toActionErrorResult(error, "Failed to generate infographic");
   }
 }
