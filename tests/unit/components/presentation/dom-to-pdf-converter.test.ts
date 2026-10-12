@@ -444,6 +444,102 @@ describe("convertToPdf", () => {
     expect(addImageCalls).toHaveLength(3);
   });
 
+  it("captures the cloned slide itself, never the off-screen host", async () => {
+    // Regression guard for the blank-PDF defect: `html-to-image` sizes and
+    // paints its isolated document from the target element alone. Capturing the
+    // `position: fixed; overflow: hidden` wrapper that only parks the clone
+    // produced a correctly-sized but completely empty canvas, so every page
+    // shipped with a solid background and no content.
+    const slide = mountSlideDom("slide-1");
+
+    await convertToPdf([makeScanResult()], [{ id: "slide-1", content: [] }]);
+
+    const target = toCanvasMock.mock.calls[0]?.[0] as HTMLElement;
+    expect(target).not.toBeNull();
+    // The target is the element that actually carries the slide content...
+    expect(target.textContent).toContain("Quarterly results");
+    expect(target.querySelector("table")).not.toBeNull();
+    expect(target.querySelector("img")).not.toBeNull();
+    // ...and it is a detached clone, not the live editor slide.
+    expect(target).not.toBe(slide);
+    // The wrapper is only ever a parking spot: the slide background and the
+    // measured size live on the captured node, because `html-to-image` drops
+    // everything above it when it builds the isolated document.
+    expect(target.style.backgroundColor).not.toBe("");
+    expect(target.style.width).toBe("1280px");
+    expect(target.style.height).toBe("720px");
+    // The host itself is never the capture target: it is a bare wrapper with no
+    // slide content of its own.
+    expect(target.querySelector("h1")).not.toBeNull();
+    expect(target.parentElement?.childElementCount).toBe(1);
+  });
+
+  it("keeps a slide readable when an external image cannot be resolved", async () => {
+    // An unreachable host, a 415 from the proxy or a CORS rejection must cost
+    // the export that one image — never the page and never the whole deck.
+    mountSlideDom("slide-1");
+    resolveExportImageDataUrlMock.mockImplementation(async (url: string) =>
+      url.includes("root.png") ? null : null,
+    );
+
+    await expect(
+      convertToPdf([makeScanResult()], [{ id: "slide-1", content: [] }]),
+    ).resolves.toBeInstanceOf(ArrayBuffer);
+
+    // The unresolved image is simply absent from the captured clone...
+    const target = toCanvasMock.mock.calls[0]?.[0] as HTMLElement;
+    for (const image of Array.from(target.querySelectorAll("img"))) {
+      expect(image.getAttribute("src")?.startsWith("https://")).toBe(false);
+    }
+    // ...the raster and its searchable text layer are untouched.
+    expect(addImageCalls).toHaveLength(1);
+    expect(addImageCalls[0]?.[1]).toBe("JPEG");
+    expect(textCalls.map((call) => call.text)).toEqual([["Quarterly results"]]);
+    // Nothing is left behind in the document.
+    expect(document.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0);
+  });
+
+  it("draws one raster and one page per slide of a multi-slide deck", async () => {
+    document.body.innerHTML = "";
+    const deck = [
+      { id: "slide-1", title: "Cover" },
+      { id: "slide-2", title: "Metrics" },
+      { id: "slide-3", title: "Roadmap" },
+      { id: "slide-4", title: "Appendix" },
+    ];
+    for (const { id, title } of deck) {
+      const slide = mountSlideDom(id);
+      slide.querySelector("h1")!.textContent = title;
+    }
+
+    await convertToPdf(
+      deck.map(({ id }) => makeScanResult({ slideId: id })),
+      deck.map(({ id }) => ({ id, content: [] })),
+    );
+
+    // One capture per slide, each of that slide's own DOM.
+    expect(toCanvasMock).toHaveBeenCalledTimes(deck.length);
+    const capturedTitles = toCanvasMock.mock.calls.map(
+      (call) => (call[0] as HTMLElement).querySelector("h1")?.textContent,
+    );
+    expect(capturedTitles).toEqual(deck.map((slide) => slide.title));
+
+    // One raster per slide, stamped on the right number of pages.
+    expect(addImageCalls).toHaveLength(deck.length);
+    for (const [index, dataUrl] of addImageCalls.map(
+      (call) => call[0] as string,
+    ).entries()) {
+      expect(dataUrl).toBe(RASTER_DATA_URL);
+      expect(dataUrl).toMatch(/^data:image\/jpeg;base64,/);
+      expect(index).toBeLessThan(deck.length);
+    }
+    expect(addPageCalls).toHaveLength(deck.length - 1);
+    // Every slide contributes its own searchable text run.
+    expect(textCalls).toHaveLength(deck.length);
+    // No blank page survives anywhere in the deck.
+    expect(deletedPages).toEqual([]);
+  });
+
   it("keeps image slides on the dedicated full-page image path", async () => {
     await convertToPdf(
       [makeScanResult()],
