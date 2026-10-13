@@ -12,7 +12,6 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { generateInfographicImageAction } from "@/app/_actions/apps/image-studio/generate-infographic";
-import { getApiKey } from "@/lib/key-storage";
 import { type RootImage } from "@/components/notebook/presentation/utils/parser";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,6 +29,7 @@ import {
   getAvailableImageModels,
   type ImageModelList,
 } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import { useDebouncedSave } from "@/hooks/presentation/useDebouncedSave";
 import { usePresentationState } from "@/states/presentation-state";
 
@@ -137,10 +137,13 @@ export function InfographicGenerationPanel() {
         prompt: trimmedPrompt,
         layout,
         model: selectedModel,
-        apiKey: getApiKey() ?? undefined,
       });
 
       if (!result.success || !result.image) {
+        const byokProvider = byokErrorFromResult(result);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
         throw new Error(result.error ?? "Failed to generate infographic");
       }
 

@@ -120,6 +120,8 @@ export const PresentationImageEditor = ({
                     variant="secondary"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/80"
+                    disabled
+                    title="Download is not available in this preview"
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -127,6 +129,8 @@ export const PresentationImageEditor = ({
                     variant="secondary"
                     size="icon"
                     className="h-8 w-8 rounded-full bg-background/80"
+                    disabled
+                    title="Delete is not available in this preview"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

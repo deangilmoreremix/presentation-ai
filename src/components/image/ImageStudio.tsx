@@ -24,7 +24,6 @@ import {
   Settings2,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { getApiKey } from "@/lib/key-storage";
 import { useAuth } from "@/components/AppAuthProvider";
 import { searchUnsplashImages } from "@/app/_actions/apps/image-studio/unsplash";
 import { searchGoogleImages } from "@/app/_actions/apps/image-studio/google";
@@ -39,6 +38,7 @@ import {
   type ImageBackground,
   type ImageCategory,
 } from "@/lib/image/types";
+import { byokFetch } from "@/lib/ai/byok-client";
 
 // Category definitions with labels
 const CATEGORIES: { id: ImageCategory; label: string; icon: string }[] = [
@@ -323,7 +323,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
       const images = await fetchGeneratedImages();
       setDbHistory(
         images.map((img) => ({
-          url: img.url,
+          url: typeof img === "string" ? img : img.url,
           prompt: img.prompt,
           model: img.model,
           created_at: img.created_at,
@@ -346,7 +346,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
         if (res.success && res.images) {
           setStockResults(
             res.images.map((img) => ({
-              url: img.url,
+              url: typeof img === "string" ? img : img.url,
               thumb: img.thumb,
               author: img.author,
               title: img.author,
@@ -378,7 +378,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
         prompt: trimmed,
         layout: infographicLayout,
         model: infographicModel as any,
-        apiKey: getApiKey() ?? undefined,
       });
       if (!result.success || !result.image) {
         throw new Error(result.error ?? "Failed to generate infographic");
@@ -401,7 +400,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
     setGeneratedImages([]);
 
     try {
-      const response = await fetch("/api/image/generate", {
+      const response = await byokFetch("/api/image/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -413,7 +412,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           outputCompression: compression,
           background,
           n,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 
@@ -423,7 +421,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
         throw new Error(data.error || "Failed to generate image");
       }
 
-      const urls = data.images?.map((img: any) => img.url) ?? [];
+      const urls = data.images?.map((img: any) => (typeof img === "string" ? img : img?.url)) ?? [];
       setGeneratedImages(urls);
       addToHistory(urls, prompt);
       onImageGenerated?.(data.images);
@@ -453,7 +451,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
 
     try {
       const combinedPrompt = `${entry.prompt}. Refine: ${refinement}`;
-      const response = await fetch("/api/image/responses", {
+      const response = await byokFetch("/api/image/responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -468,7 +466,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           action: "edit",
           previousResponseId: entry.responseId,
           n: 1,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 
@@ -524,7 +521,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
     setGeneratedImages([]);
 
     try {
-      const response = await fetch("/api/image/generate", {
+      const response = await byokFetch("/api/image/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -536,7 +533,6 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
           outputCompression: compression,
           background,
           n,
-          apiKey: getApiKey() ?? undefined,
         }),
       });
 
@@ -546,7 +542,7 @@ export function ImageStudio({ initialCategory = "core", onImageGenerated }: Imag
         throw new Error(data.error || "Failed to generate image");
       }
 
-      const urls = data.images?.map((img: any) => img.url) ?? [];
+      const urls = data.images?.map((img: any) => (typeof img === "string" ? img : img?.url)) ?? [];
       setGeneratedImages(urls);
       addToHistory(urls, originalPrompt);
       onImageGenerated?.(data.images);

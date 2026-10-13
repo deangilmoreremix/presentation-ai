@@ -13,7 +13,7 @@ export default function SignIn() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-slate-900 px-4">
       <SignInComponent
         routing="hash"
-        signUpUrl="/auth/signup"
+        signUpUrl="/sign-up"
         forceRedirectUrl={callbackUrl}
       />
     </div>

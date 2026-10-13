@@ -1,6 +1,6 @@
 import { search_tool } from "@/ai/tools/search";
 import { NextResponse } from "next/server"
-import { csrfGuard } from "@/lib/csrf";;
+import { csrfGuard } from "@/lib/csrf";
 
 export async function POST(req: Request) {
   try {

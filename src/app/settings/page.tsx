@@ -1,12 +1,30 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ApiKeyModal } from "@/components/settings/ApiKeyModal";
-import { Loader2, Key, Shield, Globe, Eye, EyeOff, User, Wifi, WifiOff } from "lucide-react";
-import { getApiKey, getMaskedKey, getKeyStoragePreference, removeApiKey, saveApiKey } from "@/lib/key-storage";
+import {
+  ApiKeyModal,
+  BYOK_PROVIDERS,
+  type ByokProvider,
+  type ProviderStatus,
+} from "@/components/settings/ApiKeyModal";
+import {
+  Loader2,
+  Key,
+  ShieldCheck,
+  User,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 function getInitials(email: string | null): string {
@@ -19,97 +37,95 @@ function getInitials(email: string | null): string {
   return combined || local.slice(0, 2).toUpperCase();
 }
 
+const EMPTY_STATUSES: Record<ByokProvider, ProviderStatus | undefined> = {
+  openai: undefined,
+  muapi: undefined,
+};
+
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
 
-  const [preference, setPreference] = React.useState<"client" | "server">(() => getKeyStoragePreference());
-  const [maskedKey, setMaskedKey] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [success, setSuccess] = React.useState<string | null>(null);
-
-  const [modalOpen, setModalOpen] = React.useState(false);
-  const [showFullKey, setShowFullKey] = React.useState(false);
-  const [serverStorageSupported, setServerStorageSupported] = React.useState(false);
+  const [statuses, setStatuses] = useState<
+    Record<ByokProvider, ProviderStatus | undefined>
+  >(EMPTY_STATUSES);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [highlightProvider, setHighlightProvider] =
+    useState<ByokProvider | null>(null);
 
   const isAuthenticated = isLoaded && !!user;
 
-  React.useEffect(() => {
-    const pref = getKeyStoragePreference();
-    setPreference(pref);
-    setMaskedKey(getMaskedKey());
-    checkServerKeyStatus().then(() => setLoading(false));
-  }, []);
-
-  const checkServerKeyStatus = async () => {
+  const loadStatuses = React.useCallback(async () => {
     try {
-      const response = await fetch("/api/user/api-key", { credentials: "include" });
-      if (response.status === 401) {
-        setServerStorageSupported(false);
+      const response = await fetch("/api/user/api-key", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        setStatuses(EMPTY_STATUSES);
         return;
       }
       const data = await response.json();
-      if (response.ok && data.success && data.maskedKey) {
-        setServerStorageSupported(true);
-        setMaskedKey(data.maskedKey);
-      } else {
-        setServerStorageSupported(true);
+      const next: Record<ByokProvider, ProviderStatus | undefined> = {
+        openai: undefined,
+        muapi: undefined,
+      };
+      for (const entry of data.providers ?? []) {
+        next[entry.provider as ByokProvider] = entry as ProviderStatus;
       }
+      setStatuses(next);
     } catch {
-      // noop
+      setStatuses(EMPTY_STATUSES);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const handleSave = async (key: string, storage: "client" | "server") => {
+  React.useEffect(() => {
+    loadStatuses();
+  }, [loadStatuses]);
+
+  const handleSave = async (provider: ByokProvider, key: string) => {
     const response = await fetch("/api/user/api-key", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ key, storage }),
+      body: JSON.stringify({ provider, key }),
     });
 
     if (!response.ok) {
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       throw new Error(data.error || "Failed to save API key");
     }
 
-    setPreference(storage);
-    if (storage === "client") {
-      saveApiKey(key, "client");
-      setMaskedKey(getMaskedKey());
-    } else {
-      const resp = await fetch("/api/user/api-key", { credentials: "include" });
-      const data = await resp.json();
-      if (resp.ok && data.maskedKey) {
-        setMaskedKey(data.maskedKey);
-      }
-    }
+    await loadStatuses();
+    setError(null);
+    setSuccess(
+      `${BYOK_PROVIDERS.find((p) => p.id === provider)?.name ?? "Provider"} key saved.`,
+    );
+    setTimeout(() => setSuccess(null), 3000);
   };
 
-  const handleRemove = async () => {
-    if (!confirm("Are you sure you want to remove your API key? AI generation will stop working.")) {
-      return;
-    }
+  const handleRemove = async (provider: ByokProvider) => {
+    const response = await fetch(
+      `/api/user/api-key?provider=${encodeURIComponent(provider)}`,
+      { method: "DELETE", credentials: "include" },
+    );
 
-    try {
-      const response = await fetch("/api/user/api-key", {
-        method: "DELETE",
-        credentials: "include",
-      });
+    if (!response.ok) throw new Error("Failed to remove API key");
 
-      if (!response.ok) throw new Error("Failed to remove");
-
-      removeApiKey();
-      setMaskedKey(null);
-      setPreference("client");
-      setError(null);
-      setSuccess("API key removed successfully");
-      setTimeout(() => setSuccess(null), 3000);
-    } catch {
-      setError("Failed to remove API key");
-      setSuccess(null);
-    }
+    await loadStatuses();
+    setError(null);
+    setSuccess(
+      `${BYOK_PROVIDERS.find((p) => p.id === provider)?.name ?? "Provider"} key removed.`,
+    );
+    setTimeout(() => setSuccess(null), 3000);
   };
+
+  const anyConfigured = BYOK_PROVIDERS.some(
+    (p) => statuses[p.id]?.configured,
+  );
 
   const displayName = user?.emailAddresses[0]?.emailAddress
     ? user.emailAddresses[0].emailAddress.split("@")[0]
@@ -119,23 +135,23 @@ export default function SettingsPage() {
     <div className="container mx-auto py-6 md:py-8 px-4 md:px-6">
       <h1 className="text-2xl md:text-3xl font-bold mb-6">Settings</h1>
 
-      {!maskedKey && !loading && (
+      {!anyConfigured && !loading && (
         <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          <strong>API key required:</strong> You need an OpenAI API key to use AI generation features. Add one below to continue.
+          <strong>Bring your own AI key:</strong> Presentation AI uses your own
+          provider credentials. Connect OpenAI to enable outlines, presentations,
+          slides, and AI images. MuAPI credentials can also be stored here.
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {/* User Profile Section */}
+        {/* Account */}
         <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               Account
             </CardTitle>
-            <CardDescription>
-              Your profile and session status.
-            </CardDescription>
+            <CardDescription>Your profile and session status.</CardDescription>
           </CardHeader>
           <CardContent>
             {!isLoaded ? (
@@ -151,8 +167,12 @@ export default function SettingsPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm md:text-base truncate">{displayName}</p>
-                  <p className="text-sm text-muted-foreground truncate">{user?.emailAddresses[0]?.emailAddress ?? ""}</p>
+                  <p className="font-medium text-sm md:text-base truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {user?.emailAddresses[0]?.emailAddress ?? ""}
+                  </p>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -178,107 +198,98 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* API Key Section */}
+        {/* AI providers */}
         <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="h-5 w-5" />
-              OpenAI API Key
+              AI Providers
             </CardTitle>
             <CardDescription>
-              Your personal OpenAI API key powers text and image generation. You can manage it here.
+              Connect your own provider keys. Keys are encrypted before they are
+              stored, scoped to your account, and never shown back to you.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading...
+                Loading provider status...
               </div>
             ) : error ? (
               <p className="text-sm text-destructive">{error}</p>
-            ) : success ? (
-              <p className="text-sm text-green-600">{success}</p>
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between rounded-md border p-4 gap-4">
-                  <div className="min-w-0">
-                    <p className="font-medium flex items-center gap-2 flex-wrap">
-                      {maskedKey ? (
-                        <>
-                          Key:{" "}
-                          <code className="rounded bg-muted px-2 py-1 text-sm flex items-center gap-1">
-                            {showFullKey && preference === "client" ? getApiKey() : maskedKey}
-                            {preference === "client" && maskedKey && (
-                              <button
-                                type="button"
-                                onClick={() => setShowFullKey(!showFullKey)}
-                                className="ml-1 text-muted-foreground hover:text-foreground"
-                                aria-label={showFullKey ? "Hide key" : "Show key"}
-                              >
-                                {showFullKey ? (
-                                  <EyeOff className="h-3 w-3" />
-                                ) : (
-                                  <Eye className="h-3 w-3" />
-                                )}
-                              </button>
-                            )}
-                          </code>
-                        </>
-                      ) : (
-                        "No API key set"
-                      )}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Storage:{" "}
-                      {preference === "server" ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Shield className="h-3 w-3 text-green-600" />
-                          Encrypted on server
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          Local browser storage
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setModalOpen(true)}>
-                      {maskedKey ? "Change Key" : "Add Key"}
-                    </Button>
-                    {maskedKey && (
-                      <Button variant="destructive" onClick={handleRemove}>
-                        Remove
-                      </Button>
-                    )}
-                  </div>
+                {success && (
+                  <p className="text-sm text-green-600">{success}</p>
+                )}
+
+                <div className="space-y-2">
+                  {BYOK_PROVIDERS.map((provider) => {
+                    const status = statuses[provider.id];
+                    const configured = Boolean(status?.configured);
+                    return (
+                      <div
+                        key={provider.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-md border p-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-medium flex items-center gap-2">
+                            {provider.name}
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                configured
+                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {configured && (
+                                <ShieldCheck className="h-3 w-3" />
+                              )}
+                              {configured ? "Connected" : "Not connected"}
+                            </span>
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {provider.description}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setHighlightProvider(provider.id);
+                              setModalOpen(true);
+                            }}
+                          >
+                            {configured ? "Manage key" : "Connect"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                  {preference === "server" ? (
-                    <p>
-                      Your key is encrypted and stored securely on our servers. It will be available on any device you sign in with.
-                    </p>
-                  ) : (
-                    <p>
-                      Your key is stored only in this browser&apos;s local storage. It won&apos;t be available on other devices or after clearing browser data.
-                    </p>
-                  )}
-                </div>
+                <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                  This app runs on bring-your-own-key: your provider bills you
+                  directly for usage, and no platform-owned key is ever used for
+                  your requests.
+                </p>
               </>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* API Key Modal */}
       <ApiKeyModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setHighlightProvider(null);
+        }}
         onSave={handleSave}
-        serverStorageSupported={serverStorageSupported}
+        statuses={statuses}
+        highlightProvider={highlightProvider}
+        onRemove={handleRemove}
       />
     </div>
   );
