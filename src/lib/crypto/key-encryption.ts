@@ -93,3 +93,48 @@ export async function decryptApiKey(
   return decrypted.toString('utf8');
 }
 
+
+/**
+ * Per-provider credential format validation.
+ *
+ * OpenAI keys are `sk-` prefixed. MuAPI keys are opaque tokens, so the check
+ * is deliberately permissive: only length and whitespace are validated.
+ */
+export function validateProviderKeyFormat(
+  provider: "openai" | "muapi",
+  key: string,
+): boolean {
+  const trimmed = key.trim();
+
+  if (provider === "openai") {
+    return /^sk-[A-Za-z0-9_-]{32,}$/.test(trimmed);
+  }
+
+  // MuAPI: no documented public prefix convention. Require a reasonably long
+  // opaque token so an obviously wrong value is rejected early.
+  return trimmed.length >= 16 && !/\s/.test(trimmed);
+}
+
+const LAST_VALIDATED_COLUMNS: Record<"openai" | "muapi", string> = {
+  openai: "openai_last_validated_at",
+  muapi: "muapi_last_validated_at",
+};
+
+/**
+ * Records the non-sensitive "last validated" timestamp for a provider key.
+ * Never writes, reads, or logs any part of the credential itself.
+ */
+export async function recordKeyValidatedAt(
+  provider: "openai" | "muapi",
+  userId: string,
+): Promise<void> {
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  if (!supabase) return;
+
+  const column = LAST_VALIDATED_COLUMNS[provider];
+  await supabase
+    .from("users")
+    .update({ [column]: new Date().toISOString() })
+    .eq("id", userId);
+}

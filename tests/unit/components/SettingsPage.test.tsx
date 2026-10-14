@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import * as React from "react";
 
 // Mock Clerk
 vi.mock("@clerk/nextjs", () => ({
@@ -8,35 +9,16 @@ vi.mock("@clerk/nextjs", () => ({
     isLoaded: true,
     isSignedIn: false,
   })),
-  useSignIn: vi.fn(() => ({
-    isLoaded: true,
-    signIn: {
-      create: vi.fn(),
-    },
-  })),
-  useSignUp: vi.fn(() => ({
-    isLoaded: true,
-    signUp: {
-      create: vi.fn(),
-    },
-  })),
+  useSignIn: vi.fn(() => ({ isLoaded: true, signIn: { create: vi.fn() } })),
+  useSignUp: vi.fn(() => ({ isLoaded: true, signUp: { create: vi.fn() } })),
   UserButton: () => <div>User Button</div>,
   SignInButton: () => <div>Sign In</div>,
   SignUpButton: () => <div>Sign Up</div>,
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
-// Mock the key-storage module BEFORE importing SettingsPage
-vi.mock("@/lib/key-storage", () => ({
-  getMaskedKey: vi.fn(() => null),
-  getKeyStoragePreference: vi.fn(() => "client"),
-  getApiKey: vi.fn(() => null),
-  removeApiKey: vi.fn(),
-  saveApiKey: vi.fn(),
-  shouldShowModal: vi.fn(() => false),
-}));
-
-// Mock next/navigation
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
     push: vi.fn(),
@@ -44,165 +26,95 @@ vi.mock("next/navigation", () => ({
     prefetch: vi.fn(),
   })),
 }));
-
-// Mock next/navigation
-vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(() => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-  })),
-}));
-
-// Mock ClerkProvider is already mocked above
 
 import SettingsPage from "@/app/settings/page";
-import {
-  getApiKey,
-  getMaskedKey,
-  getKeyStoragePreference,
-} from "@/lib/key-storage";
 
-// Mock fetch
-global.fetch = vi.fn();
+const fetchMock = vi.fn();
 
-// Get mocked ClerkProvider from the mock
-const { ClerkProvider } = await import("@clerk/nextjs");
+beforeEach(() => {
+  vi.clearAllMocks();
+  global.fetch = fetchMock as unknown as typeof fetch;
+});
 
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <ClerkProvider>{children}</ClerkProvider>
-);
+function mockProviders(providers: unknown[]) {
+  fetchMock.mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({ success: true, providers }),
+  });
+}
 
-describe("SettingsPage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(getMaskedKey).mockReturnValue(null);
-    vi.mocked(getKeyStoragePreference).mockReturnValue("client");
-    vi.mocked(getApiKey).mockReturnValue(null);
-    global.fetch = vi.fn();
+const OPENAI_PROVIDERS = [
+  { provider: "openai", configured: true, lastValidatedAt: "2026-01-01T00:00:00.000Z" },
+  { provider: "muapi", configured: false, lastValidatedAt: null },
+];
+
+describe("SettingsPage (BYOK)", () => {
+  it("renders both AI providers", async () => {
+    mockProviders(OPENAI_PROVIDERS);
+    render(<SettingsPage />);
+
+    expect(await screen.findByText(/AI Providers/i)).toBeInTheDocument();
+    expect(screen.getByText("OpenAI")).toBeInTheDocument();
+    expect(screen.getByText("MuAPI")).toBeInTheDocument();
   });
 
-  it("renders heading and API key section", () => {
-    render(<SettingsPage />, { wrapper });
-    expect(screen.getByText("Settings")).toBeInTheDocument();
-    expect(screen.getByText("OpenAI API Key")).toBeInTheDocument();
+  it("shows connected status without ever displaying key material", async () => {
+    mockProviders(OPENAI_PROVIDERS);
+    const { container } = render(<SettingsPage />);
+
+    await screen.findByText(/AI Providers/i);
+
+    expect(screen.getByText("Connected")).toBeInTheDocument();
+    expect(screen.getByText("Not connected")).toBeInTheDocument();
+    // No key strings, masked or otherwise, are ever rendered.
+    expect(container.textContent).not.toContain("sk-");
+    expect(container.textContent).not.toMatch(/sk-\.\.\./);
   });
 
-  it("shows loading state initially", () => {
-    render(<SettingsPage />, { wrapper });
-    expect(screen.getByText(/Loading/)).toBeInTheDocument();
+  it("does not offer a client-side (localStorage) storage option", async () => {
+    mockProviders(OPENAI_PROVIDERS);
+    const { container } = render(<SettingsPage />);
+
+    await screen.findByText(/AI Providers/i);
+
+    expect(container.textContent).not.toMatch(/local browser storage/i);
+    expect(container.textContent).not.toMatch(/client storage/i);
+    // Server-side encrypted storage is the only model.
+    expect(container.textContent).toMatch(/encrypted/i);
   });
 
-  it("displays 'No API key set' when no key", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: null, storage: "none" }),
-    });
+  it("opens the API key modal for a specific provider", async () => {
+    mockProviders([
+      { provider: "openai", configured: false },
+      { provider: "muapi", configured: false },
+    ]);
+    render(<SettingsPage />);
 
-    render(<SettingsPage />, { wrapper });
+    await screen.findByText(/AI Providers/i);
+    const buttons = screen.getAllByRole("button", { name: /connect/i });
+    fireEvent.click(buttons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText("No API key set")).toBeInTheDocument();
+      expect(
+        screen.getAllByText(/Connect Your AI Providers/i)[0],
+      ).toBeInTheDocument();
     });
+    // Modal subtitle states the BYOK model.
+    expect(
+      screen.getAllByText(/your provider bills you directly/i).length,
+    ).toBeGreaterThan(0);
   });
 
-  it("displays masked key from server when storage is server", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: "sk-...abcd", storage: "server" }),
-    });
-    vi.mocked(getKeyStoragePreference).mockReturnValue("server");
+  it("warns the user when no provider is connected", async () => {
+    mockProviders([
+      { provider: "openai", configured: false },
+      { provider: "muapi", configured: false },
+    ]);
+    render(<SettingsPage />);
 
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.getByText("sk-...abcd")).toBeInTheDocument();
-      expect(screen.getByText(/Encrypted on server/)).toBeInTheDocument();
-    });
-  });
-
-  it("displays masked key from localStorage when storage is client", async () => {
-    const { getMaskedKey } = await import("@/lib/key-storage");
-    vi.mocked(getMaskedKey).mockReturnValue("sk-...1234");
-    vi.mocked(getKeyStoragePreference).mockReturnValue("client");
-
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.getByText("sk-...1234")).toBeInTheDocument();
-      expect(screen.getByText(/Local browser storage/)).toBeInTheDocument();
-    });
-  });
-
-  it("opens modal when Add Key button clicked", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: null, storage: "none" }),
-    });
-
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.getByText("No API key set")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /add key/i }));
-    expect(await screen.findByText("Enter your OpenAI API key")).toBeInTheDocument();
-  });
-
-  it("opens modal when Change Key button clicked", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: "sk-...abcd", storage: "server" }),
-    });
-
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.getByText("sk-...abcd")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /change key/i }));
-    expect(await screen.findByText("Enter your OpenAI API key")).toBeInTheDocument();
-  });
-
-  it("removes key when Remove button clicked and confirmed", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: "sk-...wxyz", storage: "server" }),
-    });
-
-    // Mock window.confirm
-    vi.spyOn(window, "confirm").mockReturnValue(true);
-
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.getByText("sk-...wxyz")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("/api/user/api-key", expect.objectContaining({
-        method: "DELETE",
-        credentials: "include",
-      }));
-    });
-
-    vi.restoreAllMocks();
-  });
-
-  it("does not show Remove button when no key", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, maskedKey: null, storage: "none" }),
-    });
-
-    render(<SettingsPage />, { wrapper });
-
-    await waitFor(() => {
-      expect(screen.queryByRole("button", { name: /remove/i })).not.toBeInTheDocument();
-    });
+    expect(
+      await screen.findByText(/Bring your own AI key/i),
+    ).toBeInTheDocument();
   });
 });

@@ -817,7 +817,9 @@ async function renderSlideToCanvas(
 
   const host = document.createElement("div");
   // Same off-screen mounting as the presentation thumbnail capture: `fixed`
-  // keeps it out of document flow, so the editor's layout is untouched.
+  // keeps it out of document flow, so the editor's layout is untouched. The
+  // host only ever parks the clone; nothing is captured from it directly (see
+  // the `toCanvas` call below for why).
   host.setAttribute("aria-hidden", "true");
   host.style.position = "fixed";
   host.style.top = "0";
@@ -825,13 +827,6 @@ async function renderSlideToCanvas(
   host.style.zIndex = "-50";
   host.style.overflow = "hidden";
   host.style.pointerEvents = "none";
-  host.style.backgroundColor = backgroundColor;
-  if (backgroundImage) {
-    host.style.backgroundImage = `url("${backgroundImage.dataUrl}")`;
-    host.style.backgroundSize = "cover";
-    host.style.backgroundPosition = "center";
-    host.style.backgroundRepeat = "no-repeat";
-  }
 
   copyCustomProperties(source, host);
 
@@ -844,9 +839,23 @@ async function renderSlideToCanvas(
   node.style.border = "none";
   node.style.boxShadow = "none";
   node.style.transform = "none";
+  // The slide background and full-bleed image live on the captured node,
+  // because html-to-image only carries the target element's own styles into
+  // the isolated SVG document — anything left on the wrapper is dropped.
+  node.style.backgroundColor = backgroundColor;
+  if (backgroundImage) {
+    node.style.backgroundImage = `url("${backgroundImage.dataUrl}")`;
+    node.style.backgroundSize = "cover";
+    node.style.backgroundPosition = "center";
+    node.style.backgroundRepeat = "no-repeat";
+  }
+  // `ThemeBackground` can scope the theme variables to a wrapper rather than
+  // `<html>`, so re-declare them on the captured node as well.
+  copyCustomProperties(source, node);
 
   const { width, height } = resolveCaptureSize(source, scanResult);
   node.style.width = `${width}px`;
+  node.style.height = `${height}px`;
   host.style.width = `${width}px`;
   host.style.height = `${height}px`;
 
@@ -873,7 +882,12 @@ async function renderSlideToCanvas(
     );
     await waitForAnimationFrame();
 
-    const canvas = await toCanvas(host, {
+    // Capture the cloned slide, NOT the off-screen host. html-to-image sizes and
+    // paints the isolated document from the target element alone, and a host
+    // that is `position: fixed` / `overflow: hidden` makes it produce a
+    // correctly-sized but completely blank canvas — verified in
+    // `tests/unit/components/presentation/dom-to-pdf-converter.test.ts`.
+    const canvas = await toCanvas(node, {
       backgroundColor,
       // Fonts are embedded (see `resolveFontEmbedCss`) because the raster is
       // painted in an isolated document. `imagePlaceholder` keeps a failed
