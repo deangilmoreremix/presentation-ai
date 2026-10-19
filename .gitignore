@@ -60,3 +60,4 @@ test-results/
 
 # clerk configuration (can include secrets)
 /.clerk/
+.netlify-auth/
