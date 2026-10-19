@@ -6,12 +6,26 @@ type PresentationImageProxyInput = {
   stockImageProvider?: string;
 };
 
+/** Image provenance metadata that decides whether an image needs the proxy. */
+export type ExportImageProxyInput = PresentationImageProxyInput;
+
 type RewriteOptions = {
   absolute?: boolean;
 };
 
 type ExportImageSourceInput = PresentationImageProxyInput;
 
+/**
+ * Result of {@link resolveExportImageSource}.
+ *
+ * `data` is always safe to embed. A `path` is a URL that the consumer has to
+ * fetch itself, and when that URL points at `/api/image-proxy` it only resolves
+ * because the proxy route answers with `access-control-allow-origin: *` — see
+ * the fallback in {@link resolveExportImageSource}. Consumers that cannot
+ * issue a CORS-aware fetch (`html-to-image` re-fetches every resource, jsPDF
+ * cannot fetch at all) should prefer {@link resolveExportImageDataUrl} so this
+ * dependency disappears instead of being implicit.
+ */
 export type ExportImageSource =
   | {
       type: "data";
@@ -69,6 +83,27 @@ function createImageProxyUrl(
   return origin ? `${origin}${relativeUrl}` : relativeUrl;
 }
 
+/**
+ * Decide whether a scanned image has to travel through `/api/image-proxy`.
+ *
+ * Exemptions (both are deliberate, both are re-verified against the actual
+ * configuration rather than assumed):
+ *
+ * - `embedType`: an embedded media root (YouTube/Vimeo/infographic embeds)
+ *   stores a *page* URL, not an image byte stream. `/api/image-proxy` only
+ *   forwards `image/*` content types and answers 415 otherwise, so proxying
+ *   these would convert a working embed into a hard failure.
+ * - `imageSource === "upload"`: uploads are served from the public Supabase
+ *   Storage bucket, whose `access-control-allow-origin: *` is exactly the
+ *   condition the proxy exists to create. Routing them through the proxy would
+ *   add a server round trip (and a 10 MB / 415 cliff) for no gain.
+ *
+ * Everything else remote is proxied: AI-generated images (`generate`), stock
+ * search results (`search`), GIFs from Giphy (`gif`) and images with unknown
+ * provenance all come from hosts that either send no CORS headers at all or
+ * send headers that `html-to-image` / `pptxgenjs` cannot satisfy, so an
+ * unproxied export either silently drops the image or aborts the whole export.
+ */
 function shouldProxyPresentationImage(
   url: string | undefined,
   input: PresentationImageProxyInput = {},
@@ -77,15 +112,7 @@ function shouldProxyPresentationImage(
     return false;
   }
 
-  if (input.embedType || input.imageSource === "upload") {
-    return false;
-  }
-
-  if (input.imageSource === "search" || input.stockImageProvider === "google") {
-    return true;
-  }
-
-  return !input.imageSource;
+  return !input.embedType && input.imageSource !== "upload";
 }
 
 export function proxyPresentationImageUrl(
@@ -143,7 +170,46 @@ export async function resolveExportImageSource(
     };
   } catch (error) {
     console.warn("Failed to prepare proxied image for export:", error);
+    // Falling back to the proxied absolute URL is only viable because the
+    // proxy route sets `access-control-allow-origin: *`; see the
+    // `ExportImageSource` doc comment. Prefer `resolveExportImageDataUrl`
+    // where a CORS-aware fetch is not available.
     return { type: "path", value: proxiedUrl };
+  }
+}
+
+/**
+ * Resolve an image to an inline data URL, or `null` when it cannot be read.
+ *
+ * Use this for consumers that cannot fetch a URL themselves — jsPDF, for
+ * instance, only accepts data URLs / buffers, and `html-to-image` re-fetches
+ * every resource through an in-memory canvas. Both cases otherwise depend on
+ * the proxy's `access-control-allow-origin: *` (or, for non-proxied URLs, on
+ * the upstream happening to be CORS-friendly) to succeed at all.
+ */
+export async function resolveExportImageDataUrl(
+  url: string,
+  input: ExportImageSourceInput = {},
+): Promise<string | null> {
+  if (url.startsWith("data:")) {
+    return url;
+  }
+
+  const source = await resolveExportImageSource(url, input);
+  if (source.type === "data") {
+    return source.value;
+  }
+
+  try {
+    const response = await fetch(source.value, { cache: "force-cache" });
+    if (!response.ok) {
+      throw new Error(`Image request failed with status ${response.status}.`);
+    }
+
+    return await blobToDataUrl(await response.blob());
+  } catch (error) {
+    console.warn("Failed to inline export image:", error);
+    return null;
   }
 }
 

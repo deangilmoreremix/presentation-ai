@@ -58,7 +58,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
         try {
           setSavingStatus("saving");
 
-          await updatePresentation({
+          const result = await updatePresentation({
             id: currentPresentationId,
             content: {
               slides,
@@ -88,6 +88,14 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
               pageBackground,
             }),
           });
+
+          // A rejected save returns {success:false, message} instead of
+          // throwing; ignore it and the indicator would briefly lie.
+          if (result?.success === false) {
+            console.error("Failed to save presentation:", result.message);
+            setSavingStatus("idle");
+            return;
+          }
 
           setSavingStatus("saved");
           // Reset to idle after 2 seconds
@@ -145,7 +153,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
     try {
       setSavingStatus("saving");
 
-      await updatePresentation({
+      const result = await updatePresentation({
         id: currentPresentationId,
         content: {
           slides,
@@ -175,6 +183,15 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
           pageBackground,
         }),
       });
+
+      // updatePresentation returns {success:false, message} on failure rather
+      // than throwing, so a rejected save used to flash "Saved" and lose the
+      // edits. Only report success when the server actually accepted it.
+      if (result?.success === false) {
+        console.error("Failed to save presentation:", result.message);
+        setSavingStatus("idle");
+        return;
+      }
 
       setSavingStatus("saved");
       // Reset to idle after 2 seconds

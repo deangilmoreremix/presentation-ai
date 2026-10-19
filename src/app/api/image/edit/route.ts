@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { getOpenAIClient } from "@/lib/openai/client";
 import { utapi } from "@/app/api/uploadthing/core";
 import { UTFile } from "uploadthing/server";
-import type OpenAI from "openai";
 import {
   type ImageModel,
   type GptImageSize,
@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
     let inputFidelity: "high" | "low" | undefined;
     let moderation: "low" | "auto" | undefined;
     let n: number;
-    let apiKey: string | undefined;
     let images: Array<{ url?: string; file_id?: string }> = [];
     let mask: { url?: string; file_id?: string } | undefined;
     let stream = false;
@@ -46,21 +45,37 @@ export async function POST(req: NextRequest) {
       inputFidelity = formData.get("inputFidelity") as "high" | "low" | undefined;
       moderation = formData.get("moderation") as "low" | "auto" | undefined;
       n = Number(formData.get("n")) || 1;
-      apiKey = formData.get("apiKey") as string | undefined;
       stream = (formData.get("stream") as string) === "true";
       partialImages = formData.get("partialImages") ? Number(formData.get("partialImages")) : undefined;
 
       const imageFile = formData.get("image") as File | null;
       const maskFile = formData.get("mask") as File | null;
 
+      // `URL.createObjectURL` is a browser-only API and is not implemented in
+      // the Node runtime, so it threw here for every multipart edit request.
+      // Upload the files instead, exactly like the generate route does.
       if (imageFile) {
-        const imageUrl = URL.createObjectURL(imageFile);
-        images = [{ url: imageUrl }];
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        const uploaded = await utapi.uploadFiles([
+          new UTFile([new Uint8Array(buffer)], imageFile.name || "edit-source"),
+        ]);
+        const url = uploaded[0]?.data?.ufsUrl;
+        if (!url) {
+          throw new Error("Failed to upload the source image");
+        }
+        images = [{ url }];
       }
 
       if (maskFile) {
-        const maskUrl = URL.createObjectURL(maskFile);
-        mask = { url: maskUrl };
+        const buffer = Buffer.from(await maskFile.arrayBuffer());
+        const uploaded = await utapi.uploadFiles([
+          new UTFile([new Uint8Array(buffer)], maskFile.name || "edit-mask"),
+        ]);
+        const url = uploaded[0]?.data?.ufsUrl;
+        if (!url) {
+          throw new Error("Failed to upload the mask image");
+        }
+        mask = { url };
       }
     } else {
       const body = await req.json();
@@ -74,7 +89,6 @@ export async function POST(req: NextRequest) {
       inputFidelity = body.inputFidelity;
       moderation = body.moderation;
       n = body.n || 1;
-      apiKey = body.apiKey;
       images = body.images || [];
       mask = body.mask;
       stream = body.stream || false;
@@ -89,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "At least one image is required" }, { status: 400 });
     }
 
-    const openai = await getOpenAIClient(undefined, apiKey);
+    const openai = await getOpenAIClient();
 
     const requestParams: Record<string, unknown> = {
       model,
@@ -152,6 +166,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, images: uploadedUrls, count: uploadedUrls.length });
   } catch (error) {
     console.error("Image edit API error:", error);
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to edit image" },
       { status: 500 },

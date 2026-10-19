@@ -8,6 +8,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+// `useSearchParams` below is read during render. Without this, Next.js tries
+// to statically prerender the route, and the prerender pass fails with
+// "useSearchParams() should be wrapped in a suspense boundary", which fails
+// the whole `next build`. The route creates a presentation and navigates into
+// it, so it is per-request by nature.
+export const dynamic = "force-dynamic";
+
 function getSlideCount(value: string | null): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) {

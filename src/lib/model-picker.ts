@@ -1,6 +1,6 @@
-import { env } from "@/env";
 import { createLogger } from "@/lib/observability/logger";
 import { ChatOpenAI } from "@langchain/openai";
+import { resolveOpenAICredential } from "@/lib/ai/provider-credentials";
 
 type ModelProvider = "openai" | "lmstudio";
 const modelLogger = createLogger("model-picker");
@@ -152,16 +152,8 @@ export function assertModelIsConfigured(
     throw new Error("An LM Studio model must be selected before continuing.");
   }
 
-  if (selection.provider === "openai" && !env.OPENAI_API_KEY?.trim()) {
-    modelLogger.error("Model configuration failed", undefined, {
-      provider: selection.provider,
-      modelId: selectedOpenAIModel,
-      reason: "missing_openai_api_key",
-    });
-    throw new Error(
-      `OPENAI_API_KEY is required when using the OpenAI model "${selectedOpenAIModel}".`,
-    );
-  }
+  // BYOK: a platform OpenAI key is never consulted or required here. The
+  // user's own key is resolved when the model is constructed below.
 
   modelLogger.info("Model configuration validated", {
     provider: selection.provider,
@@ -190,10 +182,9 @@ export async function ensureModelIsReady(
  * Centralized model picker for LangChain-based presentation routes.
  * Supports OpenAI and OpenAI-compatible local endpoints.
  */
-export function modelPicker(
+export async function modelPicker(
   modelProviderOrModel: string,
   modelId?: string,
-  apiKey?: string | null,
 ) {
   const selection = resolveModelSelection(modelProviderOrModel, modelId);
 
@@ -218,7 +209,9 @@ export function modelPicker(
   }
 
   const selectedOpenAIModel = selection.modelId || "gpt-4o-mini";
-  const openAIApiKey = apiKey?.trim() || env.OPENAI_API_KEY?.trim();
+  // BYOK: the credential always comes from the authenticated user's stored
+  // key. Client-supplied keys are not trusted as a credential source.
+  const openAIApiKey = await resolveOpenAICredential();
 
   modelLogger.info("Creating OpenAI model client", {
     provider: selection.provider,

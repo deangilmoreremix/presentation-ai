@@ -3,6 +3,7 @@
 import { UTFile } from "uploadthing/server";
 
 import { utapi } from "@/app/api/uploadthing/lib";
+import { toActionErrorResult } from "@/lib/ai/action-error";
 import {
   DEFAULT_IMAGE_MODEL,
   OPENAI_RESPONSES_MODEL,
@@ -18,7 +19,6 @@ type GenerateInfographicImageActionInput = {
   layout?: string;
   model?: ImageModelList;
   prompt: string;
-  apiKey?: string;
   size?: string;
   quality?: ImageQuality;
   outputFormat?: OutputFormat;
@@ -68,7 +68,6 @@ export async function generateInfographicImageAction({
   layout = "Timeline",
   model = DEFAULT_IMAGE_MODEL,
   prompt,
-  apiKey,
   size = "1536x1024",
   quality = "high",
   outputFormat = "png",
@@ -118,7 +117,7 @@ export async function generateInfographicImageAction({
       "smart.server.image_generation.model": actualModel,
     });
 
-    const openai = await getOpenAIClient(apiKey);
+    const openai = await getOpenAIClient();
 
     const tool: Record<string, unknown> = {
       type: "image_generation",
@@ -201,12 +200,6 @@ export async function generateInfographicImageAction({
   } catch (error) {
     console.error("Error generating infographic:", error);
     span.end();
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to generate infographic",
-    };
+    return toActionErrorResult(error, "Failed to generate infographic");
   }
 }

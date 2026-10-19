@@ -24,6 +24,7 @@ import { useDebouncedSave } from "@/hooks/presentation/useDebouncedSave";
 import { useDraggable } from "../dnd/hooks/useDraggable";
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
 import { cn } from "@/lib/utils";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 
 export interface PresentationImageElementProps {
   className?: string;
@@ -92,6 +93,12 @@ export const PresentationImageElement = withHOC(
             setTimeout(() => {
               void saveImmediately();
             }, 500);
+          } else {
+            setError("Failed to generate image. Please try again.");
+            const byokProvider = byokErrorFromResult(result);
+            if (byokProvider) {
+              notifyByokError(byokProvider);
+            }
           }
         } catch (error) {
           console.error("Error generating image:", error);
@@ -159,27 +166,33 @@ export const PresentationImageElement = withHOC(
                       }
                     }}
                   >
-                    <Image
-                      ref={handleRef}
-                      className={cn(
-                        "presentation-image",
-                        "cursor-pointer",
-                        focused &&
-                          selected &&
-                          "ring-2 ring-ring ring-offset-2",
-                        isDragging && "opacity-50"
-                      )}
-                      alt={props.element.query ?? ""}
-                      src={imageUrl}
-                      onError={(e) => {
-                        console.error(
-                          "Presentation image failed to load:",
-                          e,
-                          imageUrl
-                        );
-                      }}
-                      {...nodeProps}
-                    />
+                    {imageUrl ? (
+                      <Image
+                        ref={handleRef}
+                        className={cn(
+                          "presentation-image",
+                          "cursor-pointer",
+                          focused &&
+                            selected &&
+                            "ring-2 ring-ring ring-offset-2",
+                          isDragging && "opacity-50"
+                        )}
+                        alt={props.element.query ?? ""}
+                        src={imageUrl}
+                        onError={(e) => {
+                          console.error(
+                            "Presentation image failed to load:",
+                            e,
+                            imageUrl
+                          );
+                        }}
+                        {...nodeProps}
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-[10rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                        {error ?? "No image generated yet"}
+                      </div>
+                    )}
                   </div>
                 )}
                 <ResizeHandle

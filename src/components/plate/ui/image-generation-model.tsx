@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
-import { getApiKey } from "@/lib/key-storage";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type ImageModelList } from "@/constants/image-models";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 import { raiseError } from "@/lib/raise-error";
 import { useNotesState } from "@/states/notes-state";
 
@@ -71,9 +71,13 @@ function GenerateImageDialogContent({
     setIsGenerating(true);
 
     try {
-      const result = await generateImageAction(prompt, selectedModel, "16:9", getApiKey() ?? undefined);
+      const result = await generateImageAction(prompt, selectedModel, "16:9");
 
       if (!result.success || !("image" in result) || !result.image?.url) {
+        const byokProvider = byokErrorFromResult(result);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
         raiseError(new Error(("error" in result ? result.error : undefined) ?? "Failed to generate image"));
       }
 

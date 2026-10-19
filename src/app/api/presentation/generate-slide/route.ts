@@ -2,6 +2,7 @@ import { createUIMessageStreamResponse } from "ai";
 import { assertModelIsConfigured, modelPicker } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { withTimeout } from "@/lib/request-timeout";
 import { toUIMessageStream } from "@ai-sdk/langchain";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -17,7 +18,6 @@ interface GenerateSlideRequest {
   slideType?: "standard" | "image";
   imageStyle?: "3D" | "Sketch" | "Flat";
   textDensity?: "Minimal" | "Balanced" | "Detailed";
-  apiKey?: string;
 }
 
 const singleSlideTemplate = `You are an expert presentation designer. Create an engaging presentation in XML format.
@@ -175,7 +175,7 @@ Create a detailed, artistic prompt that:
 Now generate the single image slide.
 `;
 
-const model = (apiKey?: string) => modelPicker("gpt-4o-mini", undefined, apiKey);
+const model = async () => await modelPicker("gpt-4o-mini");
 
 function getImageStyleGuidance(style?: string): string {
   switch (style) {
@@ -218,7 +218,6 @@ export async function POST(req: Request) {
       slideType,
       imageStyle,
       textDensity,
-      apiKey,
     } = (await req.json()) as GenerateSlideRequest;
 
     if (!prompt) {
@@ -267,7 +266,7 @@ export async function POST(req: Request) {
     const promptTemplate = PromptTemplate.fromTemplate(
       isImageSlide ? singleImageSlideTemplate : singleSlideTemplate,
     );
-    const chain = RunnableSequence.from([promptTemplate, model(apiKey)]);
+    const chain = RunnableSequence.from([promptTemplate, await model()]);
 
     const input = isImageSlide
       ? {
@@ -303,6 +302,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     routeLogger.error("Single slide generation failed", error, { requestId });
+
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
 
     if (error instanceof Error && error.name === "TimeoutError") {
       return NextResponse.json(

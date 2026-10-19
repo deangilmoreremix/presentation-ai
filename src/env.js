@@ -14,7 +14,13 @@ export const env = createEnv({
 
     // Direct Postgres connection for LangGraph checkpoint persistence
     // (replaces the Prisma `DATABASE_URL`).
-    DATABASE_URL: z.string().url(),
+    //
+    // Optional so that `next build` does not require a live database:
+    // `next.config.js` loads this schema at config time, and no build step
+    // touches Postgres. It is still validated as a URL whenever it is
+    // supplied. Consumers that need it fail with an explicit error when it
+    // is absent (see `src/ai/lib/postgres.ts`).
+    DATABASE_URL: z.string().url().optional(),
 
     TAVILY_API_KEY: z.string().optional(),
     NODE_ENV: z

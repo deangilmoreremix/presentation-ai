@@ -10,6 +10,7 @@ import {
 } from "@/lib/modelPicker";
 import { createLogger } from "@/lib/observability/logger";
 import { csrfGuard } from "@/lib/csrf";
+import { byokErrorResponse } from "@/lib/ai/byok-error";
 import { withTimeout } from "@/lib/request-timeout";
 import {
   buildPresentationPromptValues,
@@ -20,7 +21,6 @@ import {
 type SlidesRequest = Omit<PresentationGenerationPromptInput, "currentDate"> & {
   modelId?: string;
   modelProvider?: "openai" | "lmstudio";
-  apiKey?: string;
   presentationId?: string;
 };
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     routeLogger.info("Presentation generation request received", { requestId });
 
     const request = (await req.json()) as SlidesRequest;
-    const { modelId, modelProvider = "openai", apiKey } = request;
+    const { modelId, modelProvider = "openai" } = request;
 
     if (
       !request.title ||
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const model = modelPicker(modelProvider, modelId, apiKey);
+    const model = await modelPicker(modelProvider, modelId);
     const chain = RunnableSequence.from([
       presentationGenerationPromptTemplate,
       model,
@@ -165,6 +165,9 @@ export async function POST(req: Request) {
     return createUIMessageStreamResponse({ stream: toUIMessageStream(stream) });
   } catch (error) {
     routeLogger.error("Presentation generation failed", error, { requestId });
+
+    const byokError = byokErrorResponse(error);
+    if (byokError) return byokError;
 
     if (error instanceof Error && error.name === "TimeoutError") {
       return NextResponse.json(

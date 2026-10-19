@@ -20,6 +20,7 @@ import { generateImageAction } from "@/app/_actions/apps/image-studio/generate";
 import { type PlateSlide } from "../../utils/parser";
 import { useDraggable } from "../dnd/hooks/useDraggable";
 import { cn } from "@/lib/utils";
+import { byokErrorFromResult, notifyByokError } from "@/lib/ai/byok-client";
 
 export default function RootImage({
   image,
@@ -96,6 +97,12 @@ export default function RootImage({
 
         // Ensure the generating state is properly reset
         setIsGenerating(false);
+      } else {
+        setError("Failed to generate image. Please try again.");
+        const byokProvider = byokErrorFromResult(result);
+        if (byokProvider) {
+          notifyByokError(byokProvider);
+        }
       }
     } catch (error) {
       console.error("Error generating image:", error);
@@ -214,20 +221,28 @@ export default function RootImage({
                     }}
                     onDoubleClick={handleImageDoubleClick}
                   >
-                    {/*  eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageUrl ?? image.url}
-                      alt={image.query}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        console.error(
-                          "Image failed to load:",
-                          e,
-                          imageUrl ?? image.url
-                        );
-                        // Optionally set a fallback image or show an error state
-                      }}
-                    />
+                    {(imageUrl ?? image.url) ? (
+                      <>
+                        {/*  eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrl ?? image.url}
+                          alt={image.query}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            console.error(
+                              "Image failed to load:",
+                              e,
+                              imageUrl ?? image.url
+                            );
+                            // Optionally set a fallback image or show an error state
+                          }}
+                        />
+                      </>
+                    ) : (
+                      <div className="flex h-full min-h-[10rem] items-center justify-center p-4 text-center text-sm text-muted-foreground">
+                        {error ?? "No image generated yet"}
+                      </div>
+                    )}
                   </div>
                 </PopoverTrigger>
                 <PopoverContent
