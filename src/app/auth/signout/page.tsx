@@ -11,6 +11,13 @@ import {
 } from "@/components/ui/card";
 import { useClerk } from "@clerk/nextjs";
 
+// `useSearchParams` below is read during render. Without this, Next.js tries
+// to statically prerender the route, and the prerender pass fails with
+// "useSearchParams() should be wrapped in a suspense boundary", which fails
+// the whole `next build`. The route is per-request anyway: it signs the user
+// out and navigates, so there is nothing to prerender.
+export const dynamic = "force-dynamic";
+
 export default function SignOut() {
   const router = useRouter();
   const searchParams = useSearchParams();
