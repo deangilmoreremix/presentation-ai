@@ -1041,7 +1041,9 @@ function buildThemeFromSlideAnalysis(
 export async function extractThemeFromPptx(
   file: File,
 ): Promise<ThemeProperties> {
-  const zip = await JSZip.loadAsync(file);
+  // Load from an ArrayBuffer: JSZip cannot read File/Blob objects under Node,
+  // and this extractor also runs server-side for template imports.
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
 
   const themeName = `Imported: ${file.name.replace(/\.pptx$/i, "").replace(/[_-]/g, " ")}`;
 

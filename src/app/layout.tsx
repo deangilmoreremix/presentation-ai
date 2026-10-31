@@ -5,6 +5,10 @@ import { ThemeProvider } from "@/provider/theme-provider";
 import { TipProvider } from "@/components/onboarding/TipProvider";
 import { GlobalGenerationManagers } from "@/components/notebook/GlobalGenerationManagers";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
+import {
+  SetupRequired,
+  getMissingRequiredEnv,
+} from "@/components/setup/SetupRequired";
 import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -22,6 +26,22 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // ClerkProvider (and every Clerk hook below it) throws without a
+  // publishable key, which renders a blank page in production.
+  // (Development uses Clerk keyless mode, so only enforce this in production.)
+  if (
+    process.env.NODE_ENV === "production" &&
+    !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  ) {
+    return (
+      <html lang="en" suppressHydrationWarning>
+        <body className={`${inter.className} antialiased`}>
+          <SetupRequired missing={getMissingRequiredEnv()} />
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>

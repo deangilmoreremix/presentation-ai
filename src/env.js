@@ -14,7 +14,7 @@ export const env = createEnv({
 
     // Direct Postgres connection for LangGraph checkpoint persistence
     // (replaces the Prisma `DATABASE_URL`).
-    DATABASE_URL: z.string().url(),
+    DATABASE_URL: z.string().url().optional(),
 
     TAVILY_API_KEY: z.string().optional(),
     NODE_ENV: z

@@ -17,8 +17,8 @@
 3. Connect your GitHub repository
 4. Configure build settings:
    - **Build command:** `pnpm build`
-   - **Publish directory:** `.next/standalone`
-   - **Functions directory:** `.netlify/functions`
+   - **Publish directory:** `.next` (already set in `netlify.toml` — do not use `.next/standalone`)
+   - **Functions directory:** leave empty (`@netlify/plugin-nextjs` generates functions)
 5. Click "Deploy site"
 
 ### 2. Set Environment Variables in Netlify
@@ -134,36 +134,23 @@ curl https://your-site.netlify.app/api/health
 
 ## 🔧 Configuration Files Reference
 
-### `netlify.toml` (create this in project root)
+### `netlify.toml` (already in the project root)
 
 ```toml
 [build]
   command = "pnpm build"
-  publish = ".next/standalone"
-  [build.environment]
-    NODE_VERSION = "18"
-    NPM_VERSION = "10"
-    NODE_OPTIONS = "--max-old-space-size=4096"
+  publish = ".next"
 
-[dev]
-  command = "pnpm dev"
-  port = 3000
-  targetPort = 3000
-  publish = ".next/standalone"
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_OPTIONS = "--max-old-space-size=4096"
+  SKIP_ENV_VALIDATION = "true"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 ```
 
-### Netlify Plugin (Recommended)
-
-```bash
-pnpm add -D @netlify/plugin-nextjs
-```
-
-This plugin automatically handles Next.js routing and serverless functions.
+Do **not** add an `/api/*` → `/.netlify/functions/...` redirect; the plugin routes API requests itself.
 
 ---
 
@@ -171,14 +158,14 @@ This plugin automatically handles Next.js routing and serverless functions.
 
 1. **Database migration must run** before using the app. Tables won't exist until you run `pnpm db:push`.
 
-2. **Environment variables must be set** in Netlify dashboard. The build will fail without `DATABASE_URL`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, and `CLERK_SECRET_KEY`.
+2. **Environment variables must be set** in Netlify dashboard. Without `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` the site shows a "configuration missing" page listing what to add. `NEXT_PUBLIC_*` values are baked in at build time, so **trigger a new deploy after changing them**.
 
 3. **Clerk domains must be configured** in Clerk Dashboard to include your Netlify domain.
 
 4. **First deployment may take 10-15 minutes** due to:
    - Installing dependencies
    - Compiling TypeScript
-   - Bundling for standalone output
+   - Bundling server functions
 
 5. **Cold starts on Netlify free tier** ~2-5 seconds. Consider upgrading to Pro for faster builds and always-on functions if needed.
 
@@ -189,14 +176,17 @@ This plugin automatically handles Next.js routing and serverless functions.
 ### Build fails with "Cannot find module"
 **Solution:** Ensure all dependencies are listed correctly in `package.json`. Avoid Node.js native modules not compatible with serverless.
 
-### Runtime error: "DATABASE_URL not set"
-**Solution:** Add `DATABASE_URL` in Netlify environment variables.
+### Blank page after deploy
+**Solution:** Check the publish directory is `.next` (not `.next/standalone`), confirm the latest deploy actually succeeded (Netlify keeps serving the previous deploy when a build fails), and open the browser console for CSP errors.
+
+### AI agent chat history not persisted
+**Solution:** Add `DATABASE_URL` (Supabase Postgres connection string). Without it the agent uses an in-memory checkpointer.
 
 ### Auth redirect loop
 **Solution:** Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly. Also check that your domain is in Clerk's allowed origins.
 
 ### 404 on API routes
-**Solution:** Ensure `netlify.toml` has the redirect rule and `@netlify/plugin-nextjs` is installed.
+**Solution:** Ensure `publish = ".next"` and `@netlify/plugin-nextjs` is listed under `[[plugins]]`. Remove any manual `/api/*` redirects.
 
 ### Database connection errors
 **Solution:** Check that Supabase project is active, not paused. Verify connection string is correct. Ensure connection pooling is enabled in Supabase.

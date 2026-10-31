@@ -10,6 +10,8 @@ import {
   CredenzaTitle,
 } from "@/components/ui/credenza";
 import { usePresentationState } from "@/states/presentation-state";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FreePptTemplateGallery } from "@/components/templates/FreePptTemplateGallery";
 import { TemplateLibrary } from "@/components/templates/TemplateLibrary";
 
 export function PresentationTemplates() {
@@ -64,9 +66,21 @@ export function PresentationTemplates() {
             <span aria-hidden>×</span>
           </Button>
         </CredenzaHeader>
-        <TemplateLibrary
-          isSidebarVisible={isSidebarVisible}
-        />
+        <Tabs defaultValue="layouts" className="gap-0">
+          <TabsList className="mx-4 mt-3 w-fit sm:mx-6">
+            <TabsTrigger value="layouts">Smart Layouts</TabsTrigger>
+            <TabsTrigger value="free-ppt">Free PPT Templates</TabsTrigger>
+          </TabsList>
+          <TabsContent value="layouts">
+            <TemplateLibrary isSidebarVisible={isSidebarVisible} />
+          </TabsContent>
+          <TabsContent
+            value="free-ppt"
+            className="max-h-[calc(92dvh-8rem)] overflow-y-auto"
+          >
+            <FreePptTemplateGallery />
+          </TabsContent>
+        </Tabs>
       </CredenzaContent>
     </Credenza>
   );

@@ -1,117 +1,80 @@
 # Netlify Deployment Guide
 
-This guide covers deploying Smart Presentations to Netlify with Supabase.
+Smart Presentations deploys to Netlify with `@netlify/plugin-nextjs` (Next.js 16).
+All build settings live in `netlify.toml`; you only need to set environment variables.
 
-## Step 1: Create `netlify.toml`
+## 1. Build settings
 
-Create this file in your project root:
+`netlify.toml` (already committed):
 
 ```toml
 [build]
   command = "pnpm build"
-  publish = ".next/standalone"
-  [build.environment]
-    NODE_VERSION = "18"
-    NPM_VERSION = "10"
-    NODE_OPTIONS = "--max-old-space-size=4096"
+  publish = ".next"
 
-[dev]
-  command = "pnpm dev"
-  port = 3000
-  targetPort = 3000
-  publish = ".next/standalone"
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_OPTIONS = "--max-old-space-size=4096"
+  SKIP_ENV_VALIDATION = "true"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 ```
 
-## Step 2: Add Netlify Next.js Plugin (Recommended)
+In the Netlify UI leave **Publish directory** as `.next` and **Functions directory** empty.
+
+> ⚠️ Do **not** set the publish directory to `.next/standalone` and do not add
+> `/api/*` redirects to `/.netlify/functions`. Both bypass the Next.js runtime
+> plugin and produce a blank site / 404s. `output: "standalone"` is only used
+> for the Docker image and is disabled automatically on Netlify.
+
+## 2. Environment variables
+
+Site configuration → Environment variables. `NEXT_PUBLIC_*` values are inlined
+at build time, so **redeploy after changing them**.
+
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk → API Keys. Without it the site shows a setup page. |
+| `CLERK_SECRET_KEY` | ✅ | Clerk → API Keys |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase → Project Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase → Project Settings → API |
+| `OPENAI_API_KEY` | ✅ | Text + image generation (users can also add their own key in Settings) |
+| `API_KEY_ENCRYPTION_MASTER_KEY` | ✅ if users save API keys | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
+| `DATABASE_URL` | optional | Supabase Postgres URL; persists AI agent conversations (in-memory otherwise) |
+| `CLERK_WEBHOOK_SECRET` | optional | For `/api/webhooks/clerk` |
+| `UNSPLASH_ACCESS_KEY`, `PIXABAY_API_KEY`, `PEXELS_API_KEY`, `GIPHY_API_KEY` | optional | Stock image / GIF search |
+| `TAVILY_API_KEY` | optional | Web research |
+| `TOGETHER_AI_API_KEY`, `PINECONE_API_KEY` | optional | Alternate models / vector search |
+| `UPLOADTHING_TOKEN` | optional | Image uploads |
+| `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN` | optional | Error tracking |
+
+## 3. Clerk
+
+- Add your Netlify domain (and custom domain) in Clerk → Domains.
+- Production Clerk instances load their script from `clerk.<your-domain>`; the
+  app's Content-Security-Policy derives that host from the publishable key
+  automatically.
+
+## 4. Database
+
+Apply the Supabase migrations in `supabase/migrations` (`pnpm db:push`) before first use.
+
+## 5. Verify
 
 ```bash
-pnpm add -D @netlify/plugin-nextjs
+curl https://<site>.netlify.app/api/health
 ```
 
-This plugin automatically handles Next.js routing and serverless functions.
-
-## Step 3: Deploy to Netlify
-
-### Via Git Integration:
-
-1. Push your code to GitHub
-2. Go to https://app.netlify.com/sites/new
-3. Import from Git → select your repository
-4. Build settings:
-   - **Build command:** `pnpm build`
-   - **Publish directory:** `.next/standalone`
-   - **Functions directory:** `.netlify/functions`
-5. Set environment variables (see below)
-6. Click "Deploy site"
-
-### Via Netlify CLI:
-
-```bash
-npm install -g netlify-cli
-netlify login
-netlify init
-# Follow prompts to create new site
-netlify deploy --prod
-```
-
-## Step 4: Environment Variables
-
-In Netlify dashboard → Site settings → Build & Deploy → Environment:
-
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
-CLERK_SECRET_KEY="sk_test_..."
-NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-ID].supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
-SUPABASE_SERVICE_ROLE_KEY="eyJ..."  # Optional
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres"
-OPENAI_API_KEY="sk-..." # optional
-API_KEY_ENCRYPTION_MASTER_KEY="..."
-SKIP_ENV_VALIDATION=true
-```
-
-## Step 5: Post-Deploy
-
-1. **Run database migration:**
-   ```bash
-   netlify run pnpm db:push
-   ```
-
-2. **Configure Clerk:**
-   - Add your Netlify domain to Clerk Dashboard → Configure → Allowed origins
-   - Set redirect paths: sign-in `/auth/signin`, sign-up `/auth/signup`
-
-3. **Test the deployed site:**
-   - Visit your Netlify URL
-   - Sign in with Clerk (email or social auth)
-   - Create a presentation
-   - Export to PPTX and PDF
-
-## Step 6: Custom Domain (Optional)
-
-1. Netlify dashboard → Domain management → Add custom domain
-2. Update Clerk Dashboard to include your custom domain in allowed origins
-3. Update Supabase auth settings if using Supabase auth providers
+Then open `/` (landing page), `/templates` (Free PPT Templates + Smart Layouts)
+and sign in.
 
 ## Troubleshooting
 
-### Build Fails: "Module not found"
-Ensure all dependencies are installed. Run `pnpm install` locally and commit `pnpm-lock.yaml`.
-
-### 404 on API Routes
-The `netlify.toml` redirect rule should handle this. Ensure `@netlify/plugin-nextjs` is installed.
-
-### Database Connection Errors
-Check DATABASE_URL is correct and Supabase connection pool is configured.
-
-### Auth redirect loop
-Verify `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are set correctly. Check Clerk Dashboard → Configure → Paths.
-
----
-
-For detailed comparison with Vercel and additional deployment options, see `DEPLOYMENT_GUIDE.md`.
+- **Blank page:** wrong publish dir (must be `.next`), or the latest build failed
+  and Netlify is still serving an older deploy. Check the deploy log.
+- **"Configuration missing" page:** Clerk keys not set at build time — set them and redeploy.
+- **Sign-in widget never appears:** check the browser console for CSP violations
+  and that the domain is configured in Clerk.
+- **`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`:** run `pnpm install` locally and commit `pnpm-lock.yaml`.

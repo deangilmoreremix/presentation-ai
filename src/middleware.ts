@@ -8,6 +8,7 @@ import { rateLimit } from "@/lib/rate-limit";
  */
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/templates",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/auth/signin(.*)",
@@ -51,16 +52,48 @@ function getRateLimitConfig(pathname: string): { windowMs: number; maxRequests: 
   return DEFAULT_RATE_LIMIT;
 }
 
+/**
+ * Clerk production instances serve clerk-js from their own Frontend API host
+ * (e.g. clerk.example.com), which is encoded in the publishable key as
+ * base64("<host>$"). It must be allowed by the CSP or the auth UI never loads.
+ */
+function getClerkFrontendApiHost(): string | null {
+  const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!key) return null;
+  try {
+    const encoded = key.split("_").slice(2).join("_");
+    const host = atob(encoded).replace(/\$$/, "");
+    return /^[a-z0-9.-]+$/i.test(host) ? host : null;
+  } catch {
+    return null;
+  }
+}
+
+// Development falls back to Clerk keyless mode, so only bypass Clerk when a
+// production build is missing its keys.
+const isClerkConfigured =
+  process.env.NODE_ENV !== "production" ||
+  Boolean(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+      process.env.CLERK_SECRET_KEY,
+  );
+
 function buildContentSecurityPolicy(): string {
+  const clerkHost = getClerkFrontendApiHost();
+  const clerk = [
+    "https://*.clerk.com",
+    "https://*.clerk.accounts.dev",
+    ...(clerkHost ? [`https://${clerkHost}`] : []),
+  ].join(" ");
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.clerk.accounts.dev blob:",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${clerk} https://challenges.cloudflare.com blob:`,
     "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.ufs.sh https://images.unsplash.com https://*.supabase.co https://media.giphy.com https://i.giphy.com https://images.pexels.com https://cdn.pixabay.com",
+    "img-src 'self' data: blob: https://img.clerk.com https://cdn.ppttemplate.ai https://lh3.googleusercontent.com https://*.ufs.sh https://images.unsplash.com https://*.supabase.co https://media.giphy.com https://i.giphy.com https://images.pexels.com https://cdn.pixabay.com",
     "font-src 'self' data:",
-    "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.clerk.com https://*.clerk.accounts.dev https://clerk-telemetry.com https://api.unsplash.com https://www.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://api.giphy.com https://api.pexels.com https://cdn.pixabay.com",
-    "frame-src 'self' https://www.youtube.com https://player.vimeo.com https://www.loom.com https://www.figma.com https://www.google.com https://codepen.io",
+    `connect-src 'self' https://api.openai.com https://*.supabase.co wss://*.supabase.co ${clerk} https://clerk-telemetry.com https://*.ufs.sh https://*.uploadthing.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://cdn.ppttemplate.ai https://api.unsplash.com https://www.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://api.giphy.com https://api.pexels.com https://cdn.pixabay.com`,
+    `frame-src 'self' ${clerk} https://challenges.cloudflare.com https://www.youtube.com https://player.vimeo.com https://www.loom.com https://www.figma.com https://www.google.com https://codepen.io`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -88,7 +121,32 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export default clerkMiddleware(async (auth, request: NextRequest) => {
+async function applyRateLimit(request: NextRequest): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+  if (!pathname.startsWith("/api/")) return null;
+  const config = getRateLimitConfig(pathname);
+  const result = await rateLimit(request, config);
+  if (result.success) return null;
+  return applySecurityHeaders(
+    NextResponse.json(
+      {
+        error: "Too many requests",
+        message: `Rate limit exceeded. Try again in ${Math.ceil(result.resetIn / 1000)} seconds.`,
+      },
+      {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": String(config.maxRequests),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(Date.now() + result.resetIn),
+          "Retry-After": String(Math.ceil(result.resetIn / 1000)),
+        },
+      },
+    ),
+  );
+}
+
+const withClerk = clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
   if (!isPublicRoute(request)) {
@@ -102,34 +160,24 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     }
   }
 
-  // Apply rate limiting to API routes
-  if (pathname.startsWith("/api/")) {
-    const config = getRateLimitConfig(pathname);
-    const result = await rateLimit(request, config);
-
-    if (!result.success) {
-      return applySecurityHeaders(
-        NextResponse.json(
-          {
-            error: "Too many requests",
-            message: `Rate limit exceeded. Try again in ${Math.ceil(result.resetIn / 1000)} seconds.`,
-          },
-          {
-            status: 429,
-            headers: {
-              "X-RateLimit-Limit": String(config.maxRequests),
-              "X-RateLimit-Remaining": "0",
-              "X-RateLimit-Reset": String(Date.now() + result.resetIn),
-              "Retry-After": String(Math.ceil(result.resetIn / 1000)),
-            },
-          },
-        ),
-      );
-    }
-  }
+  const limited = await applyRateLimit(request);
+  if (limited) return limited;
 
   return applySecurityHeaders(NextResponse.next());
 });
+
+/**
+ * Without Clerk keys clerkMiddleware throws on every request in production,
+ * which takes the whole site down. Serve public pages instead and let the
+ * app show a configuration notice.
+ */
+async function withoutClerk(request: NextRequest) {
+  const limited = await applyRateLimit(request);
+  if (limited) return limited;
+  return applySecurityHeaders(NextResponse.next());
+}
+
+export default isClerkConfigured ? withClerk : withoutClerk;
 
 export const config = {
   matcher: [

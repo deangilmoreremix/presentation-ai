@@ -20,9 +20,19 @@ const config = {
         protocol: "https",
         hostname: "*.ufs.sh",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.ppttemplate.ai",
+      },
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
+      },
     ],
   },
-  output: "standalone",
+  // Standalone output is only for the Docker image. On Netlify the
+  // @netlify/plugin-nextjs runtime packages the app itself.
+  output: process.env.NETLIFY ? undefined : "standalone",
   compress: true,
   poweredByHeader: false,
   // Allow HMR / dev assets to load when accessing the dev server over the
